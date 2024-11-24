@@ -1,0 +1,1019 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1"> 
+<title>Meme Editor</title>
+<style>
+
+	body {
+		overflow: hidden;
+		/* max-width: 1200px; */
+		height: 100vh;
+		display: flex;
+		flex-direction: column;
+		margin: auto;
+		padding: 0 2px;
+		font-family: ubuntu;
+	}
+
+	.column {
+		display: flex;
+		flex-direction: column;
+	}
+
+	.column > * {
+		margin-top: 3px;
+		margin-bottom: 3px;
+	}
+
+	.fit {
+		flex: 1;
+	}
+
+	.row {
+		display: flex;
+	}
+
+	.row > * {
+		margin-left: 3px;
+		margin-right: 3px;
+	}
+
+	.noverflow {
+		overflow: hidden;
+	}
+
+	
+
+	.absolute {
+		position: absolute;
+	}
+
+	.relative {
+		position: relative;
+	}
+
+	
+
+	.toolbar {
+		display: flex;
+		align-items: center;
+		margin-bottom: 10px;
+	}
+
+	.toolbar > * {
+		margin-right: 5px;
+	}
+
+	.footer {
+		padding: 2px;
+		font-size: small;
+		opacity: .8;
+	}
+
+	input[type="number"] {
+		max-width: 60px;
+	}
+
+	textarea {
+		resize: none;
+	}
+
+	canvas {
+		border: 1px solid black;
+	}
+
+	.hidden {
+		visibility: hidden;
+	}
+	
+</style>
+</head>
+<body>
+<!-- <h1>Hello World!</h1> -->
+
+
+<h1>Meme Editor</h1>
+<div class="toolbar">
+
+	<label>Width:</label>
+	<input type="number" id="width" value="800">
+	<label>Height:</label>
+	<input type="number" id="height" value="600">
+	<label>Border:</label>
+	<input type="number" id="border-width" value="2">
+	<input type="color" id="border-color" value="#111111">
+	<button id="new" title="New bubble">New</button>
+	<button id="export" title="Export meme">Export</button>
+</div>
+
+<div class="column noverflow" style="height: 100%;">
+
+<div class="row noverflow" style="height: 100%;">
+	<canvas id="canvas" width="800" height="600">Create meme with canvas</canvas>
+	<div id="properties" class="hidden">
+		<h2>Propeties</h2>
+		<div class="column">
+			<span class="row">
+				<b class="fit">x</b>
+				<input id="object-x" type="number">
+			</span>
+			<span class="row">
+				<b class="fit">y</b>
+				<input id="object-y" type="number">
+			</span>
+			<span class="row">
+				<b class="fit">width</b>
+				<input id="object-width" type="number">
+			</span>
+			<span class="row">
+				<b class="fit">height</b>
+				<input id="object-height" type="number">
+			</span>
+			<span class="row">
+				<b class="fit">radius</b>
+				<input id="object-radius" type="number">
+			</span>
+			<span class="row">
+				<b class="fit">stroke</b>
+				<input id="object-stroke" type="color">
+			</span>
+			<span class="row">
+				<b class="fit">fill</b>
+				<input id="object-fill" type="color">
+			</span>
+			<span class="row">
+				<b class="fit">beak</b>
+				<select id="object-beak">
+					<option value="left">left</option>
+					<option value="right">right</option>
+				</select>
+			</span>
+		</div>
+		<h3>Text</h3>
+		<div class="column">
+			<span class="row">
+				<b class="fit">offset X</b>
+				<input id="object-textOffsetX" type="number">
+			</span>
+			<span class="row">
+				<b class="fit">offset Y</b>
+				<input id="object-textOffsetY" type="number">
+			</span>
+			<span class="row">
+				<b class="fit">size</b>
+				<input id="object-textSize" type="number">
+			</span>
+			<span class="row">
+				<b class="fit">font</b>
+				<select id="object-textFont">
+					<option value="Arial" selected>Arial</option>
+					<option value="Serif">Serif</option>
+					<option value="Monospace">Monospace</option>
+					<option value="Helvetica">Helvetica</option>
+					<option value="Ubuntu">Ubuntu</option>
+				</select>
+			</span>
+			<span class="row">
+				<b class="fit">fill</b>
+				<input for="object-textFill" type="checkbox" checked onchange="this.nextElementSibling.disabled=!this.checked">
+				<input id="object-textFill" type="color">
+			</span>
+			<span class="row">
+				<b class="fit">stroke</b>
+				<input for="object-textStroke" type="checkbox" onchange="this.nextElementSibling.disabled=!this.checked">
+				<input id="object-textStroke" type="color" disabled>
+			</span>
+			<textarea id="object-text" rows="5"></textarea>
+		</div>
+	</div>
+</div>
+
+<span class="footer">© 2018-2022 <b>FreeTalk Technologies</b></span>
+
+</div>
+
+<script type="module">
+
+const body = document.body;
+const canvas = document.getElementById('canvas');
+const add = document.getElementById('new');
+const exp = document.getElementById('export');
+
+const width = document.getElementById('width');
+const height = document.getElementById('height');
+
+const borderWidth = document.getElementById('border-width');
+const borderColor = document.getElementById('border-color');
+
+const properties = document.getElementById('properties');
+
+
+class Editor {
+
+	#canvas;
+	#ctx;
+	#r;
+	#objects = [];
+	#image;
+	#node;
+	#selected;
+	#properties;
+	#object = {};
+	#crop = [1, 1];
+	#border = 2;
+	#color = '#111111';
+
+	get canvas()  { return this.#ctx.canvas; }
+	get context() { return this.#ctx; }
+
+	set width(v) {
+		this.canvas.width = v;
+		this.canvas.height = v * 3/4;
+	}
+
+	set border(v) { this.#border = v; }
+	set color(v) { this.#color = v; }
+
+	constructor(canvas, properties) {
+		this.#ctx = canvas.getContext('2d');
+
+		const r = canvas.getBoundingClientRect();
+		this.#onResize(r);
+
+		this.#registerCanvasEvents();
+		this.#registerResizeEvents();
+
+		if (properties) {
+			this.#properties = properties;
+			this.#registerPropertiesEvents();
+		}
+	}
+
+	add(type='bubble') {
+
+		let o;
+
+		switch (type) {
+
+			case 'bubble':
+			o = new Bubble(this);
+			break;
+
+			case 'rect':
+			break;
+
+		}
+
+		if (o) {
+			this.#objects.push(o);
+			this.draw();
+		}
+		else {
+			console.error('Unknown object type:', type);
+		}
+
+		return o;
+
+	}
+
+	export(name='meme', type='jpeg') {
+
+		const e = document.createElement('canvas');
+		const ctx = e.getContext('2d');
+
+		e.width = this.canvas.width * this.#crop[0];
+		e.height = this.canvas.height * this.#crop[1];
+
+		ctx.drawImage(canvas, 0, 0);
+
+		const img = e.toDataURL('image/' + type);
+		const a = document.createElement('a');
+
+		a.download = name + '.' + type;
+		a.href = img;
+
+		a.click();
+
+	}
+
+	async import(files) {
+		if (this.#image)
+			URL.revokeObjectURL(this.#image.src);
+
+		const e = document.createElement('canvas');
+		const canvas = this.canvas;
+
+		e.width = canvas.width;
+		e.height = canvas.height;
+
+		const ctx = e.getContext("2d");
+
+		let x = 0, y = 0, r, width = canvas.width, height, img;
+
+		let maxWidth = 0, maxHeight = 0;
+		let images = [];
+
+		for (const i of files) {
+			img = await loadImage(i);
+			images.push(img);
+
+			if (maxWidth < img.width)
+				maxWidth = img.width;
+
+			if (maxHeight < img.height)
+				maxHeight = img.height;
+		}
+
+		const totalWidth = images.map(i => i.width).reduce((a, b) => a + b, 0);
+		
+		r = canvas.width / totalWidth;
+
+		maxWidth *= r;
+		maxHeight *= r;
+		
+		for (let i = 0, p; i < images.length; ++i) {
+
+			img = images[i];
+
+			p = img.width / totalWidth;
+			width = img.width * r;
+			height = img.height * r;
+
+			y = 0;
+
+			if (height < maxHeight) {
+				y += (maxHeight - height) / 2;
+			}
+
+			console.log('Draw image:', x, y, width, height);
+			ctx.drawImage(img, x, y, width, height);
+
+			ctx.lineWidth = this.#border;
+			ctx.strokeStyle = this.#color;
+			ctx.strokeRect(x, 0, width, maxHeight);
+
+			drawWatermark(ctx, 'www.sipme.io', maxHeight);
+
+			URL.revokeObjectURL(img.src);
+
+			x += width;
+		}
+
+		this.#image = await loadImage(e.toDataURL('image/png'));
+		// image = await loadImage(e.toDataURL('image/octet-stream'));
+
+		this.#crop[1] = maxHeight / canvas.height;
+		this.draw();
+	}
+
+	draw() {
+
+		const ctx = this.#ctx;
+
+		ctx.fillStyle = '#fff';
+		ctx.fillRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+
+		if (this.#image)
+			ctx.drawImage(this.#image, 0, 0);
+
+		for (const i of this.#objects)
+			i.draw();
+	}
+
+	#onResize(r) {
+
+		const canvas = this.canvas;
+
+		this.width = r.width;
+		this.#r = [ canvas.width / r.width,  canvas.height / r.height];
+
+		this.draw();
+
+	}
+
+	#registerCanvasEvents() {
+
+		this.canvas.onclick = (e) => {
+
+			if (this.#node) return;
+
+			let x = e.offsetX * this.#r[0] // - e.offsetX
+				, y = e.offsetY * this.#r[1]// - e.offsetY
+				;
+
+			let s;
+
+			for (const i of [...this.#objects].reverse()) {
+
+				if (i.handleSelect(x, y)) {
+					s = i;
+					// console.log('Bubble selected');
+					x = -10;
+					y = -10;
+
+					i.selected = this.#object;
+				}
+			}
+
+			if (this.#selected != s) {
+				this.#selected = s;
+				this.draw();
+			}
+
+			if (this.#properties) {
+				if (this.#selected) 
+					this.#properties.classList.remove('hidden');
+				else 
+					this.#properties.classList.add('hidden');
+
+			}
+
+		}
+
+		this.canvas.onmousemove = (e) => {
+
+			if (!this.#node) return;
+
+			const x = e.offsetX * this.#r[0]
+				, y = e.offsetY * this.#r[1]
+				;
+
+			this.#node.move(x, y);
+
+			this.draw();
+		}
+
+		this.canvas.onmouseup = () => this.#node = null;
+
+		this.canvas.onmousedown = (e) => {
+
+			const x = e.offsetX * this.#r[0] // - e.offsetX
+				, y = e.offsetY * this.#r[1]// - e.offsetY
+				;
+
+			this.#node = null;
+
+			for (const i of this.#objects) {
+
+
+				if (this.#node = i.handleClick(x, y)) {
+
+					console.log('Bubble found');
+					break;
+				}
+			}
+
+			console.log(e);
+		}
+	}
+
+	#registerPropertiesEvents() {
+
+		const inputs = this.#properties.querySelectorAll('input,select,textarea');
+		for (const i of inputs) {
+			const name = i.id || i.getAttribute('role');
+
+			if (name) {
+				const [type, id] = name.split('-');
+
+				if (type == 'object') 
+					this.#object[id] = i;
+			}
+		}
+
+		this.#properties.oninput = (e) => {
+
+			const target = e.target;
+			if (!target.value) return;
+
+			const name = target.id || target.getAttribute('role');
+			if (!name) return;
+
+			let [type, id] = name.split('-')
+				, value = target.value;
+
+			if (target.type == 'checkbox') {
+				value = target.checked;
+
+				const a = target.getAttribute('for');
+
+				if (a) {
+					[type, id] = a.split('-');
+
+					if (value) {
+						const e = target.nextElementSibling; // todo: improve
+						value = e.value;
+					}
+					else {
+						value = '';
+					}
+				}
+			}
+
+			if (type == 'object' && this.#selected) {
+				console.log('On update');
+				
+				const descriptor = Object.getOwnPropertyDescriptor(Bubble.prototype, id);
+
+				if (descriptor)
+					descriptor.set.call(this.#selected, value);
+
+				this.draw();
+			}
+
+		}
+
+	}
+
+	#registerResizeEvents() {
+		const resizeObserver = new ResizeObserver(e => this.#onResize(e[0].contentRect));
+		resizeObserver.observe(this.canvas);
+	}
+}
+
+
+function loadImage(file) {
+
+	return new Promise((resolve, reject) => {
+
+		const img = new Image;
+
+		img.src = file instanceof Blob ? URL.createObjectURL(file) : file;
+
+		img.onload = () => resolve(img);
+		img.onerror = reject;
+
+	});
+}
+
+
+class Bubble {
+	#editor;
+	#width = 200;
+	#height = 150;
+	#stroke = '#000000';
+	#fill = '#888888';
+	#beak = 'left';
+	#text = '';
+
+	#x;
+	#y;
+
+	#radius = 10;
+
+	#pX;
+	#pY;
+
+	#nr = 5; // node radius
+
+	#tX = 10;
+	#tY = 10;
+	#tSize = Math.floor(this.#width / 10);
+	#tFont = 'Arial'; 
+	#tFill = '#eeeeee';
+	#tStroke;
+
+	#selected = false;
+
+	constructor(editor) {
+		this.#editor = editor;
+
+		this.#x = 50 + Math.random() * (editor.canvas.width - this.#width - 50);
+		this.#y = 10 + Math.random() * (editor.canvas.height - this.#height - 10);
+
+		this.#pX = this.#x - 30;
+		this.#pY = this.#y + 50;
+	}
+
+	set selected(obj) {
+
+		this.#selected = !!obj;
+
+		if (!obj) return;
+
+		obj.x.value = this.#x;
+		obj.y.value = this.#y;
+		obj.width.value = this.#width;
+		obj.height.value = this.#height;
+		obj.radius.value = this.#radius;
+
+		obj.fill.value = this.#fill;
+		obj.stroke.value = this.#stroke;
+
+		obj.beak.value = this.#beak;
+
+		obj.textOffsetX.value = this.#tX;
+		obj.textOffsetY.value = this.#tY;
+		obj.textSize.value = this.#tSize;
+		obj.text.value = this.#text;
+
+		if (this.#tFill) {
+			obj.textFill.value = this.#tFill;
+			obj.textFill.disabled = false;
+			obj.textFill.previousElementSibling.checked = true;
+		}
+		else {
+			obj.textFill.disabled = true;
+			obj.textFill.previousElementSibling.checked = false;
+		}
+
+		if (this.#tStroke) {
+			obj.textStroke.value = this.#tStroke;
+			obj.textStroke.disabled = false;
+			obj.textStroke.previousElementSibling.checked = true;
+		}
+		else {
+			obj.textStroke.disabled = true;
+			obj.textStroke.previousElementSibling.checked = false;
+		}
+			
+	}
+
+	set x(n) {
+		if (typeof n == 'string') n = parseInt(n);
+		//if (n < 10) n = 10;
+
+		this.#x = n;
+	}
+
+	set y(n) {
+		if (typeof n == 'string') n = parseInt(n);
+		//if (n < 10) n = 10;
+
+		this.#y = n;
+	}
+
+	set width(n) {
+		if (typeof n == 'string') n = parseInt(n);
+		if (n < 10) n = 10;
+
+		this.#width = n;
+	}
+
+	set height(n) {
+		if (typeof n == 'string') n = parseInt(n);
+		if (n < 10) n = 10;
+
+		this.#height = n;
+	}
+
+	set radius(n) {
+		if (typeof n == 'string') n = parseInt(n);
+		//if (n < 10) n = 10;
+
+		this.#radius = n;
+	}
+
+	set stroke(v) {
+		// console.log('Setting stroke value', v);
+		this.#stroke = v;
+
+	}
+
+	set fill(v) {
+		// console.log('Setting stroke value', v);
+		this.#fill = v;
+
+	}
+
+	set beak(v) {
+
+		const d = this.#beak == 'left' ? this.#x - this.#pX : this.#pX - this.#x - this.#width;
+
+		this.#pX = v == 'left' ? this.#x - d : this.#x + this.#width + d;
+		this.#beak = v;
+	}
+
+	set textOffsetX(n) {
+		if (typeof n == 'string') n = parseInt(n);
+		if (n < 2) n = 2;
+
+		this.#tX = n;
+	}
+
+	set textOffsetY(n) {
+		if (typeof n == 'string') n = parseInt(n);
+		if (n < 2) n = 2;
+
+		this.#tY = n;
+	}
+
+	set textSize(n) {
+		if (typeof n == 'string') n = parseInt(n);
+		if (n < 8) n = 8;
+
+		this.#tSize = n;
+	}
+
+	set textFont(n) {
+		this.#tFont = n;
+	}
+
+	set textFill(v) {
+		// console.log('Setting stroke value', v);
+		this.#tFill = v;
+
+	}
+
+	set textStroke(v) {
+		// console.log('Setting stroke value', v);
+		this.#tStroke = v;
+
+	}
+
+	set text(s) {
+		console.debug('Setting text:', s);
+		this.#text = s.split('\n');
+
+	}
+
+	get ctx() {
+		return this.#editor.context;
+	}
+	
+	draw() {
+
+		const ctx = this.ctx;
+
+		ctx.save();
+
+		// ctx.fillStyle = this.#fill;
+		// ctx.fillRect(this.#x, this.#y, this.#width, this.#height);
+
+		// ctx.strokeStyle = this.#stroke;
+		// ctx.strokeRect(this.#x, this.#y, this.#width, this.#height);
+
+		// ctx.lineWidth = 3;
+
+		this.#drawBubble();
+		this.#drawText();
+		this.#drawSelection();
+
+		ctx.restore();
+	}
+
+	handleSelect(x, y) {
+		const px0 = this.#x
+			, px1 = px0 + this.#width
+			, py0 = this.#y
+			, py1 = py0 + this.#height
+			;
+
+		if (x > px0 && x < px1 && y > py0 && y < py1) {
+			return true;
+		}
+
+		this.#selected = false;
+	}
+
+	handleClick(x, y) {
+
+		if (!this.#selected) return;
+
+		let X = this.#pX
+			, Y = this.#pY
+			, R = this.#nr
+			;
+
+		if (x > X - R &&
+			x < X + R &&
+			y > Y - R &&
+			y < Y + R)
+			return {
+
+				move: (x, y) => {
+					this.#pX = x;
+					this.#pY = y;
+				}
+
+			};
+
+		X = this.#x + this.#width / 2;
+		Y = this.#y + this.#height / 2;
+
+		if (x > X - R &&
+			x < X + R &&
+			y > Y - R &&
+			y < Y + R)
+			return {
+
+				move: (x, y) => {
+
+					const X = this.#x
+						, Y = this.#y
+						;
+
+					this.#x = x - this.#width / 2;
+					this.#y = y - this.#height / 2;
+
+					this.#pX -= X - this.#x;
+					this.#pY -= Y - this.#y;
+				}
+
+			};
+
+		return null;
+	}
+
+	#drawText(text=this.#text) {
+
+		if (!text) return;
+		if (!Array.isArray(text)) text = [text];
+
+		const ctx = this.ctx;
+
+		ctx.save();
+		//ctx.translate(btn.x, btn.y);
+		//ctx.rotate(angle);
+
+		let x = this.#x + this.#tX
+			, y = this.#y + this.#tY
+			;
+
+		ctx.fillStyle = this.#tFill;
+		ctx.strokeStyle = this.#tStroke;
+		// ctx.textBaseline = "middle";
+		ctx.textBaseline = "top";
+		ctx.textAlign = "left";
+		ctx.font = "bold " + `${this.#tSize}px` + ' ' + this.#tFont;
+
+		const lineHeight = ctx.measureText("M").width * 1.2;
+		
+		for (const t of text) {
+
+			// ctx.translate(x, y);
+			if (this.#tFill)
+				ctx.fillText(t, x, y);
+
+			if (this.#tStroke)
+				ctx.strokeText(t, x, y);
+
+			y += lineHeight;
+
+		}
+
+		ctx.restore();
+	}
+
+	#drawSelection() {
+
+		if (!this.#selected) return;
+
+		const ctx = this.ctx;
+
+		ctx.strokeStyle = '#00f';
+
+		ctx.beginPath();
+		ctx.arc(this.#pX, this.#pY, this.#nr, 0, Math.PI * 2);
+		ctx.stroke();
+		ctx.closePath();
+
+		let X = this.#x + this.#width / 2
+			, Y = this.#y + this.#height / 2
+
+		ctx.beginPath();
+		ctx.arc(X, Y, this.#nr, 0, Math.PI * 2);
+		ctx.stroke();
+		ctx.closePath();
+	}
+
+	#drawBubble() {
+
+		const ctx = this.ctx;
+
+		const x = this.#x
+			, y = this.#y
+			, width = this.#width
+			, height = this.#height
+			, fill = this.#fill
+			, stroke = this.#stroke
+			;
+
+		let radius = this.#radius;
+		
+		if (typeof radius === 'number') {
+		radius = {
+			tl: radius,
+			tr: radius,
+			br: radius,
+			bl: radius
+		};
+		} else {
+		var defaultRadius = {
+			tl: 0,
+			tr: 0,
+			br: 0,
+			bl: 0
+		};
+		for (var side in defaultRadius) {
+			radius[side] = radius[side] || defaultRadius[side];
+		}
+		}
+		ctx.beginPath();
+		ctx.moveTo(x + radius.tl, y);
+		ctx.lineTo(x + width - radius.tr, y);
+		ctx.quadraticCurveTo(x + width, y, x + width, y + radius.tr);
+		if (this.#beak == 'right') {
+			ctx.lineTo(x + width, y + radius.tl);
+			ctx.lineTo(this.#pX, this.#pY);
+			ctx.lineTo(x + width, y + radius.tl + 20);
+		}
+		ctx.lineTo(x + width, y + height - radius.br);
+	
+		ctx.quadraticCurveTo(x + width, y + height, x + width - radius.br, y + height);
+		ctx.lineTo(x + radius.bl, y + height);
+		ctx.quadraticCurveTo(x, y + height, x, y + height - radius.bl);
+
+		if (this.#beak == 'left') {
+			ctx.lineTo(x, y + radius.tl + 20);
+			ctx.lineTo(this.#pX, this.#pY);
+		}
+		
+		ctx.lineTo(x, y + radius.tl);
+		
+		ctx.quadraticCurveTo(x, y, x + radius.tl, y);
+		ctx.closePath();
+		if (fill) {
+			ctx.fillStyle = fill;
+			ctx.fill();
+		}
+		if (stroke) {
+			ctx.strokeStyle = stroke;
+			ctx.stroke();
+		}
+	}
+}
+
+function drawWatermark(ctx, text, height=ctx=canvas.height) {
+	ctx.save();
+	//ctx.translate(btn.x, btn.y);
+	//ctx.rotate(angle);
+
+	const W = ctx.canvas.width;
+
+	const s = W / 50
+		, x = W * 0.01
+		, y = height - x
+		;
+	
+	// ctx.rotate(-Math.PI/2);
+	
+	ctx.fillStyle = '#888';
+	ctx.textBaseline = "middle";
+	ctx.textAlign = "left";
+	ctx.font = "bold " + `${s}px` + " monospace";
+	ctx.fillText(text, x, y);
+	ctx.restore();
+}
+
+const editor = new Editor(canvas, properties);
+
+add.onclick = () => editor.add();
+exp.onclick = () => editor.export();
+
+width.oninput = () => editor.width = parseInt(width.value);
+borderWidth.oninput = () => editor.border = parseInt(borderWidth.value);
+borderColor.oninput = () => editor.color = borderColor.value;
+
+
+body.ondragover = (e) => e.preventDefault();
+body.ondrop = (e) => {
+	// console.log("File(s) dropped");
+
+	// Prevent default behavior (Prevent file from being opened)
+	e.preventDefault();
+
+	const files = [];
+
+	if (e.dataTransfer.items) {
+		// Use DataTransferItemList interface to access the file(s)
+		for (const item of e.dataTransfer.items) {
+			// If dropped items aren't files, reject them
+			if (item.kind === "file") {
+				const file = item.getAsFile();
+				// console.log(`… file[${i}].name = ${file.name}`);
+
+				files.push(file);
+			}
+		}
+	} else {
+		// Use DataTransfer interface to access the file(s)
+		e.dataTransfer.files.forEach((file, i) => {
+			console.log(`… file[${i}].name = ${file.name}`);
+
+			files.push(file);
+		});
+	}
+
+	console.log("File(s) dropped", files);
+
+	editor.import(files);
+}
+
+
+
+</script>
+</body>
+</html
