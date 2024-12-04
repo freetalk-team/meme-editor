@@ -1,0 +1,608 @@
+<div class="cr fit noverflow">
+
+	<div id="tools" class="tools w3-card-2 w3-margin w3-padding-small cc" style="width: 30px;">
+		<button name="bubble" class="icon fa fa-message w3-text-blue" title="Bubble"></button>
+		<button name="rect" class="icon fa fa-square w3-text-orange" title="Rectangle"></button>
+		<button name="text" class="icon fa fa-t w3-text-black" title="Text"></button>
+		<div id="icon-picker">
+			<button id="toggle-popup" name="emoji" class="icon fa fa-face-smile w3-text-amber" title="Emoji"></button>
+			<div class="icon-popup" id="icon-popup">
+
+				<!-- Tabs -->
+				<div class="tabs" id="tabs">
+					<div class="tab active" data-tab="smileys">Smileys</div>
+					<div class="tab" data-tab="animals">Animals</div>
+					<div class="tab" data-tab="food">Food</div>
+					<div class="tab" data-tab="flags">Flags</div>
+					<div class="tab" data-tab="others">Others</div>
+				</div>
+				<!-- Tab Content -->
+				<div class="tab-content active" id="smileys">
+					<div class="emoji-grid">
+						<!-- Smileys Emoji -->
+						<div class="emoji-item">😀</div>
+						<div class="emoji-item">😁</div>
+						<div class="emoji-item">😂</div>
+						<div class="emoji-item">🤣</div>
+						<div class="emoji-item">😃</div>
+						<div class="emoji-item">😄</div>
+						<div class="emoji-item">😅</div>
+						<div class="emoji-item">😆</div>
+						<div class="emoji-item">😉</div>
+						<div class="emoji-item">😊</div>
+						<div class="emoji-item">😋</div>
+						<div class="emoji-item">🤠</div>
+						<div class="emoji-item">😎</div>
+						<div class="emoji-item">😴</div>
+						<div class="emoji-item">🤔</div>
+						<div class="emoji-item">🫣</div>
+						<div class="emoji-item">😜</div>
+						<div class="emoji-item">🤩</div>
+						<div class="emoji-item">😍</div>
+						<div class="emoji-item">😮</div>
+						<div class="emoji-item">😯</div>
+						<div class="emoji-item">😲</div>
+						<div class="emoji-item">😧</div>
+						<div class="emoji-item">😩</div>
+					</div>
+				</div>
+				<div class="tab-content" id="animals">
+					<div class="emoji-grid">
+						<!-- Animals Emoji -->
+						<div class="emoji-item">🐶</div>
+						<div class="emoji-item">🐱</div>
+						<div class="emoji-item">🐭</div>
+						<div class="emoji-item">🐹</div>
+						<div class="emoji-item">🐰</div>
+						<div class="emoji-item">🦊</div>
+						<div class="emoji-item">🐻</div>
+						<div class="emoji-item">🐼</div>
+						<div class="emoji-item">🐨</div>
+						<div class="emoji-item">🐯</div>
+					</div>
+				</div>
+				<div class="tab-content" id="food">
+					<div class="emoji-grid">
+						<!-- Food Emoji -->
+						<div class="emoji-item">🍎</div>
+						<div class="emoji-item">🍊</div>
+						<div class="emoji-item">🍌</div>
+						<div class="emoji-item">🍉</div>
+						<div class="emoji-item">🍇</div>
+						<div class="emoji-item">🍓</div>
+						<div class="emoji-item">🍒</div>
+						<div class="emoji-item">🍑</div>
+						<div class="emoji-item">🥝</div>
+						<div class="emoji-item">🍍</div>
+						<div class="emoji-item">🍔</div>
+						<div class="emoji-item">🍖</div>
+						<div class="emoji-item">🍟</div>
+						<div class="emoji-item">🌭</div>
+						<div class="emoji-item">🥪</div>
+						<div class="emoji-item">🌮</div>
+						<div class="emoji-item">🌯</div>
+						<div class="emoji-item">🍿</div>
+					</div>
+				</div>
+				<div class="tab-content" id="flags">
+					<div class="emoji-grid">
+					  <!-- Country Flags -->
+					  <div class="emoji-item">🇧🇬</div>
+					  <div class="emoji-item">🇷🇴</div>
+					  <div class="emoji-item">🇩🇪</div> <!-- Germany -->
+					  <div class="emoji-item">🇫🇷</div> <!-- France -->
+					  <div class="emoji-item">🇪🇸</div> <!-- Spain -->
+					  <div class="emoji-item">🇮🇹</div> <!-- Italy -->
+					  <div class="emoji-item">🇪🇺</div>
+					  <div class="emoji-item">🇬🇧</div> <!-- United Kingdom -->
+					  <div class="emoji-item">🇺🇸</div> <!-- United States -->
+					  <div class="emoji-item">🇨🇦</div> <!-- Canada -->
+					  <div class="emoji-item">🇦🇺</div> <!-- Australia -->
+					  <div class="emoji-item">🇮🇳</div> <!-- India -->
+					  <div class="emoji-item">🇨🇳</div> <!-- China -->
+					  <div class="emoji-item">🇯🇵</div> <!-- Japan -->
+					  <div class="emoji-item">🇧🇷</div> <!-- Brazil -->
+					  <div class="emoji-item">🇰🇷</div> <!-- South Korea -->
+					  <div class="emoji-item">🇷🇺</div> <!-- Russia -->
+					  <div class="emoji-item">🇿🇦</div> <!-- South Africa -->
+					  <div class="emoji-item">🇳🇬</div> <!-- Nigeria -->
+					  <div class="emoji-item">🇪🇬</div> <!-- Egypt -->
+					  <div class="emoji-item">🇸🇦</div> <!-- Saudi Arabia -->
+					  <div class="emoji-item">🇦🇪</div> <!-- UAE -->
+					  <div class="emoji-item">🇲🇽</div> <!-- Mexico -->
+					</div>
+				</div>
+				<div class="tab-content" id="others">
+					<div class="emoji-grid">
+						<div class="emoji-item">🍺</div>
+						<div class="emoji-item">🍷</div>
+						<div class="emoji-item">🍾</div>
+						<div class="emoji-item">☕</div>
+						<div class="emoji-item">🍻</div>
+						<div class="emoji-item">🥃</div>
+						<div class="emoji-item">🍹</div>
+						<div class="emoji-item">💯</div>
+						<div class="emoji-item">💣</div>
+						<div class="emoji-item">🩸</div>
+						<div class="emoji-item">🚬</div>
+						<div class="emoji-item">💶</div>
+						<div class="emoji-item">🚾</div>
+						<div class="emoji-item">☢</div>
+						<div class="emoji-item">♀</div>
+						<div class="emoji-item">♂</div>
+						<div class="emoji-item">⚧</div>
+						<div class="emoji-item">💥</div>
+						<div class="emoji-item">💋</div>
+						<div class="emoji-item">❤</div>
+						<div class="emoji-item">💔</div>
+						<div class="emoji-item">❓</div>
+						<div class="emoji-item">❗</div>
+						<div class="emoji-item">⁉</div>
+						<div class="emoji-item">‼</div>
+						<div class="emoji-item">✴</div>
+						<div class="emoji-item">❇</div>
+						<div class="emoji-item">©</div>
+						<div class="emoji-item">®</div>
+						<div class="emoji-item">™</div>
+						<div class="emoji-item">🚫</div>
+						<div class="emoji-item">⛔</div>
+						<div class="emoji-item">🔆</div>
+						<div class="emoji-item">💊</div>
+					</div>
+				</div>
+			</div>
+		</div>
+		<h4 class="nomargin fit text-center ellipsis" style="writing-mode:vertical-rl;rotate:180deg;opacity:.2;">Freetalk Team</h4>
+	</div>
+
+	<div class="column" style="height: 100%; width:100%">
+
+		<div class="toolbar cr ci w3-margin-bottom w3-margin-right">
+			<b>Width:</b>
+			<input type="number" id="width" value="1200">
+			<b>Height:</b>
+			<input type="number" id="height" value="630">
+			<b>Border:</b>
+			<input type="number" id="border-width" value="2">
+			<input type="color" id="border-color" value="#111111">
+			<button id="reset" class="ux" title="Reset">Reset</button>
+
+			<div class="cr ci fit justify-end">
+
+				<input value="meme1">
+				<button id="save" class="ux" title="Save">Save</button>
+				<button id="export" class="icon fa fa-fw lg fa-file-export w3-text-blue" title="Export meme"></button>
+				<button id="import" class="icon fa fa-fw lg fa-folder w3-text-blue relative" title="Import images"><i class="fa plus"></i></button>
+
+			</div>
+			<!-- <select id="object">
+				<option value="rect" selected>Rect</option>
+				<option value="bubble" selected>Bubble</option>
+			</select>
+			<button id="new" title="New bubble">New</button> -->
+		</div>
+
+		<div class="column noverflow" style="height:100%;width:calc(100% - 15px);">
+
+			<div class="row noverflow" style="height:100%;">
+				<div class="canvas">
+					<canvas id="canvas" tabindex="1" width="1200" height="900">Create meme with canvas</canvas>
+				</div>
+				<div class="column w3-container w3-card-2 w3-padding" style="min-width: 280px;margin: 2px 2px 2px 10px;">
+					<div class="cr ci smaller">
+						<button class="icon tab fit selected" tab="properties" onclick="dom.switchTab(this)">
+							<i class="fa fa-cog"></i>
+						</button>
+						<button class="icon tab fit" tab="objects" onclick="dom.switchTab(this)">
+							<i class="fa fa-object-ungroup"></i>
+						</button>
+						<button class="icon tab fit" tab="projects" onclick="dom.switchTab(this)">
+							<i class="fa fa-list-check"></i>
+						</button>
+					</div>
+					<div class="column monospace">
+						
+						<div class="column" tab="properties">
+							<h2 class="wm8 inconsolata">Propeties</h2>
+							<div id="properties" class="invisible">
+								<div class="cc">
+									<span class="row">
+										<b class="fit">x</b>
+										<input id="object-x" type="number">
+									</span>
+									<span class="row">
+										<b class="fit">y</b>
+										<input id="object-y" type="number">
+									</span>
+									<span class="row" display="rect bubble image">
+										<b class="fit">width</b>
+										<input id="object-width" type="number">
+									</span>
+									<span class="row" display="rect bubble image">
+										<b class="fit">height</b>
+										<input id="object-height" type="number">
+									</span>
+									<span class="row" display="rect bubble">
+										<b class="fit">radius</b>
+										<input id="object-radius" type="number">
+									</span>
+									<span class="row" display="rect bubble text image">
+										<b class="fit">stroke</b>
+										<input id="object-stroke" type="color">
+									</span>
+									<span class="row" display="rect bubble text image">
+										<b class="fit">stroke width</b>
+										<input id="object-strokeWidth" type="number">
+									</span>
+									<span class="row" display="rect bubble text image">
+										<b class="fit">fill</b>
+										<input for="object-fill" class="checkbox w3-margin-right" type="checkbox" checked onchange="this.nextElementSibling.disabled=!this.checked">
+										<input id="object-fill" type="color">
+									</span>
+
+									<span class="row">
+										<b class="fit">shadow</b>
+										<select id="object-shadow">
+											<option value="none" selected>none</option>
+											<option value="fill">fill</option>
+											<option value="stroke">stroke</option>
+										</select>
+									</span>
+									<span class="row">
+										<b class="fit">shadow color</b>
+										<input id="object-shadowColor" type="color">
+									</span>
+									<span class="row">
+										<b class="fit">shadow width</b>
+										<input id="object-shadowWidth" type="number">
+									</span>
+									
+									<span class="row" display="bubble">
+										<b class="fit">beak</b>
+										<select id="object-beak">
+											<option value="left">left</option>
+											<option value="right">right</option>
+										</select>
+									</span>
+									
+									<span class="row" display="text emoji">
+										<b class="fit">size</b>
+										<input id="object-size" type="number">
+									</span>
+									<span class="row" display="text">
+										<b class="fit">font</b>
+										<select id="object-font">
+											<option value="Arial" selected>Arial</option>
+											<option value="Serif">Serif</option>
+											<option value="Monospace">Monospace</option>
+											<option value="Helvetica">Helvetica</option>
+											<option value="Ubuntu">Ubuntu</option>
+										</select>
+									</span>
+									<textarea id="object-value" rows="5" display="text" placeholder="Some text" spellcheck="false"></textarea>
+								</div>
+								<div class="cc" display="image">
+									<h3 class="wm8 inconsolata">Image</h3>
+									<span class="row">
+										<b class="fit">x</b>
+										<input id="object-imgX" type="number">
+									</span>
+									<span class="row">
+										<b class="fit">y</b>
+										<input id="object-imgY" type="number">
+									</span>
+									<span class="row">
+										<b class="fit">width</b>
+										<input id="object-imgWidth" type="number">
+									</span>
+									<span class="row">
+										<b class="fit">height</b>
+										<input id="object-imgHeight" type="number">
+									</span>
+									<span class="row">
+										<b class="fit">keep proportion</b>
+										<input id="object-imgKeepProportion" type="checkbox" class="checkbox">
+									</span>
+									<span class="row">
+										<b class="fit">scale</b>
+										<input id="object-imgScale" step="0.01" type="number">
+									</span>
+									<span class="row">
+										<b class="fit">mirror</b>
+										<input id="object-imgMirror" type="checkbox" class="checkbox">
+									</span>
+									<span class="row">
+										<b class="fit">crop X</b>
+										<input id="object-cropX" type="number">
+									</span>
+									<span class="row">
+										<b class="fit">crop Y</b>
+										<input id="object-cropY" type="number">
+									</span>
+									<span class="row">
+										<b class="fit">crop Width</b>
+										<input id="object-cropWidth" type="number">
+									</span>
+									<span class="row">
+										<b class="fit">crop Height</b>
+										<input id="object-cropHeight" type="number">
+									</span>
+									<!-- <button class="ux" name="detect">Detect</button> -->
+								</div>
+								<div class="cc" display="rect bubble">
+									<h3 class="wm8 inconsolata">Text</h3>
+									<span class="row" >
+										<b class="fit">offset X</b>
+										<input id="object-textOffsetX" type="number">
+									</span>
+									<span class="row" >
+										<b class="fit">offset Y</b>
+										<input id="object-textOffsetY" type="number">
+									</span>
+									<span class="row">
+										<b class="fit">size</b>
+										<input id="object-textSize" type="number">
+									</span>
+									<span class="row">
+										<b class="fit">font</b>
+										<select id="object-textFont">
+											<option value="Arial" selected>Arial</option>
+											<option value="Serif">Serif</option>
+											<option value="Monospace">Monospace</option>
+											<option value="Helvetica">Helvetica</option>
+											<option value="Ubuntu">Ubuntu</option>
+										</select>
+									</span>
+									<span class="row">
+										<b class="fit">fill</b>
+										<input for="object-textFill" class="checkbox w3-margin-right" type="checkbox" checked onchange="this.nextElementSibling.disabled=!this.checked">
+										<input id="object-textFill" type="color">
+									</span>
+									<span class="row">
+										<b class="fit">stroke</b>
+										<input for="object-textStroke" class="checkbox w3-margin-right" type="checkbox" onchange="this.nextElementSibling.disabled=!this.checked">
+										<input id="object-textStroke" type="color" disabled>
+									</span>
+									<span class="row">
+										<b class="fit">stroke width</b>
+										<input id="object-textStrokeWidth" type="number">
+									</span>
+									<span class="row">
+										<b class="fit">shadow</b>
+										<select id="object-textShadow">
+											<option value="none" selected>none</option>
+											<option value="fill">fill</option>
+											<option value="stroke">stroke</option>
+										</select>
+									</span>
+									<span class="row">
+										<b class="fit">shadow color</b>
+										<input id="object-textShadowColor" type="color">
+									</span>
+									<span class="row">
+										<b class="fit">shadow width</b>
+										<input id="object-textShadowWidth" type="number">
+									</span>
+
+									<textarea id="object-text" rows="5" placeholder="Some text" spellcheck="false"></textarea>
+								</div>
+							</div>
+						</div>
+						<div class="column hidden" tab="objects" >
+							<div class="cr ci">
+								<h2 class="wm8 inconsolata fit">Objects</h2>
+								<button id="align-images" class="icon fa fa-image w3-text-blue" title="Align images"></button>
+							</div>
+							<div id="objects" class="cc show-empty"></div>
+						</div>
+						<div class="column hidden" tab="projects" >
+							<h2 class="wm8 inconsolata">Projects</h2>
+							<div id="projects" class="cc show-empty"></div>
+						</div>
+
+					</div>
+				</div>
+				
+			</div>
+
+			<span class="footer">© 2018-2022 <b>FreeTalk Technologies</b></span>
+
+		</div>
+
+	</div>
+</div>
+
+<template id="item-object" class="w3-padding-tiny cr ci noevents fade" data-id="{{this.id}}">
+	<i class="fa smaller wm8" type="{{this.type}}"></i>
+	<span class="fit ellipsis">
+		<span contenteditable>{{this.id}}</span>
+	</span>
+	<div class="row ci display-hover">
+		<button name="up" class="icon fa fa-angle-up" title="Move up"></button>
+		<button name="down" class="icon fa fa-angle-down" title="Move down"></button>
+		<button name="rm" class="icon fa" title="Remove"></button>
+	</div>
+</template>
+
+<template id="item-project" class="w3-padding-tiny cr ci noevents fade" data-id="{{this.id}}">
+	<span class="fit ellipsis">{{this.id.toUpperCase()}}</span>
+	<i class="smaller">{{this.objects.length}}</i>
+	<button name="rm" class="icon fa display-hover" title="Remove"></button>
+</template>
+
+<script type="module">
+
+<% if (!production) { %>
+
+import MemeEditor from '/editor.js';
+
+<% } %>
+
+const body = document.body;
+const canvas = document.getElementById('canvas');
+
+const add = document.getElementById('new')
+	, exp = document.getElementById('export')
+	, imp = document.getElementById('import')
+	, reset = document.getElementById('reset')
+	, save = document.getElementById('save')
+	, align = document.getElementById('align-images')
+	;
+
+const width = document.getElementById('width')
+	, height = document.getElementById('height');
+
+const borderWidth = document.getElementById('border-width')
+	, borderColor = document.getElementById('border-color');
+
+const properties = document.getElementById('properties')
+	, objects = document.getElementById('objects')
+	, projects = document.getElementById('projects')
+	, tools = document.getElementById('tools')
+	;
+
+// const editor = new Editor(canvas, properties);
+const editor = new MemeEditor(canvas);
+
+editor.init();
+
+editor.wrapProperties(properties);
+editor.wrapObjects(objects, 'item-object');
+editor.wrapProjects(projects, 'item-project');
+editor.wrapTools(tools);
+
+editor.on('select', e => {
+	const obj = e.detail;
+
+	if (obj) {
+		properties.setAttribute('mode', obj.type);
+		properties.classList.remove('invisible');
+	}
+	else {
+		properties.classList.add('invisible');
+	}
+});
+
+editor.on('open', e => {
+	save.previousElementSibling.value = e.detail;
+
+	properties.classList.add('invisible');
+});
+
+editor.on('newobject', e => {
+	const id = e.detail;
+
+	console.log('New object:', id);
+});
+
+// add.onclick = () => {
+// 	const type = add.previousElementSibling.value;
+// 	editor.add(type);
+// }
+
+exp.onclick = () => editor.export();
+imp.onclick = () => editor.import();
+align.onclick = () => editor.alignImages();
+
+reset.onclick = () => {
+	editor.reset();
+
+	properties.classList.add('invisible');
+}
+
+save.onclick = () => {
+	const name = save.previousElementSibling.value || 'test';
+	editor.save(name);
+}
+
+width.oninput = () => editor.width = parseInt(width.value);
+borderWidth.oninput = () => editor.border = parseInt(borderWidth.value);
+borderColor.oninput = () => editor.color = borderColor.value;
+
+
+body.ondragover = (e) => e.preventDefault();
+body.ondrop = (e) => {
+	// console.log("File(s) dropped");
+
+	// Prevent default behavior (Prevent file from being opened)
+	e.preventDefault();
+
+	const files = [];
+
+	if (e.dataTransfer.items) {
+		// Use DataTransferItemList interface to access the file(s)
+		for (const item of e.dataTransfer.items) {
+			// If dropped items aren't files, reject them
+			if (item.kind === "file") {
+				const file = item.getAsFile();
+				// console.log(`… file[${i}].name = ${file.name}`);
+
+				files.push(file);
+			}
+		}
+	} else {
+		// Use DataTransfer interface to access the file(s)
+		e.dataTransfer.files.forEach((file, i) => {
+			console.log(`… file[${i}].name = ${file.name}`);
+
+			files.push(file);
+		});
+	}
+
+	console.log("File(s) dropped", files);
+
+	editor.import(files);
+}
+
+
+const toggleButton = document.getElementById('toggle-popup');
+const popup = document.getElementById('icon-popup');
+const tabs = popup.querySelectorAll('.tab');
+const tabContents = document.querySelectorAll('.tab-content');
+
+// Toggle popup visibility
+toggleButton.addEventListener('click', (e) => {
+	popup.style.display = popup.style.display === 'block' ? 'none' : 'block';
+	e.stopPropagation();
+});
+
+// Handle tab switching
+tabs.forEach(tab => {
+	tab.addEventListener('click', () => {
+		// Remove active class from all tabs and tab contents
+		tabs.forEach(t => t.classList.remove('active'));
+		tabContents.forEach(content => content.classList.remove('active'));
+
+		// Add active class to the selected tab and corresponding content
+		tab.classList.add('active');
+		document.getElementById(tab.getAttribute('data-tab')).classList.add('active');
+	});
+});
+
+// Close the popup when clicking outside
+document.addEventListener('click', (event) => {
+	if (!popup.contains(event.target) && event.target !== toggleButton) {
+		popup.style.display = 'none';
+	}
+});
+
+// Example: Handle icon selection
+const icons = document.querySelectorAll('.icon-item');
+icons.forEach(icon => {
+	icon.addEventListener('click', () => {
+	//alert(`You selected: ${icon.innerHTML}`);
+	popup.style.display = 'none';
+	});
+});
+
+// Example: Handle emoji selection
+const emojis = document.querySelectorAll('.emoji-item');
+emojis.forEach(emoji => {
+	emoji.addEventListener('click', () => {
+	// alert(`You selected: ${emoji.textContent}`);
+		editor.add('emoji', emoji.textContent);
+		popup.style.display = 'none';
+	});
+});
+	
+</script>

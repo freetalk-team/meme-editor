@@ -1,0 +1,264 @@
+body {
+	overflow: hidden;
+	/* max-width: 1200px; */
+	height: 100vh;
+	display: flex;
+	flex-direction: column;
+	margin: auto;
+	font-family: ubuntu;
+}
+
+.footer {
+	padding: 2px;
+	font-size: small;
+	opacity: .8;
+}
+
+
+input[type="number"] {
+	text-align: right;
+	max-width: 70px;
+}
+
+input[type="color"] {
+	margin:0;
+	padding:0;
+	border:0;
+	height: 20px;
+}
+
+input::-webkit-color-swatch-wrapper {
+	padding: 0;
+	margin:0;
+	background:none;
+}
+
+input::-webkit-color-swatch {
+	border: none;
+}
+
+textarea {
+	resize: none;
+}
+
+select {
+	font-size: smaller;
+	text-align: right;
+}
+
+.canvas {
+	width: 100%;
+	aspect-ratio: 4 / 3;
+}
+
+canvas {
+	border: 1px dashed #555;
+	max-height: 100%;
+	/* width: 100%; */
+	height: 100%;
+	aspect-ratio: 4/3;
+}
+
+.item[selected] {
+	color: #11e;
+	border: 1px solid #115;
+}
+
+button.tab {
+	opacity: .6;
+	position: relative;
+	padding-bottom: 10px;
+}
+
+button.tab.selected {
+	opacity: .9;
+}
+
+button.tab.selected:after {
+	background-color: #888;
+	opacity: .5;
+	content: "";
+	height: 2px;
+	width: 100%;
+	display: inline-block;
+
+	position: absolute;
+	left: 0;
+	bottom: 0;
+}
+
+.fa[type="bubble"]::after {
+	content: '\f27a';
+}
+
+.fa[type="rect"]::after {
+	content: '\f0c8';
+}
+
+.fa[type="image"]::after {
+	content: '\f03e';
+}
+
+.fa[type="text"]::after {
+	content: '\f031';
+}
+
+.fa[type="emoji"]::after {
+	content: '\f118';
+}
+
+.tools button {
+	padding-block: 0;
+	padding-inline: 0;
+}
+
+#properties [display] {
+	display: none;
+}
+
+#properties[mode="bubble"] [display*="bubble"],
+#properties[mode="image"] [display*="image"],
+#properties[mode="rect"] [display*="rect"],
+#properties[mode="text"] [display*="text"],
+#properties[mode="emoji"] [display*="emoji"] { 
+	display: inherit!important; 
+}
+
+#tools button:hover {
+	transform: scale(1.2);
+}
+
+#icon-picker {
+	position: relative;
+	display: inline-block;
+}
+.icon-popup {
+	position: absolute;
+	top: 20px;
+	left: 20px;
+	background: white;
+	border: 1px solid #ccc;
+	border-radius: 8px;
+	width: 400px; /* Adjust width as needed */
+	max-height: 400px;
+	overflow: hidden;
+	box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+	display: none;
+	z-index: 1000;
+}
+.tabs {
+	display: flex; 
+	border-bottom: 1px solid #ccc;
+}
+.tab {
+	flex: 1;
+	text-align: center;
+	padding: 10px;
+	cursor: pointer;
+	background: #f9f9f9;
+	transition: background 0.3s;
+}
+.tab:hover {
+	background: #f0f0f0;
+}
+.tab.active {
+	background: white;
+	font-weight: bold;
+	border-bottom: 2px solid #007BFF;
+}
+.tab-content {
+	display: none;
+	padding: 10px;
+	overflow-y: auto;
+	max-height: 350px;
+}
+.tab-content.active {
+	display: block;
+}
+.icon-grid {
+	display: grid;
+	grid-template-columns: repeat(auto-fill, minmax(50px, 1fr));
+	gap: 10px;
+}
+.icon-item {
+	text-align: center;
+	font-size: 24px;
+	cursor: pointer;
+	transition: background 0.3s;
+}
+.icon-item:hover {
+	background: #f0f0f0;
+	border-radius: 4px;
+}
+.emoji-grid {
+	display: grid;
+	grid-template-columns: repeat(auto-fill, minmax(40px, 1fr));
+	gap: 10px;
+	font-size: 24px;
+	text-align: center;
+	cursor: pointer;
+}
+.emoji-item {
+	padding: 10px;
+	transition: background 0.3s;
+	font-family: var(--emoji-font);
+}
+.emoji-item:hover {
+	background: #f0f0f0;
+	border-radius: 4px;
+}
+#toggle-popup {
+	/* background: #007BFF;
+	color: white;
+	border: none;
+	padding: 10px 20px;
+	border-radius: 4px;
+	cursor: pointer; */
+}
+
+/* The Modal (background) */
+.modal {
+	display: none; /* Hidden by default */
+	position: fixed; /* Stay in place */
+	z-index: 10; /* Sit on top */
+	padding-top: 100px; /* Location of the box */
+	left: 0;
+	top: 0;
+	width: 100%; /* Full width */
+	height: 100%; /* Full height */
+	overflow: auto; /* Enable scroll if needed */
+	background-color: rgb(0,0,0); /* Fallback color */
+	background-color: rgba(0,0,0,0.4); /* Black w/ opacity */
+}
+
+/* Modal Content */
+.modal-content {
+	background-color: #bbb;
+	margin: auto;
+	padding: 20px;
+	border: 1px solid #888;
+	width: 80%;
+}
+
+/* The Close Button */
+.close {
+	color: #aaaaaa;
+	float: right;
+	font-size: 28px;
+	font-weight: bold;
+}
+
+.close:hover,
+.close:focus {
+	color: #000;
+	text-decoration: none;
+	cursor: pointer;
+}
+
+.fa.plus {
+	bottom: 0;
+	right: 0;
+	color: #0f0c;
+	font-size: 12px;
+	position: absolute;
+}

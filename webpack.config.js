@@ -1,12 +1,11 @@
 ;
 
 const path = require('path');
-const TerserPlugin = require('terser-webpack-plugin');
 
 module.exports = {
-  entry: path.resolve(__dirname, 'editor.js'),
+  entry: path.resolve(__dirname, 'public/editor.js'),
   output: {
-    path: path.resolve(__dirname, '../../apps/chat/public/dist'),
+    path: path.resolve(__dirname, 'public/dist'),
     filename: 'meme-editor.min.js',
     libraryTarget: 'umd',
     library: {
@@ -18,11 +17,6 @@ module.exports = {
   },
 
   mode: 'production',
-  optimization: {
-    // minimize: false,
-    // minimizer: [new TerserPlugin()],
-  },
-  plugins: [
-
-  ],
+  optimization: {},
+  plugins: [],
 };

@@ -1,20 +1,25 @@
 {
-  "name": "meme-editor",
+  "name": "MemeEditor",
   "version": "1.0",
   "description": "Meme Editor for browsers",
   "repository": "https://github.com/freetalk-team/meme-editor",
   "contributors": [
+    "Marina Nedeva <mnedeva@gmail.com>",
     "Pavel Patarinski <pavelp.work@gmail.com>"
   ],
-  "main": "server.js",
+  "main": "electron/main.js",
   "directories": {
     "doc": "doc",
     "test": "test"
   },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "node server.js",
-    "build": "webpack"
+    "server": "node server.js",
+    "start": "electron-forge start",
+    "build": "webpack",
+    "compile": "electron-webpack",
+    "package": "npm run build && electron-forge package",
+    "make": "electron-forge make"
   },
   "keywords": [
     "meme",
@@ -24,7 +29,24 @@
   "author": "Freetalk Team",
   "license": "ISC",
   "dependencies": {
+    "canvas": "^2.11.2",
+    "ejs": "^3.1.9",
+    "ejs-electron": "^3.0.0",
+    "electron-settings": "^4.0.4",
+    "electron-squirrel-startup": "^1.0.1",
     "express": "^4.19.2",
-    "morgan": "^1.10.0"
+    "morgan": "^1.10.0",
+    "tar": "^7.4.3"
+  },
+  "devDependencies": {
+    "@electron-forge/cli": "^7.4.0",
+    "@electron-forge/maker-deb": "^7.4.0",
+    "@electron-forge/maker-rpm": "^7.4.0",
+    "@electron-forge/maker-squirrel": "^7.4.0",
+    "@electron-forge/maker-zip": "^7.4.0",
+    "@electron-forge/plugin-auto-unpack-natives": "^7.4.0",
+    "@electron-forge/plugin-fuses": "^7.4.0",
+    "@electron/fuses": "^1.8.0",
+    "electron": "^30.0.8"
   }
 }
