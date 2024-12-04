@@ -56,7 +56,7 @@ npm run build
 
 ## In Loving Memory of Marina Nedeva 💖
 
-| ![Picture of Marina](public/ui/png/marina_x64.png) | This project is dedicated to the memory of Marina, my dearest friend, an extraordinary software developer, and a kind, inspiring soul who left an indelible mark on both this work and my life. <br><br> Her contributions to this project showcase her dedication to clean code, her problem-solving skills, and her commitment to excellence. Her friendship and professional brilliance will always be remembered. |
+| ![Picture of Marina](public/ui/png/marina.png) | This project is dedicated to the memory of Marina, my dearest friend, an extraordinary software developer, and a kind, inspiring soul who left an indelible mark on both this work and my life. <br><br> Her contributions to this project showcase her dedication to clean code, her problem-solving skills, and her commitment to excellence. Her friendship and professional brilliance will always be remembered. |
 |------------------------------------------------------|-------------------------------------------------------------------------------------------------------------------------------------------
 
 
