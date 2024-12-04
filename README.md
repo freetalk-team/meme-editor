@@ -56,10 +56,8 @@ npm run build
 
 ## In Loving Memory of Marina Nedeva 💖
 
-<div style="display: flex; align-items: center;">
-<img src="public/ui/png/marina_x64.png" alt="Picture of Marina" width="64" height="64" style="margin-right: 10px;">
-<p>This project is dedicated to the memory of Marina, my dearest friend, an extraordinary software developer, and a kind, inspiring soul who left an indelible mark on both this work and my life.</p>
-</div>
+| ![Picture of Marina](public/ui/png/marina_x64.png) | This project is dedicated to the memory of Marina, my dearest friend, an extraordinary software developer, and a kind, inspiring soul who left an indelible mark on both this work and my life. |
+|------------------------------------------------------|-------------------------------------------------------------------------------------------------------------------------------------------
 
 
 ### Her Contribution
