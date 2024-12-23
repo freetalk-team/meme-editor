@@ -8,11 +8,83 @@ const path = require('node:path')
 const prod = process.env.NODE_ENV == 'production';
 const root = app.isPackaged ? path.join('resources', 'app.asar') : '';
 
+// this should be placed at top of main.js to handle setup events quickly
+if (handleSquirrelEvent()) {
+	// squirrel event handled and app will exit in 1000ms, so don't do anything else
+	return;
+}
+  
+  function handleSquirrelEvent() {
+	if (process.argv.length === 1) {
+	  return false;
+	}
+  
+	const ChildProcess = require('child_process');
+	const path = require('path');
+  
+	const appFolder = path.resolve(process.execPath, '..');
+	const rootAtomFolder = path.resolve(appFolder, '..');
+	const updateDotExe = path.resolve(path.join(rootAtomFolder, 'Update.exe'));
+	const exeName = path.basename(process.execPath);
+  
+	const spawn = function(command, args) {
+	  let spawnedProcess, error;
+  
+	  try {
+		spawnedProcess = ChildProcess.spawn(command, args, {detached: true});
+	  } catch (error) {}
+  
+	  return spawnedProcess;
+	};
+  
+	const spawnUpdate = function(args) {
+	  return spawn(updateDotExe, args);
+	};
+  
+	const squirrelEvent = process.argv[1];
+	switch (squirrelEvent) {
+	  case '--squirrel-install':
+	  case '--squirrel-updated':
+		// Optionally do things such as:
+		// - Add your .exe to the PATH
+		// - Write to the registry for things like file associations and
+		//   explorer context menus
+  
+		// Install desktop and start menu shortcuts
+		spawnUpdate(['--createShortcut', exeName]);
+  
+		setTimeout(app.quit, 1000);
+		return true;
+  
+	  case '--squirrel-uninstall':
+		// Undo anything you did in the --squirrel-install and
+		// --squirrel-updated handlers
+  
+		// Remove desktop and start menu shortcuts
+		spawnUpdate(['--removeShortcut', exeName]);
+  
+		setTimeout(app.quit, 1000);
+		return true;
+  
+	  case '--squirrel-obsolete':
+		// This is called on the outgoing version of your app before
+		// we update to the new version - it's the opposite of
+		// --squirrel-updated
+  
+		app.quit();
+		return true;
+	}
+};
+
+// run this as early in the main process as possible
+if (require('electron-squirrel-startup')) app.quit();
+
 var win;
 
 var kViewsPath = path.resolve('views');
 var kPublicPath = path.resolve('public');
-var kEntryPoint = '/app.ejs';
+var kEntryPoint = 'app.ejs';
+var kRootDir = path.join(__dirname, '..');
 
 // console.log('NODE Environment:', process.env.NODE_ENV);
 // console.log('ELECTRON Environment:', process.env.ELECTRON_ENV);
@@ -49,15 +121,15 @@ async function createWindow () {
 
 	const icon = path.resolve(root, 'public', 'ui', 'png', 'app-icon.png');
 
-	console.log('ICON', icon);
+	// console.log('ICON', icon);
 	
 	const stateKeeper = await windowStateKeeper('main');
 
 	// Create the browser window.
 	const mainWindow = new BrowserWindow({
-		title: 'Player',
-		x: stateKeeper.x,
-		y: stateKeeper.y,
+		title: 'Meme Editor',
+		x: stateKeeper.x < 0 ? 0 : stateKeeper.x,
+		y: stateKeeper.y < 0 ? 0 : stateKeeper.y,
 		width: stateKeeper.width,
 		height: stateKeeper.height,
 		frame: false,
@@ -88,6 +160,9 @@ async function createWindow () {
 
 	ejse.options('ejs', kViewsPath);
 	ejse.options('public', kPublicPath);
+	ejse.options('root', kRootDir);
+
+	ejse.data('platform', process.platform);
 
 	// and load the index.html of the app.
 	// mainWindow.loadFile('index.html')

@@ -9,6 +9,7 @@ export class Emoji extends Text {
 		super();
 
 		this.value = value;
-		this.font = 'emoji';
+		this.font = window.navigator.platform == 'Win32' ? 'Noto Color Emoji' : 'emoji';
+		this.size = 50;
 	}
 }

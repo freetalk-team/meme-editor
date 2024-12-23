@@ -1,34 +1,73 @@
-export function wrapProperties(container, handler) {
 
-	const props = {
+function wrap(container, props={}) {
 
-		set(prop, value) {
+	Object.assign(props, {
+		set(prop, value, id) {
 
 			const e = this[prop];
 
 			if (e) {
 
-				// if (typeof value == 'number')
-				// 	value = Math.floor(value);
+				switch (e.tagName) {
 
-				if (e.tagName == 'INPUT' && e.type == 'color') {
-					const p = e.previousElementSibling;
-					const checked = !!value;
-
-					if (p.tagName == 'INPUT' && p.type == 'checkbox')
-						p.checked = checked;
-
-					if (checked) {
-						e.value = value;
+					case 'INPUT':
+					if (e.type == 'checkbox') {
+						e.checked = !!value;
 					}
+					else {
 
-					e.disabled = !checked;
-				}
-				else if (e.tagName == 'INPUT' && e.type == 'checkbox') {
-					e.checked = !!value;
-				}
-				else {
+						if (id) e.dataset.id = id;
+
+						const p = e.previousElementSibling;
+						const checked = !!value;
+	
+						if (p && p.tagName == 'INPUT' && p.type == 'checkbox') {
+							// p.checked = checked;
+							// p.value = checked;
+
+							e.disabled = !checked;
+
+							if (checked) 
+								e.value = value;
+
+							if (checked != p.checked)
+								p.checked = checked;
+						}
+						else if (value) {
+							e.value = value;
+						}
+					}
+					break;
+
+					case 'SELECT': {
+						const p = e.previousElementSibling;
+						const checked = !!value;
+	
+						if (p && p.tagName == 'INPUT' && p.type == 'checkbox') {
+							// p.checked = checked;
+							// p.value = checked;
+
+							e.disabled = !checked;
+
+							if (checked) 
+								e.value = value;
+							else {
+								e.value = e.children[0].value;
+							}
+							
+							if (checked != p.checked)
+								// p.click();
+								p.checked = checked;
+						}
+						else {
+							e.value = value;
+						}
+					}
+					break;
+
+					default:
 					e.value = value;
+					break;
 				}
 
 			}
@@ -38,7 +77,7 @@ export function wrapProperties(container, handler) {
 			for (const [k, v] of Object.entries(data)) 
 				this.set(k, v);
 		}
-	};
+	});
 
 	const inputs = container.querySelectorAll('input,select,textarea');
 	for (const i of inputs) {
@@ -52,12 +91,29 @@ export function wrapProperties(container, handler) {
 		}
 	}
 
+	return props;
+}
+
+export function wrapProperties(container, handler) {
+
+	if (typeof container == 'string')
+		container = document.getElementById(container);
+
+	const props = wrap(container, {
+
+		mode(m) {
+
+			if (m) 
+				container.setAttribute('mode', m);
+			else
+				container.removeAttribute('mode');
+		}
+	});
+
 	container.oninput = (e) => {
 
 		let target = e.target;
 		// if (!target.value) return;
-
-		
 
 		let type, id, value;
 
@@ -84,7 +140,7 @@ export function wrapProperties(container, handler) {
 		[type, id] = name.split('-');
 
 		if (value == null)
-			value = target.value;
+			value = target.dataset.id || target.value;
 
 		if (handler)
 			handler.update(id, value);
@@ -94,9 +150,27 @@ export function wrapProperties(container, handler) {
 
 		const target = e.target;
 
-		if (target.name == 'detect') {
-			handler.detectHuman();
-			return;
+		switch (target.name) {
+			
+			case 'center':
+			handler.centerImage();
+			break;
+
+			case 'remove':
+			handler.remove();
+			break;
+
+			case 'export':
+			handler.exportObject();
+			break;
+
+			case 'detect': {
+				const e = target.previousElementSibling;
+				const threshold = parseFloat(e.value);
+
+				handler.detectBody(threshold);
+			}
+			break;
 		}
 	}
 
@@ -105,9 +179,11 @@ export function wrapProperties(container, handler) {
 
 export function wrapObjects(container, handler, template) {
 	
-	container.classList.add('list', 'list2');
+	if (typeof container == 'string')
+		container = document.getElementById(container);
 
-	const list = UX.List.createMixin(container);
+	const e = container.querySelector('.list');
+	const list = UX.List.createMixin(e);
 
 	container.onclick = (e) => {
 
@@ -138,6 +214,17 @@ export function wrapObjects(container, handler, template) {
 					handler.move(id, -1);
 					break;
 
+					case 'visible':
+					handler.update('visible', 'toggle', id);
+					break;
+
+					case 'duplicate':
+					handler.copy(id);
+					break;
+
+					case 'apply':
+					handler.applyMask(id);
+					break;
 				}
 			}
 
@@ -155,7 +242,6 @@ export function wrapObjects(container, handler, template) {
 	}
 
 	container.oninput = e => {
-		console.log('On input', e);
 
 		const target = e.target;
 		const item = target.closest('[data-id]');
@@ -164,15 +250,12 @@ export function wrapObjects(container, handler, template) {
 			const id = item.dataset.id;
 			const value = target.innerText;
 
-			handler.update('id', value, id);
-
-			item.dataset.id = value;
+			handler.update('name', value, id);
 		}
-
 		
 	}
 
-	list.add = function(o) {
+	list.add = function(o, i) {
 
 		const id = o.id;
 
@@ -180,6 +263,11 @@ export function wrapObjects(container, handler, template) {
 
 		if (template) {
 			e = list.addItemTemplate(template, o);
+			if (typeof i == 'number') {
+				const p = list.area.childNodes[i];
+				if (p)
+					dom.insertAfter(e, p);
+			}
 		}
 		else {
 			e = document.createElement('span');
@@ -193,13 +281,20 @@ export function wrapObjects(container, handler, template) {
 		return e;
 	}
 
+	list.select = function(id) {
+		this.selectItem(id);
+	}
+
 	return list;
 }
 
 export function wrapProjects(container, handler, template) {
-	container.classList.add('list', 'list2');
 
-	const list = UX.List.createMixin(container);
+	if (typeof container == 'string')
+		container = document.getElementById(container);
+
+	const e = container.querySelector('.list');
+	const list = UX.List.createMixin(e);
 
 	container.onclick = (e) => {
 
@@ -221,6 +316,9 @@ export function wrapProjects(container, handler, template) {
 				}
 				break;
 
+				case 'align':
+				handler.alignImages();
+				break;
 			}
 
 
@@ -258,10 +356,16 @@ export function wrapProjects(container, handler, template) {
 		return e;
 	}
 
+	list.select = function(id) {
+		this.selectItem(id);
+	}
+
 	return list;
 }
 
 export function wrapTools(container, handler) {
+	if (typeof container == 'string')
+		container = document.getElementById(container);
 
 	container.onclick = (e) => {
 		const target = e.target;
@@ -269,8 +373,307 @@ export function wrapTools(container, handler) {
 		if (target.tagName == 'BUTTON') {
 
 			const name = target.name;
+			
+			if (target.hasAttribute('selectable')) {
 
-			handler.add(name);
+				const all = target.parentElement.querySelectorAll('[selectable]');
+				for (const i of all)
+					i.disabled = false;
+
+				target.disabled = true;
+			}
+
+			switch (name) {
+
+				case 'select':
+				case 'draw':
+				case 'edit':
+				handler.mode = name;
+				break;
+
+				default:
+				handler.add(name);
+				break;
+			}
+
 		}
 	}
+
+	const props = {
+
+		mode(mode) {
+
+			const selectable = container.querySelectorAll('[selectable]');
+
+			for (const i of selectable)
+				i.disabled = i.name == mode;
+		}
+	};
+
+	return props;
+}
+
+export function wrapCanvas(container, handler) {
+	if (typeof container == 'string')
+		container = document.getElementById(container);
+
+	const props = wrap(container);
+
+	container.oninput = (e) => {
+
+		let target = e.target;
+		// if (!target.value) return;
+
+		let type, id, value;
+
+		const name = target.id || target.getAttribute('role');
+		if (!name) return;
+
+		[type, id] = name.split('-');
+
+		if (value == null)
+			value = target.value;
+
+		if (handler)
+			handler.update(id, value, 'canvas');
+	}
+
+	return props;
+}
+
+export function wrapStatus(container) {
+
+	const props = {};
+
+	if (typeof container == 'string')
+		container = document.getElementById(container);
+
+	const outputs = container.querySelectorAll('[name]');
+
+	for (const i of outputs) {
+		const name = i.name;
+
+		props[name] = i;
+	}
+
+	Object.assign(props, {
+		set(prop, value) {
+
+			if (this[prop])
+				this[prop].value = value;
+		},
+
+		assign(values) {
+
+			for (const [name, value] of Object.entries(values))
+				this.set(name, value);
+		}
+
+	});
+
+	return props;
+}
+
+export function wrapActions(container, editor) {
+	if (typeof container == 'string')
+		container = document.getElementById(container);
+
+	const save = container.querySelector('button[name="save"]');
+	const project = save.previousElementSibling;
+
+	const zoomInput = container.querySelector('input[name="zoom"]');
+	const zoomDropdown = zoomInput.nextElementSibling;
+	const dropdownOptions = zoomDropdown.querySelectorAll('.dropdown-option');
+
+	// Show the dropdown when the input is focused
+	zoomInput.addEventListener('focus', () => {
+		zoomDropdown.style.display = 'block';
+	  });
+
+	// Hide the dropdown when clicking outside of the input or dropdown
+	document.addEventListener('click', (e) => {
+		if (!zoomDropdown.contains(e.target) && e.target !== zoomInput) {
+		  zoomDropdown.style.display = 'none';
+		}
+	});
+	
+	// Set the input value when a dropdown option is clicked
+	dropdownOptions.forEach(option => {
+		option.addEventListener('click', () => {
+		  zoomInput.value = option.textContent;
+		  zoomDropdown.style.display = 'none';
+
+		  // Manually trigger the 'input' event
+		  //zoomInput.dispatchEvent(new Event('input', { bubbles: true }));
+		  zoomInput.dispatchEvent(new Event('change', { bubbles: true }));
+		});
+	});
+	
+	// Always show all options, regardless of input value
+	zoomInput.addEventListener('input', () => {
+		// Ensure all options are visible
+		dropdownOptions.forEach(option => {
+		  option.style.display = 'block';
+		});
+	});
+
+	let zoomInputTimeout;
+
+	const actions = {
+
+		current: 'select',
+
+		mode(m) {
+
+			container.setAttribute('mode', m);
+
+			// const buttons = container.querySelectorAll('button');
+
+			// if (this.current == 'edit') {
+			// 	for (const i of buttons)
+			// 		i.disabled = true;
+			// }
+
+			// if (m == 'edit') {
+			// 	for (const i of buttons)
+			// 		i.disabled = false;
+			// }
+
+			// this.current = m;
+
+		},
+
+		set(prop, value) {
+
+			switch (prop) {
+				case 'zoom':
+				zoomInput.value = parseInt(value * 100) + '%';
+				break;
+			}
+		}
+	};
+
+	container.onclick = e => {
+		const target = e.target;
+
+		switch (target.tagName) {
+
+			case 'BUTTON':
+			switch (target.name) {
+
+				case 'undo':
+				editor.undo();
+				break;
+
+				case 'redo':
+				editor.redo();
+				break;
+
+				case 'export':
+				editor.export();
+				break;
+
+				case 'import':
+				editor.import();
+				break;
+
+				case 'reset':
+				editor.reset();
+				break;
+
+				case 'save': {
+					const name = target.previousElementSibling.value || 'test';
+					editor.save(name);
+				}
+				break;
+
+				case 'rmnode':
+				editor.removeNode();
+				break;
+
+				case 'node':
+				editor.insertNode();
+				break;
+
+				case 'center':
+				editor.centerView();
+				break;
+
+			}
+			break;
+
+			// case 'INPUT':
+			// switch (target.name) {
+
+			// 	case 'zoom':
+
+			// 	break;
+			// }
+			// break;
+		}
+	}
+
+	container.onchange = e => {
+
+		const target = e.target;
+		const value = target.value;
+
+		switch (target.name) {
+
+			case 'height':
+			editor.height = parseInt(value);
+			break;
+
+			case 'width':
+			editor.width = parseInt(value);
+			break;
+
+			case 'fill':
+			editor.fill = value;
+			break;
+
+			case 'stroke':
+			editor.stroke = value;
+			break;
+
+			case 'strokeWidth':
+			editor.strokeWidth = parseInt(value);
+			break;
+
+			case 'zoom':
+			editor.zoom = parseInt(value) / 100;
+			break;
+		}
+
+	}
+
+	container.oninput = e => {
+
+		const target = e.target;
+		const value = target.value;
+
+		switch (target.name) {
+
+			case 'zoom': {
+				if (!zoomInputTimeout)
+					zoomInputTimeout = setTimeout(() => {
+						zoomInputTimeout = null;
+						
+						const value = parseInt(zoomInput.value);
+						console.log('Zoom change', value);
+						
+						editor.zoom = value / 100;
+
+					}, 1200);
+			}
+			break;
+
+		}
+
+		//console.debug('INPUT');
+	}
+
+	editor.on('open', e => project.value = e.detail);
+
+	return actions;
 }

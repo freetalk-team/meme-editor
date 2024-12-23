@@ -57,6 +57,31 @@ Object.getSetters = function(i) {
 	return setters;
 }
 
+Object.getProperties = function(i) {
+
+	let setters = {};
+	let getters = {};
+	let proto = Object.getPrototypeOf(i);
+
+	while (proto && proto !== Object.prototype) {
+		const descriptors = Object.getOwnPropertyDescriptors(proto);
+
+		for (const [key, descriptor] of Object.entries(descriptors)) {
+			if (typeof descriptor.get === 'function' && !(key in getters)) {
+				getters[key] = descriptor.get; // Store the getter function
+			}
+
+			if (typeof descriptor.set === 'function' && !(key in setters)) {
+				setters[key] = descriptor.set; // Store the getter function
+			}
+		}
+		
+		proto = Object.getPrototypeOf(proto); // Move up the prototype chain
+	}
+
+	return { setters, getters };
+}
+
 Object.getGetter = function(i, name) {
 	const setters = Object.getGetters(i);
 	return setters[name];
@@ -65,6 +90,11 @@ Object.getGetter = function(i, name) {
 Object.getSetter = function(i, name) {
 	const setters = Object.getSetters(i);
 	return setters[name];
+}
+
+Object.getProperty = function(i, name) {
+	const { setters, getters } = Object.getProperties(i);
+	return { setter: setters[name], getter: getters[name] };
 }
 
 Object.fromInstance = function(i, o={}, ...ignore) {
@@ -95,6 +125,10 @@ Object.instanceFrom = function(i, o) {
 
 Array.repeat = function(n, v=0) {
 	return new Array(n).fill(0);
+}
+
+Array.prototype.last = function() {
+	return this[this.length - 1];
 }
 
 String.prototype.capitalizeFirstLetter = function() {

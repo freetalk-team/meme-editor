@@ -1,0 +1,72 @@
+<div id="actions" class="toolbar cr ci w3-margin-bottom w3-margin-right">
+	<b>Width:</b>
+	<input type="number" name="width" value="1200">
+	<b>Height:</b>
+	<input type="number" name="height" value="630">
+	<button name="reset" class="ux" title="Reset">Reset</button>
+
+	<div class="row">
+		<button name="undo" class="icon fa lg fa-undo" title="Undo"></button>
+		<button name="redo" class="icon fa lg fa-repeat" title="Redo"></button>
+	</div>
+
+	<i class="hs"></i>
+
+	<input type="color" name="fill" value="#eeeeee">
+	<input type="number" name="strokeWidth" value="1" style="max-width: 30px;">
+	<input type="color" name="stroke" value="#111111">
+	<div class="row ci relative" style="width: 80px;">
+
+		<input name="zoom" list="zoom" value="100%" style="width:100%;box-sizing: border-box;">
+		<div class="dropdown text-right scroll" id="zoomDropdown">
+			<div class="dropdown-option">80%</div>
+			<div class="dropdown-option">90%</div>
+			<div class="dropdown-option">100%</div>
+			<div class="dropdown-option">110%</div>
+			<div class="dropdown-option">120%</div>
+			<div class="dropdown-option">130%</div>
+			<div class="dropdown-option">140%</div>
+			<div class="dropdown-option">150%</div>
+		</div>
+		<!-- <b>%</b> -->
+		<!-- <datalist id="zoom">
+			<option value="80"></option>
+			<option value="90"></option>
+			<option value="100"></option>
+			<option value="120"></option>
+			<option value="130"></option>
+			<option value="140"></option>
+			<option value="150"></option>
+		</datalist> -->
+	</div>
+	<button name="center" class="icon fa fa-arrows-to-eye" title="Center view"></button>
+
+	<div class="cr ci smaller" display="edit" style="height: 100%;">
+		<i class="hs"></i>
+		<button name="node" class="icon fa fa-u relative" title="Add smooth node" >
+			<i class="fa fa-circle absolute" style="font-size:6px;bottom:1px;left:calc(50% - 3px);"></i>
+			<i class="fa fa-circle-plus action w3-text-green"></i>
+		</button>
+		<button name="line" class="icon fa fa-v relative" title="Add sharp node" >
+			<i class="fa fa-circle absolute" style="font-size:6px;bottom:1px;left:calc(50% - 2px);"></i>
+			<i class="fa fa-circle-plus action w3-text-green"></i>
+		</button>
+		<button name="rmnode" class="icon fa fa-o relative" title="Remove node" >
+			<i class="fa fa-circle-minus action w3-text-red"></i>
+		</button>
+	</div>
+
+	<div class="cr ci fit justify-end">
+
+		<input value="meme1">
+		<button name="save" class="ux" title="Save">Save</button>
+		<button name="export" class="icon fa fa-fw lg fa-file-export w3-text-blue" title="Export meme"></button>
+		<button name="import" class="icon fa fa-fw lg fa-folder w3-text-blue relative" title="Import images"><i class="fa fa-circle-plus action w3-text-green"></i></button>
+
+	</div>
+	<!-- <select id="object">
+		<option value="rect" selected>Rect</option>
+		<option value="bubble" selected>Bubble</option>
+	</select>
+	<button id="new" title="New bubble">New</button> -->
+</div>

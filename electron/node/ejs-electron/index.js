@@ -2,11 +2,11 @@
 
 // Define the module
 const EjsElectron = (module.exports = {
-  data,
-  listen,
-  listening,
-  options,
-  stopListening,
+	data,
+	listen,
+	listening,
+	options,
+	stopListening,
 })
 
 // Load dependencies
@@ -18,9 +18,9 @@ const path = require('path')
 
 // Set up local state
 let state = {
-  data: {},
-  listening: false,
-  options: {},
+	data: {},
+	listening: false,
+	options: {},
 }
 
 // Method API
@@ -34,7 +34,7 @@ let state = {
  * - ejse.data({key: 'val'}) -- Replace the current data set with a new one containing {key: 'val'}
  */
 function data(key, val) {
-  return updateState('data', 'ejse.data()', key, val)
+	return updateState('data', 'ejse.data()', key, val)
 }
 
 /**
@@ -43,18 +43,18 @@ function data(key, val) {
  * Use this only to start listening again after calling EjsElectron.stopListening().
  */
 function listen() {
-  if (state.listening) return EjsElectron // already listening; nothing to do here
+	if (state.listening) return EjsElectron // already listening; nothing to do here
 
-  protocol.handle('file', protocolListener)
-  state.listening = true
-  return EjsElectron // for chaining
+	protocol.handle('file', protocolListener)
+	state.listening = true
+	return EjsElectron // for chaining
 }
 
 /**
  * EjsElectron.listening() -- True if ejs-electron is currently intercepting requests on the 'file:' protocol.
  */
 function listening() {
-  return state.listening
+	return state.listening
 }
 
 /**
@@ -65,55 +65,75 @@ function listening() {
  *   ejse.options({key: 'val'}) -- Replace the current options set with a new one containing {key: 'val'}
  */
 function options(key, val) {
-  return updateState('options', 'ejse.options()', key, val)
+	return updateState('options', 'ejse.options()', key, val)
 }
 
 /**
  * EjsElectron.stopListening() -- Stop intercepting requests, restoring the original 'file:' protocol handler.
  */
 function stopListening() {
-  if (!state.listening) return EjsElectron // we're not listening; nothing to stop here
+	if (!state.listening) return EjsElectron // we're not listening; nothing to stop here
 
-  protocol.unhandle('file')
-  state.listening = false
+	protocol.unhandle('file')
+	state.listening = false
 
-  return EjsElectron
+	return EjsElectron
 }
 
 // Helper Functions
 function compileEjs(pathname, contentBuffer) {
-  state.data.ejse = EjsElectron
-  state.options.filename = pathname
+	state.data.ejse = EjsElectron
+	state.options.filename = pathname
 
-  let contentString = contentBuffer.toString()
-  let compiledEjs = ejs.render(contentString, state.data, state.options)
+	let contentString = contentBuffer.toString()
+	let compiledEjs = ejs.render(contentString, state.data, state.options)
 
-  return new Buffer.from(compiledEjs)
+	return new Buffer.from(compiledEjs)
 }
 
-function parsePathname(reqUrl) {
-  let parsedUrl = new URL(reqUrl)
-  let pathname = decodeURIComponent(parsedUrl.pathname)
+function parsePathname(reqUrl, root) {
+	let parsedUrl = new URL(reqUrl)
+	let pathname = decodeURIComponent(parsedUrl.pathname)
 
-  if (process.platform === 'win32' && !parsedUrl.host.trim()) {
-    pathname = pathname.substring(1)
-  }
+	if (process.platform === 'win32' /*&& !parsedUrl.host.trim()*/) {
 
-  return pathname
+		root = '/' + root.replaceAll('\\', '/');
+
+		// console.log('ROOT', root);
+
+		if (pathname.startsWith(root)) {
+			pathname = pathname.substring(root.length);
+		}
+		else {
+			pathname = pathname.substring(3);
+		}
+
+		// pathname = pathname.substring(1)
+		//pathname = path.basename(pathname)
+	}
+	else {
+		if (pathname.startsWith(root))
+			pathname = pathname.substring(root.length);
+	}
+
+	return pathname
 }
 
 function protocolListener(request) {
-  try {
+	try {
 
 	const ejsRoot = EjsElectron.options('ejs');
 	const pubRoot = EjsElectron.options('public');
+	const root = EjsElectron.options('root');
 
-	//console.log('#', ejsRoot, pubRoot);
+	// console.log('#', ejsRoot, pubRoot);
 	//console.log('###', request.url);
 
-    let pathname = parsePathname(request.url)
-    let extension = path.extname(pathname)
+		let pathname = parsePathname(request.url, root)
+		let extension = path.extname(pathname)
 	let isejs = extension === '.ejs';
+
+	// console.log('PATH', pathname);
 
 	if (isejs) {
 		pathname = path.join(ejsRoot, pathname);
@@ -122,50 +142,50 @@ function protocolListener(request) {
 		pathname = path.join(pubRoot, pathname);
 	}
 
-  // console.debug('### ', pathname);
+	// console.debug('### ', pathname);
 
-    let fileContents = fs.readFileSync(pathname)
-    let mimeType = mime.getType(extension)
+		let fileContents = fs.readFileSync(pathname)
+		let mimeType = mime.getType(extension)
 
-    if (isejs) {
-      fileContents = compileEjs(pathname, fileContents)
-      mimeType = 'text/html'
-    }
+		if (isejs) {
+			fileContents = compileEjs(pathname, fileContents)
+			mimeType = 'text/html'
+		}
 
-    return new Response(fileContents, {
-      headers: { 'Content-Type': mimeType },
-    })
-  } catch (exception) {
-    console.error(exception)
+		return new Response(fileContents, {
+			headers: { 'Content-Type': mimeType },
+		})
+	} catch (exception) {
+		console.error(exception)
 
-    if (exception.code === 'ENOENT') {
-      // HTTP Error 404 - Not Found
-      return new Response(null, { status: 404, statusText: 'Not Found' })
-    }
+		if (exception.code === 'ENOENT') {
+			// HTTP Error 404 - Not Found
+			return new Response(null, { status: 404, statusText: 'Not Found' })
+		}
 
-    // Internal error e.g. ejs compilation error
-    return new Response(null, { status: 500 })
-  }
+		// Internal error e.g. ejs compilation error
+		return new Response(null, { status: 500 })
+	}
 }
 
 function updateState(field, context, key, val) {
-  if (typeof key === 'string') {
-    if (typeof val === 'undefined') return state[field][key]
+	if (typeof key === 'string') {
+		if (typeof val === 'undefined') return state[field][key]
 
-    state[field][key] = val
+		state[field][key] = val
 
-    return EjsElectron // for chaining
-  }
+		return EjsElectron // for chaining
+	}
 
-  if (Array.isArray(key) || typeof key !== 'object') {
-    throw new TypeError(
-      `EjsElectron Error - ${context} - Method accepts either a key and (optional) value or an object. Received ${typeof key}`
-    )
-  }
+	if (Array.isArray(key) || typeof key !== 'object') {
+		throw new TypeError(
+			`EjsElectron Error - ${context} - Method accepts either a key and (optional) value or an object. Received ${typeof key}`
+		)
+	}
 
-  state[field] = key
+	state[field] = key
 
-  return EjsElectron // for chaining
+	return EjsElectron // for chaining
 }
 
 // Get this party started

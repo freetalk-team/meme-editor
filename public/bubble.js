@@ -4,80 +4,61 @@ import { Rectangle } from "./rect.js";
 class Bubble extends Rectangle {
 
 	#beak = 'left';
+	#beakWidth = 0.2;
 
 	#pX;
 	#pY;
 
 	get type() { return 'bubble'; }
 
-	get x() { return super.x; }
-	get y() { return super.y; }
-
 	get px() { return this.#pX; }
 	get py() { return this.#pY; }
 
-	set px(v) { this.#pX = v; }
+	set px(v) { this.#pX = v; this.#beak = this.#pX < 0 ? 'left' : 'right'; }
 	set py(v) { this.#pY = v; }
 	
 	get beak() { return this.#beak; }
-
-	set x(v) {
-		const d = super.x - this.#pX;
-
-		super.x = v;
-		this.#pX = super.x - d;
-	}
-
-	set y(v) {
-		const d = super.y - this.#pY;
-		
-		super.y = v;
-		this.#pY = super.y - d;
-	}
-
-
 	set beak(v) {
+		if (this.#beak == v) return;
 
-		const d = Math.min(Math.abs(this.x - this.#pX), Math.abs(this.#pX - this.width - this.x));
-		// const d = this.#beak == 'left' ? this.x - this.#pX : this.#pX - this.x - this.width;
-
-		this.#pX = v == 'left' ? this.x - d : this.x + this.width + d;
+		this.#pX = -this.#pX + this.width;
 		this.#beak = v;
+
+		this.updatePath();
+	}
+
+	get beakWidth() { return this.#beakWidth; }
+	set beakWidth(n) {
+		if (typeof n == 'string') n = parseFloat(n);
+		this.#beakWidth = n;
+
+		this.updatePath();
 	}
 
 	constructor() {
 
 		super();
 
-		this.#pX = this.x - 30;
-		this.#pY = this.y + 50;
+		this.#pX = -30;
+		this.#pY = 50;
 
 		this.radius = 10;
 	}
 	
-	draw(ctx) {
-
-		ctx.save();
-
-		this.#drawBubble(ctx);
-		this.drawText(ctx);
-		this.#drawSelection(ctx);
-
-		ctx.restore();
-	}
-
 	handleClick(x, y) {
 
-		if (!this.selected) return;
+		if (!this.isSelected()) return;
 
-		let X = this.#pX, Y = this.#pY;
+		let X = this.x + this.#pX, Y = this.y + this.#pY;
 
 		if (this.inNode(x, y, X, Y))
 			return {
 
 				move: (x, y) => {
-					this.#pX = x;
-					this.#pY = y;
+					this.#pX = x - this.x;
+					this.#pY = y - this.y;
+
+					this.updatePath();
 				}
 
 			};
@@ -85,91 +66,64 @@ class Bubble extends Rectangle {
 		return super.handleClick(x, y);
 	}
 
-	updatePos(x, y) {
-		const X = this.x
-			, Y = this.y
-			;
+	getPath() {
 
-		super.updatePos(x, y);
-
-		// this.#pX -= X - this.x;
-		// this.#pY -= Y - this.y;
-	}
-
-	#drawSelection(ctx) {
-
-		if (!this.selected) return;
-
-		Base.prototype.draw.call(this, ctx);
-
-		this.drawNode(ctx, this.#pX, this.#pY);
-
-	}
-
-	#drawBubble(ctx) {
-
-		ctx.save();
-
-		ctx.lineWidth = this.strokeWidth;
-
-		const x = this.x
-			, y = this.y
-			, width = this.width
+		const width = this.width
 			, height = this.height
-			, fill = this.fill
-			, stroke = this.stroke
+			, dx = this.#pX
+			, dy = this.#pY
+			, x = -width / 2
+			, y = -height / 2
+			, px = x + dx
+			, py = y + dy
 			;
 
 		let radius = this.radius;
-		
-		if (typeof radius === 'number') {
-			radius = {
-				tl: radius,
-				tr: radius,
-				br: radius,
-				bl: radius
-			};
-		} else {
-			const defaultRadius = {
-				tl: 0,
-				tr: 0,
-				br: 0,
-				bl: 0
-			};
 
-			for (var side in defaultRadius) {
-				radius[side] = radius[side] || defaultRadius[side];
-			}
-		}
+		const maxw =  height - 2*radius
+			, w = maxw * this.#beakWidth;
 
-		ctx.beginPath();
-		ctx.moveTo(x + radius.tl, y);
-		ctx.lineTo(x + width - radius.tr, y);
-		ctx.quadraticCurveTo(x + width, y, x + width, y + radius.tr);
+		radius = {
+			tl: radius,
+			tr: radius,
+			br: radius,
+			bl: radius
+		};
+
+		const path = new Path2D;
+
+		path.moveTo(x + radius.tl, y);
+		path.lineTo(x + width - radius.tr, y);
+		path.quadraticCurveTo(x + width, y, x + width, y + radius.tr);
 		if (this.#beak == 'right') {
-			ctx.lineTo(x + width, y + radius.tl);
-			ctx.lineTo(this.#pX, this.#pY);
-			ctx.lineTo(x + width, y + radius.tl + 20);
+			path.lineTo(x + width, y + radius.tl);
+			path.lineTo(px, py);
+			path.lineTo(x + width, y + radius.tl + w);
 		}
-		ctx.lineTo(x + width, y + height - radius.br);
+		path.lineTo(x + width, y + height - radius.br);
 	
-		ctx.quadraticCurveTo(x + width, y + height, x + width - radius.br, y + height);
-		ctx.lineTo(x + radius.bl, y + height);
-		ctx.quadraticCurveTo(x, y + height, x, y + height - radius.bl);
+		path.quadraticCurveTo(x + width, y + height, x + width - radius.br, y + height);
+		path.lineTo(x + radius.bl, y + height);
+		path.quadraticCurveTo(x, y + height, x, y + height - radius.bl);
 
 		if (this.#beak == 'left') {
-			ctx.lineTo(x, y + radius.tl + 20);
-			ctx.lineTo(this.#pX, this.#pY);
+			path.lineTo(x, y + radius.tl + w);
+			path.lineTo(px, py);
 		}
 		
-		ctx.lineTo(x, y + radius.tl);
+		path.lineTo(x, y + radius.tl);
 		
-		ctx.quadraticCurveTo(x, y, x + radius.tl, y);
-		ctx.closePath();
+		path.quadraticCurveTo(x, y, x + radius.tl, y);
+		path.closePath();
 
-		this.drawPath(ctx);
+		return path;
+	}
 
-		ctx.restore();
+	drawSelection(ctx, mode) {
+
+		this.drawNode(ctx, this.x + this.#pX, this.y + this.#pY);
+
+		super.drawSelection(ctx);
 	}
 }
 

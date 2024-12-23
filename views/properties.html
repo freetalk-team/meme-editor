@@ -1,0 +1,365 @@
+<div id="properties" class="column noverflow" tab="properties">
+	<div class="row ci">
+		<h2 class="wm8 inconsolata fit">Properties</h2>
+		<button name="center" class="icon fa fa-arrows-to-dot" title="Center image" display="image"></button>
+		<button name="export" class="icon fa fa-file-export" title="Export" display="rect image"></button>
+		<button name="remove" class="icon fa lg" title="Remove" display="all"></button>
+	</div>
+	
+	<div class="properties cc scroll">
+
+		<div class="cr ci noevents wm8 w3-padding-tiny w3-round w3-light-grey" onclick="this.classList.toggle('collapsed');this.nextElementSibling.classList.toggle('hidden')">
+			<b class="fit">Object</b>
+			<i class="fa xs collapse"></i>
+		</div>
+		
+		<div class="cc fade">
+			<span class="row">
+				<b class="fit">x</b>
+				<input id="object-x" type="number">
+			</span>
+			<span class="row">
+				<b class="fit">y</b>
+				<input id="object-y" type="number">
+			</span>
+			<span class="row" display="rect">
+				<b class="fit">width</b>
+				<input id="object-width" type="number">
+			</span>
+			<span class="row" display="rect">
+				<b class="fit">height</b>
+				<input id="object-height" type="number">
+			</span>
+			<span class="row" display="rect">
+				<b class="fit">radius</b>
+				<input id="object-radius" type="range">
+			</span>
+			<span class="row" display="rect text path arrow">
+				<b class="fit">stroke</b>
+				<input id="object-stroke" type="color">
+			</span>
+			<span class="row" display="rect text path arrow">
+				<b class="fit">stroke width</b>
+				<input id="object-strokeWidth" type="range">
+			</span>
+			<span class="row" display="rect text path">
+				<b class="fit">fill</b>
+				<input for="object-fill" class="checkbox w3-margin-right" type="checkbox" checked onchange="this.nextElementSibling.disabled=!this.checked">
+				<input id="object-fill" type="color">
+			</span>
+			<span class="row" display="rect path text emoji">
+				<b class="fit">transparency</b>
+				<input id="object-alpha" type="range" min="0" max="1" step="0.01">
+			</span>
+
+			<span class="row" display="all">
+				<b class="fit">angle</b>
+				<input id="object-angle" type="range" min="0" max="6.28" step="0.02">
+			</span>
+
+			<span class="row">
+				<b class="fit">shadow</b>
+				<input for="object-shadow" class="checkbox w3-margin-right" type="checkbox" onchange="this.nextElementSibling.disabled=!this.checked;this.parentElement.nextElementSibling.classList.toggle('hidden')">
+				<select id="object-shadow" disabled>
+					<option value="fill" selected>fill</option>
+					<option value="stroke">stroke</option>
+				</select>
+			</span>
+			<div class="cc fade hidden">
+				<span class="row">
+					<b class="fit">shadow color</b>
+					<input id="object-shadowColor" type="color">
+				</span>
+				<span class="row">
+					<b class="fit">shadow offset</b>
+					<input id="object-shadowWidth" type="range">
+				</span>
+				
+			</div>
+			
+			<span class="row" display="bubble">
+				<b class="fit">beak</b>
+				<select id="object-beak">
+					<option value="left" selected>left</option>
+					<option value="right">right</option>
+				</select>
+			</span>
+			<span class="row" display="bubble">
+				<b class="fit">beak width</b>
+				<input id="object-beakWidth" type="range" min="0.1" max="1" step="0.02">
+			</span>
+
+			<span class="row" display="arrow">
+				<b class="fit">arrow</b>
+				<select id="object-arrow">
+					<option value="end" selected>end</option>
+					<option value="begin">begin</option>
+					<option value="both">both</option>
+					<option value="none">none</option>
+				</select>
+			</span>
+			
+			<span class="row" display="text emoji">
+				<b class="fit">size</b>
+				<input id="object-size" type="number">
+			</span>
+			<span class="row" display="text">
+				<b class="fit">bold</b>
+				<input id="object-bold" type="checkbox" class="checkbox">
+			</span>
+			<span class="row" display="text">
+				<b class="fit">italic</b>
+				<input id="object-italic" type="checkbox" class="checkbox">
+			</span>
+			<span class="row" display="text">
+				<b class="fit">font</b>
+				<select id="object-font">
+					<option value="Arial" selected>Arial</option>
+					<option value="Serif">Serif</option>
+					<option value="Monospace">Monospace</option>
+					<option value="Helvetica">Helvetica</option>
+					<option value="Ubuntu">Ubuntu</option>
+				</select>
+			</span>
+			<textarea id="object-value" rows="5" display="text" placeholder="Some text" spellcheck="false"></textarea>
+		</div>
+		
+		<div class="cc" display="image">
+			<div class="cr ci noevents wm8 w3-padding-tiny w3-round w3-light-grey" onclick="this.classList.toggle('collapsed');this.nextElementSibling.classList.toggle('hidden')">
+				<b class="fit">Image</b>
+				<i class="fa xs collapse"></i>
+			</div>
+			<!-- <h3 class="wm8 inconsolata">Image</h3> -->
+			<div class="cc fade">
+				<span class="row">
+					<b class="fit">x</b>
+					<input id="object-imgX" type="number">
+				</span>
+				<span class="row">
+					<b class="fit">y</b>
+					<input id="object-imgY" type="number">
+				</span>
+				<!-- <span class="row">
+					<b class="fit">width</b>
+					<input id="object-imgWidth" type="number">
+				</span>
+				<span class="row">
+					<b class="fit">height</b>
+					<input id="object-imgHeight" type="number">
+				</span> 
+				<span class="row">
+					<b class="fit">keep proportion</b>
+					<input id="object-imgKeepProportion" type="checkbox" class="checkbox">
+				</span> -->
+				<div class="row">
+					<div class="cc fit">
+						<b>width</b>
+						<b>height</b>
+					</div>
+					<div class="column center-content" style="margin-right:4px;">
+						<input id="object-imgKeepProportion" type="checkbox" class="checkbox" title="Keep proportion">
+					</div>
+					<div class="cc">
+						<input id="object-imgWidth" type="number">
+						<input id="object-imgHeight" type="number">
+					</div>
+				</div>
+				
+				<span class="cr ci m2">
+					<b class="fit">scale</b>
+					<input id="object-imgScale" min="0.1" max="5" step="0.01" type="range" oninput="this.nextElementSibling.value=parseFloat(this.value).toFixed(1)"><output>1.0</output>
+				</span>
+				<span class="row">
+					<b class="fit">mirror</b>
+					<input id="object-imgMirror" type="checkbox" class="checkbox">
+				</span>
+				<span class="row">
+					<b class="fit">crop X</b>
+					<input id="object-cropX" type="number">
+				</span>
+				<span class="row">
+					<b class="fit">crop Y</b>
+					<input id="object-cropY" type="number">
+				</span>
+				<span class="row">
+					<b class="fit">crop Width</b>
+					<input id="object-cropWidth" type="number">
+				</span>
+				<span class="row">
+					<b class="fit">crop Height</b>
+					<input id="object-cropHeight" type="number">
+				</span>
+
+				<span class="row">
+					<b class="fit">mask</b>
+					<input for="object-mask" class="checkbox w3-margin-right" type="checkbox" onchange="this.nextElementSibling.disabled=!this.checked;this.parentElement.nextElementSibling.classList.toggle('hidden')">
+					<input id="object-mask"  disabled readonly style="max-width: 100px;">
+				</span>
+				<div class="cc fade hidden">
+					<span class="row">
+						<b class="fit">mask X</b>
+						<input id="object-maskX" type="number">
+					</span>
+					<span class="row">
+						<b class="fit">mask Y</b>
+						<input id="object-maskY" type="number">
+					</span>
+				</div>
+
+				<div class="cc" filter="none">
+					<span class="row">
+						<b class="fit">filter</b>
+						<input for="object-filter" class="checkbox w3-margin-right" type="checkbox" onchange="this.nextElementSibling.disabled=!this.checked">
+						<select id="object-filter" disabled onchange="this.parentElement.parentElement.setAttribute('filter', this.value)">
+							<!-- <option value="none" selected>none</option> -->
+							<optgroup label="Adjust">
+								<option value="contrast">contrast</option>
+								<option value="hue">hue</option>
+								<option value="denoise">denoise</option>
+								<option value="unsharp">unsharp</option>
+								<option value="noise">noise</option>
+								<option value="sepia">sepia</option>
+								<option value="vignette">vignette</option>
+								<option value="vibrance">vibrance</option>
+							</optgroup>
+							<optgroup label="Blur">
+								<option value="triangleBlur">triangle</option>
+								<option value="zoomBlur">zoom</option>
+								<option value="lensBlur">lens</option>
+							</optgroup>
+							<optgroup label="Warp">
+								<option value="swirl">swirl</option>
+								<option value="bulge">bulge</option>
+							</optgroup>
+							<optgroup label="Fun">
+								<option value="ink">ink</option>
+							</optgroup>
+						</select>
+					</span>
+						
+					<span class="row w3-margin-left" display="triangleBlur lensBlur swirl bulgePinch unsharpMask">
+						<b class="fit smaller wm8">Radius:</b>
+						<input id="object-filterRadius" type="range" min="0" max="200">
+					</span>
+					<span class="row w3-margin-left" display="zoomBlur ink bulgePinch unsharpMask">
+						<b class="fit smaller wm8">Strength:</b>
+						<input id="object-filterStrength" type="range" min="0" max="1" step="0.01">
+					</span>
+					<span class="row w3-margin-left" display="lensBlur brightnessContrast">
+						<b class="fit smaller wm8">Brightness:</b>
+						<input id="object-filterBrightness" type="range" min="-1" max="1" step="0.01">
+					</span>
+					<span class="row w3-margin-left" display="lensBlur swirl">
+						<b class="fit smaller wm8">Angle:</b>
+						<input id="object-filterAngle" type="range" min="-3.14" max="3.14" step="0.01">
+					</span>
+					<span class="row w3-margin-left" display="brightnessContrast">
+						<b class="fit smaller wm8">Contrast:</b>
+						<input id="object-filterContrast" type="range" min="-1" max="1" step="0.01">
+					</span>
+					<span class="row w3-margin-left" display="hueSaturation">
+						<b class="fit smaller wm8">Hue:</b>
+						<input id="object-filterHue" type="range" min="-1" max="1" step="0.01">
+					</span>
+					<span class="row w3-margin-left" display="hueSaturation">
+						<b class="fit smaller wm8">Saturation:</b>
+						<input id="object-filterSaturation" type="range" min="-1" max="1" step="0.01">
+					</span>
+					<span class="row w3-margin-left" display="denoise">
+						<b class="fit smaller wm8">Exponent:</b>
+						<input id="object-filterExponent" type="range" min="0" max="50">
+					</span>
+					<span class="row w3-margin-left" display="noise_ sepia vignette vibrance">
+						<b class="fit smaller wm8">Amount:</b>
+						<input id="object-filterAmount" type="range" min="-1" max="1" step="0.01">
+					</span>
+					<span class="row w3-margin-left" display="vignette">
+						<b class="fit smaller wm8">Size:</b>
+						<input id="object-filterSize" type="range" min="0" max="1" step="0.01">
+					</span>
+				</div>
+				<span class="cr ci">
+					<b class="fit">body</b>
+
+					<input min="0.1" max="1" step="0.05" value="0.7" type="range" oninput="this.nextElementSibling.value=parseFloat(this.value).toFixed(2)">
+					<output class="small">0.70</output>
+					<button class="ux" name="detect" display="image">Detect</button>
+				</span>
+			</div>
+		</div>
+		<div class="cc" display="label">
+			<div class="cr ci noevents wm8 w3-padding-tiny w3-round w3-light-grey" onclick="this.classList.toggle('collapsed');this.nextElementSibling.classList.toggle('hidden')">
+				<b class="fit">Text</b>
+				<i class="fa xs collapse"></i>
+			</div>
+			<!-- <h3 class="wm8 inconsolata">Text</h3> -->
+			<div class="cc fade">
+				<span class="row" >
+					<b class="fit">offset X</b>
+					<input id="object-textOffsetX" type="number">
+				</span>
+				<span class="row" >
+					<b class="fit">offset Y</b>
+					<input id="object-textOffsetY" type="number">
+				</span>
+				<span class="row">
+					<b class="fit">size</b>
+					<input id="object-textSize" type="number">
+				</span>
+				<span class="row">
+					<b class="fit">bold</b>
+					<input id="object-textBold" type="checkbox" class="checkbox">
+				</span>
+				<span class="row">
+					<b class="fit">italic</b>
+					<input id="object-textItalic" type="checkbox" class="checkbox">
+				</span>
+				<span class="row">
+					<b class="fit">font</b>
+					<select id="object-textFont">
+						<option value="Arial" selected>Arial</option>
+						<option value="Serif">Serif</option>
+						<option value="Monospace">Monospace</option>
+						<option value="Helvetica">Helvetica</option>
+						<option value="Ubuntu">Ubuntu</option>
+					</select>
+				</span>
+				<span class="row">
+					<b class="fit">fill</b>
+					<input for="object-textFill" class="checkbox w3-margin-right" type="checkbox" checked onchange="this.nextElementSibling.disabled=!this.checked">
+					<input id="object-textFill" type="color">
+				</span>
+				<span class="row">
+					<b class="fit">stroke</b>
+					<input id="object-textStroke" type="color" disabled>
+				</span>
+				<span class="row">
+					<b class="fit">stroke width</b>
+					<input id="object-textStrokeWidth" type="range" max="50">
+				</span>
+				
+				<span class="row">
+					<b class="fit">shadow</b>
+					<input for="object-textShadow" class="checkbox w3-margin-right" type="checkbox" onchange="this.nextElementSibling.disabled=!this.checked;this.parentElement.nextElementSibling.classList.toggle('hidden')">
+					<select id="object-textShadow" disabled>
+						<option value="fill" selected>fill</option>
+						<option value="stroke">stroke</option>
+					</select>
+				</span>
+				<div class="cc fade hidden">
+					<span class="row">
+						<b class="fit">shadow color</b>
+						<input id="object-textShadowColor" type="color">
+					</span>
+					<span class="row">
+						<b class="fit">shadow offset</b>
+						<input id="object-textShadowWidth" type="range">
+					</span>
+					
+				</div>
+
+				<textarea id="object-text" rows="5" placeholder="Some text" spellcheck="false"></textarea>
+			</div>
+		</div>
+	</div>
+</div>

@@ -22,7 +22,7 @@ app.disable('x-powered-by');
 
 // api
 // app.use('/', (req, res) => res.sendFile('index.html', { root: kPublic }));
-app.use('/', (req, res) => res.render('index', { production }));
+app.use('/', (req, res) => res.render('index', { production, electron: false }));
 
 app.listen(kPort, async function() {
 	console.log('Express server listening on port', kPort);

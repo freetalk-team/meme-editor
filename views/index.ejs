@@ -11,13 +11,29 @@
 <script src="dist/utils-base.min.js"></script>
 <script src="dist/core.min.js"></script>
 
+<script src="dist/tfjs.js"></script>
+<script src="dist/body-pix.js"></script>
+<script src="dist/body-segmentation.js"></script>
 
 </head>
 <body>
 <!-- <h1>Hello World!</h1> -->
-<h1 class="w3-margin-left wm8">Meme Editor</h1>
+<!-- <h1 class="w3-margin-left wm8">Meme Editor</h1> -->
+
+<%- include('help.html') %> 
+<%- include('titlebar.html') %> 
 
 <%- include('editor', { production }) %> 
+
+<script>
+
+	function showHelp() {
+		const e = document.getElementById('modal-dialog');
+	
+		e.style.display = "block";
+	}
+	
+	</script>
 
 </body>
 </html>

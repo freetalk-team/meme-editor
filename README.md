@@ -1,12 +1,31 @@
-# Meme Editor
 
-Create memes in browser
+# **Meme Editor**
 
-## Try it
+## Vector Graphics Editor in Your Browser
 
-```
-chromium demo.html
-```
+**Meme Editor** is a powerful, browser-based vector graphics editor designed for simplicity, flexibility, and creative freedom. Whether you're creating memes, editing diagrams, or exploring vector art, Meme Editor delivers a seamless design experience with no need for downloads or installations.
+
+## **Key Features**
+
+- **Essential Vector Tools**  
+  Effortlessly create and manipulate basic shapes like rectangles, lines, and Bézier curves.
+
+- **Drag-and-Drop Image Import**  
+  Quickly add images to your canvas with an intuitive drag-and-drop interface.
+
+- **AI-Powered Human Detection**  
+  Utilizing TensorFlow, Meme Editor automatically detects human figures in images and converts them into mask paths, making it easy to isolate subjects for creative edits.
+
+- **Image Effects**  
+  Apply effects like blur, noise, and more to enhance or transform your images within the editor.
+
+- **Versatile Usage**  
+  Whether you're making a meme for social media or a professional diagram for work, Meme Editor adapts to your creative needs.
+
+---
+
+**Meme Editor** empowers creators of all levels to design and express ideas visually — right from their browser.
+
 
 ## Install
 
@@ -36,6 +55,13 @@ PORT=5000 npm run server
 npm start
 ```
 
+or if it doesn't work on Windows inside VM
+
+```
+npm run vm
+```
+
+
 ## Build
 
 1. Install **webpack** globally if not installed already
@@ -50,9 +76,39 @@ npm install -g webpack
 npm run build
 ```
 
+### Desktop package
+
+```
+npm run package
+```
+
+the package will be generated in **out** directory
+
+> Note: Not tested for Windows
+
 ## Demo
 
 [Open editor](https://www.sipme.io/memed)
+
+## Next
+
+* Stroke **tapered ends**
+* Circle/ellipse object
+* Fill gradient
+* SVG export/import
+* Object grouping
+* Better handling of curve's node manipulation
+* Undo/Redo functionality 
+
+## Known issues
+
+* History Undo/Redo functionality is not completed
+
+
+### Windows
+
+WebGL is not working in VM. Not tested on Windows host machine
+
 
 ## In Loving Memory of Marina Nedeva 💖
 

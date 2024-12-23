@@ -1,6 +1,6 @@
 {
   "name": "MemeEditor",
-  "version": "1.0",
+  "version": "1.0.2",
   "description": "Meme Editor for browsers",
   "repository": "https://github.com/freetalk-team/meme-editor",
   "contributors": [
@@ -16,7 +16,10 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "server": "node server.js",
     "start": "electron-forge start",
-    "build": "webpack",
+    "vm": "electron-forge start -- --no-sandbox",
+    "build-js": "webpack",
+    "build-css": "webpack -c webpack.css.config.js",
+    "build": "npm run build-js && npm run build-css",
     "compile": "electron-webpack",
     "package": "npm run build && electron-forge package",
     "make": "electron-forge make"
@@ -29,7 +32,8 @@
   "author": "Freetalk Team",
   "license": "ISC",
   "dependencies": {
-    "canvas": "^2.11.2",
+    "css-loader": "^7.1.2",
+    "css-minimizer-webpack-plugin": "^7.0.0",
     "ejs": "^3.1.9",
     "ejs-electron": "^3.0.0",
     "electron-settings": "^4.0.4",
@@ -47,6 +51,7 @@
     "@electron-forge/plugin-auto-unpack-natives": "^7.4.0",
     "@electron-forge/plugin-fuses": "^7.4.0",
     "@electron/fuses": "^1.8.0",
-    "electron": "^30.0.8"
+    "electron": "^30.0.8",
+    "webpack-cli": "^5.1.4"
   }
 }
