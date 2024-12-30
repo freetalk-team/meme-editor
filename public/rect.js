@@ -94,6 +94,51 @@ export class Rect extends Base {
 	updatePath() {
 		this.#path = this.getPath();
 	}
+
+	toSVG(group=false) {
+
+		const fill = this.fill
+			, stroke = this.stroke
+			, alpha = this.alpha
+			, shadow = this.shadow
+			, angle = this.angle * (180 / Math.PI)
+			;
+
+		let xml = '';
+		
+		xml += `<rect x="${this.x}" y="${this.y}" width="${this.width}" height="${this.height}"`;
+
+		if (this.#radius > 0)
+			xml += ` rx="${this.#radius}" ry="${this.#radius}"`;
+
+		if (!group) {
+
+			if (fill) {
+				xml += ` fill="${fill}"`;
+
+				if (alpha < 1)
+					xml += ` fill-opacity="${alpha}"`;
+			}
+
+			if (stroke)
+				xml += ` stroke="${stroke}" stroke-width="${this.strokeWidth}"`;
+
+			if (shadow) 
+				xml += ` filter="url(#${this.id + '-shadow'})"`;
+			
+			if (angle) {
+				const [x, y] = this.center();
+				xml += ` transform="rotate(${angle},${x},${y})"`;
+			}
+
+		}
+		
+		xml += '/>';
+
+		return xml;
+	}
+
+	
 }
 
 export class Rectangle extends Rect {
@@ -121,7 +166,7 @@ export class Rectangle extends Rect {
 	// get y() { return super.y; }
 	get width() { return super.width; }
 	get height() { return super.height; }
-	get anngle() { return super.angle; }
+	get angle() { return super.angle; }
 
 	get text() { return this.#text.value; }
 	get textOffsetX() { return this.#text.x; }
@@ -252,5 +297,19 @@ export class Rectangle extends Rect {
 
 	drawText(ctx) {
 		this.#text.draw(ctx);
+	}
+
+	toSVG() {
+		let xml = '<g>';
+		
+		const x = this.x + this.#text.x
+			, y = this.y + this.#text.y;
+
+		xml += super.toSVG();
+		xml += this.#text.toSVG(x, y);
+
+		xml += '</g>';
+
+		return xml;
 	}
 }

@@ -13,7 +13,8 @@
 		<h4 class="nomargin fit text-center ellipsis" style="writing-mode:vertical-rl;rotate:180deg;opacity:.2;">Freetalk Team</h4>
 	</div>
 
-	<div class="column" style="height: 100%; width:100%">
+	<div class="column relative" style="height: 100%; width:100%">
+		<div id="notifications" class="top-right w3-margin-right" style="z-index:100;opacity:.9;"></div>
 
 		<%- include('toolbar.html') %>
 
@@ -103,6 +104,9 @@
 	<button name="rm" class="icon fa display-hover" title="Remove"></button>
 </template>
 
+<template id="item-notification" class="w3-padding fade" style="min-width:200px;">
+	{{dom.markdown(this)}}
+</template>
 
 <script type="module">
 

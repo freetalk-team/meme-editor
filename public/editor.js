@@ -11,7 +11,7 @@ import { Arrow } from './arrow.js';
 import { IndexDB } from './db.js';
 import { WebGL } from './webgl.js';
 
-import { wrapProjects, wrapObjects, wrapProperties, wrapTools, wrapCanvas, wrapStatus, wrapActions } from './wrappers.js';
+import { wrapProjects, wrapObjects, wrapProperties, wrapTools, wrapCanvas, wrapStatus, wrapActions, wrapNotifications } from './wrappers.js';
 
 const kSite = 'www.sipme.io';
 
@@ -75,7 +75,9 @@ export default class Editor extends EventTarget {
 		projects: defaultListHandler,
 		canvas: defaultHandler,
 		status: defaultHandler,
-		tools: defaultHandler
+		tools: defaultHandler,
+		actions: defaultHandler,
+		notify: defaultListHandler
 		
 	};
 
@@ -117,9 +119,7 @@ export default class Editor extends EventTarget {
 
 		this.#bg.y = (this.canvas.height - n) / 2;
 		this.#bg.height = n;
-
-		if (this.#dom.canvas)
-			this.#bg.properties = this.#dom.canvas;
+		this.#bg.properties = this.#dom.canvas;
 
 		this.draw();
 	}
@@ -422,7 +422,7 @@ export default class Editor extends EventTarget {
 
 		drawWatermark(ctx, kSite);
 
-		return exportCanvas(e, name, type);
+		return this.#exportCanvas(e, name, type);
 	}
 
 	exportObject() {
@@ -447,7 +447,7 @@ export default class Editor extends EventTarget {
 
 		// drawWatermark(ctx, kSite);
 
-		return exportCanvas(e, o.name, 'png');
+		return this.#exportCanvas(e, o.name, 'png');
 	}
 
 	async import(files) {
@@ -594,9 +594,13 @@ export default class Editor extends EventTarget {
 			}
 
 			this.#emit('save', id);
+
+			this.#dom.notify.add('Saved !', 'success');
 		}
 		catch(e) {
 			console.error('Failed to save project');
+
+			this.#dom.notify.add('Failed !', 'error');
 		}
 	}
 
@@ -648,6 +652,8 @@ export default class Editor extends EventTarget {
 				}
 			}
 
+			this.#bg = this.#objects[0];
+
 			this.draw();
 			this.#emit('open', id);
 
@@ -655,6 +661,12 @@ export default class Editor extends EventTarget {
 
 			for (const i of this.#objects.slice(1)) 
 				this.#dom.objects.add(i);
+
+			this.#bg.properties = this.#dom.canvas;
+			this.#dom.actions.assign({
+				width: this.#bg.width,
+				height: this.#bg.height
+			});
 
 		}
 		catch(e) {
@@ -915,6 +927,7 @@ export default class Editor extends EventTarget {
 		this.wrapStatus('status');
 		this.wrapActions('actions');
 		this.wrapTools('tools');
+		this.wrapNotifications('notifications', 'item-notification');
 
 		const body = document.body;
 
@@ -982,6 +995,10 @@ export default class Editor extends EventTarget {
 
 	wrapActions(container) {
 		return this.#dom.actions = wrapActions(container, this);
+	}
+
+	wrapNotifications(container, template) {
+		return this.#dom.notify = wrapNotifications(container, template);
 	}
 
 	#updateFromHistory(index, undo=false) {
@@ -1570,6 +1587,71 @@ export default class Editor extends EventTarget {
 
 		this.#dom.status.set('zoom', this.#zoom.toFixed(2));
 	}
+
+	async #exportCanvas(canvas, name, type) {
+		if (showSaveFilePicker) {
+	
+			const opts = {
+				types: [
+				{
+					description: "Image file",
+					accept: {
+						"image/*": [".png", ".jpeg", ".jpg", '.svg'],
+					},
+					suggestedName: 'meme.jpeg',
+					startIn: 'pictures'
+				},
+				],
+			};
+			
+			const file = await showSaveFilePicker(opts);
+		// console.log('#', file);
+	
+			let content, [, ext] = file.name.split('.');
+	
+			if (ext == 'jpg') ext = 'jpeg';
+	
+			const mime = 'image/' + ext;
+			const writable = await file.createWritable();
+	
+			if (ext == 'svg') {
+	
+				const w = this.#bg.width
+					, h = this.#bg.height
+					;				
+	
+				let xml = `<svg width="${w}" height="${h}" xmlns="http://www.w3.org/2000/svg"><defs>`, inner = '';
+
+				
+	
+				for (const i of this.#objects) {
+
+					xml += i.toSVGFilter();
+					inner += i.toSVG();
+				}
+
+				xml += '</defs>' + inner + '</svg>';
+
+				content = xml;
+			}
+			else {
+				content = await new Promise(resolve => canvas.toBlob(resolve, mime));
+			}
+	
+			await writable.write(content);
+			await writable.close();
+	
+		}
+		else {
+			const img = e.toDataURL('image/' + type);
+			const a = document.createElement('a');
+	
+			a.download = name + '.' + type;
+			a.href = img;
+	
+			a.click();
+		}
+	}
 }
 
 
@@ -1611,49 +1693,7 @@ function drawWatermark(ctx, text, height=ctx.canvas.height) {
 	ctx.restore();
 }
 
-async function exportCanvas(canvas, name, type) {
-	if (showSaveFilePicker) {
 
-		const opts = {
-			types: [
-			{
-				description: "Image file",
-				accept: {
-					"image/*": [".png", ".jpeg", ".jpg"],
-				},
-				suggestedName: 'meme.jpeg',
-				startIn: 'pictures'
-			},
-			],
-		};
-		
-		const file = await showSaveFilePicker(opts);
-	// console.log('#', file);
-
-		let [, ext] = file.name.split('.');
-
-		if (ext == 'jpg') ext = 'jpeg';
-
-		const mime = 'image/' + ext;
-
-		const blob = await new Promise(resolve => canvas.toBlob(resolve, mime));
-
-		const writable = await file.createWritable();
-
-		await writable.write(blob);
-		await writable.close();
-
-	}
-	else {
-		const img = e.toDataURL('image/' + type);
-		const a = document.createElement('a');
-
-		a.download = name + '.' + type;
-		a.href = img;
-
-		a.click();
-	}
-}
 
 class Database extends IndexDB {
 

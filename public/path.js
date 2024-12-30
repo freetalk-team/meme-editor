@@ -1,6 +1,6 @@
 
 import { Base } from "./base.js";
-
+import { Point, Curve2, Curve3 } from './curve.js';
 
 
 export class Path extends Base {
@@ -90,7 +90,7 @@ export class Path extends Base {
 			const path = this.#path;
 
 			if (!draw && this.#closed)
-				this.drawPath(ctx, path, angle);
+				this.drawPath(ctx, path, true, angle);
 			else
 				this.strokePath(ctx, path, ended, angle);
 		}
@@ -294,6 +294,57 @@ export class Path extends Base {
 		// this.#updateSize(x, y);
 
 		this.#path = this.getPath();
+	}
+
+	toSVG() {
+
+		const fill = this.fill
+			, stroke = this.stroke
+			, alpha = this.alpha
+			, shadow = this.shadow
+			, angle = this.angle * (180 / Math.PI)
+			, [X, Y] = this.center()
+			;
+
+		const start = this.#closed ? this.#segments.last() : this.#segments[0];
+
+		let xml = '<path d="';
+
+		// Move to the starting point of the first segment
+		xml += `M ${start.x + X} ${start.y + Y}`;
+
+		for (const i of this.#segments) 
+			xml += ' ' + i.toSVG(X, Y);
+
+		if (this.#closed)
+			xml += ' Z';
+
+		xml += '"';
+
+		if (fill) {
+			xml += ` fill="${fill}"`;
+
+			if (alpha < 1)
+				xml += ` fill-opacity="${alpha}"`;
+		}
+
+		if (stroke)
+			xml += ` stroke="${stroke}" stroke-width="${this.strokeWidth}"`;
+
+		if (shadow) 
+			xml += ` filter="url(#${this.id + '-shadow'})"`;
+
+		if (angle) {
+			xml += ` transform="rotate(${angle},${X},${Y})"`;
+		}
+
+		xml += '/>';
+		
+		return xml;
+
+		// Arc
+		// const [rx, ry, xAxisRotation, largeArcFlag, sweepFlag] = arcParams;
+		// path += `A ${rx} ${ry} ${xAxisRotation} ${largeArcFlag} ${sweepFlag} ${p2[0]} ${p2[1]} `;
 	}
 
 	close(updateSize=true) {
@@ -605,218 +656,7 @@ Path.detectBody = async function(image, threshold=0.7) {
 	return path;
 }
 
-class Point {
-	x;
-	y;
 
-	constructor(x, y) {
-		this.x = x;
-		this.y = y;
-	}
-
-	isLine() { return true; }
-
-	controlPoint() { return this; }
-
-	toCurve() {
-		return new Curve2(this.x, this.y);
-	}
-
-	draw(path) {
-		path.lineTo(this.x, this.y);
-	}
-
-	move(dx, dy) {
-		this.x += dx;
-		this.y += dy;
-	}
-
-	set(x, y) {
-		this.x = x;
-		this.y = y;
-	}
-
-	invert(x, y) {
-		const X = 2*x - this.x
-			, Y = 2*y - this.y;
-
-		this.set(X, Y);
-	}
-
-	tangent(x, y) {}
-
-	split(start, t=0.5) {
-		const m = midpoint(start, this);
-		const p = new Point(this.x, this.y);
-
-		this.set(m.x, m.y);
-
-		return p;
-	}
-
-	moveTangent() {}
-	moveNode(dx, dy) { 
-		this.x += dx;
-		this.y += dy;
-	}
-
-	toArray() { return [this.x, this.y ]; }
-
-	static create(x, y) {
-		const p = new Point;
-		
-		p.x = x;
-		p.y = y;
-
-		return p;
-	}
-}
-
-class Curve2 extends Point {
-	cp = new Point;
-
-	constructor(x, y) {
-		super(x, y);
-
-		this.cp.set(x, y);
-	}
-
-	isLine() { return false; }
-	toArray() { return [this.cp.x, this.cp.y, this.x, this.y ]; }
-
-	controlPoint() {
-		return this.cp;
-	}
-
-	setControlPoint(x, y) {
-		this.cp.set(x, y);
-	}
-
-	toCurve(X, Y) {
-		const c = new Curve3(this.x, this.y);
-
-		c.cp.set(X + 2/3*(this.cp.x - X), Y + 2/3*(this.cp.y - Y));
-		c.cp2.set(this.x + 2/3*(this.cp.x - this.x), this.y + 2/3*(this.cp.y - this.y));
-
-		return c;
-	}
-
-	
-
-	draw(path) {
-		path.quadraticCurveTo(this.cp.x, this.cp.y, this.x, this.y);
-	}
-
-	move(dx, dy) {
-		super.move(dx, dy);
-
-		this.cp.x += dx;
-		this.cp.y += dy;
-	}
-
-	// tangent(x, y) {
-	// 	this.cp.x = x;
-	// 	this.cp.y = y;
-	// }
-
-	// moveNode(dx, dy) {
-	// 	this.x += dx;
-	// 	this.y += dy;
-	// }
-
-	moveTangent(dx, dy) {
-		this.cp.x += dx;
-		this.cp.y += dy;
-	}
-	
-	tangent(x, y) {
-		const X = 2*this.x - x
-			, Y = 2*this.y - y;
-
-		this.cp.set(X, Y);
-
-		// console.debug('Setting tangent', x, y);
-
-		// this.cp.set(x, y);
-	}
-
-	static draw(ctx, curve) {
-	}
-}
-
-class Curve3 extends Curve2 {
-	cp2 = new Point;
-
-	toArray() { return [this.cp.x, this.cp.y, this.cp2.x, this.cp2.y, this.x, this.y ]; }
-
-	controlPoint() {
-		return this.cp2;
-	}
-
-	toCurve() {
-		return this;
-	}
-
-	draw(path) {
-		path.bezierCurveTo(this.cp.x, this.cp.y, this.cp2.x, this.cp2.y, this.x, this.y);
-	}
-
-	tangent(x, y) {
-		const X = 2*this.x - x
-			, Y = 2*this.y - y;
-
-		this.cp2.set(X, Y);
-	}
-
-	move(dx, dy) {
-		super.move(dx, dy);
-
-		this.cp2.x += dx;
-		this.cp2.y += dy;
-	}
-
-	moveNode(dx, dy) {
-		super.moveNode(dx, dy);
-
-
-
-		this.cp2.x += dx;
-		this.cp2.y += dy;
-	}
-
-	split(start, t=0.5) {
-		
-
-		const M0 = midpoint(start, this.cp, t);
-		const M1 = midpoint(this.cp, this.cp2, t);
-		const M2 = midpoint(this.cp2, this, t);
-
-		// Compute midpoints of second level
-		const N0 = midpoint(M0, M1, t);
-		const N1 = midpoint(M1, M2, t);
-
-		// Compute midpoint of third level (the point on the curve)
-		const Q = midpoint(N0, N1, t);
-
-		const c = new Curve3(this.x, this.y);
-
-		c.cp = N1;
-		c.cp2 = M2;
-
-		this.cp.set(M0.x, M0.y);
-		this.cp2.set(N0.x, N0.y);
-		this.set(Q.x, Q.y);
-
-		return c;
-	}
-}
-
-function midpoint(p1, p2, t) {
-	return new Point(
-		(1 - t) * p1.x + t * p2.x,
-		(1 - t) * p1.y + t * p2.y
-	);
-}
 
 class Node {
 

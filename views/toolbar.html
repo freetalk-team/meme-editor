@@ -1,8 +1,8 @@
 <div id="actions" class="toolbar cr ci w3-margin-bottom w3-margin-right">
 	<b>Width:</b>
-	<input type="number" name="width" value="1200">
+	<input type="number" name="width" value="1200" title="Canvas width">
 	<b>Height:</b>
-	<input type="number" name="height" value="630">
+	<input type="number" name="height" value="630" title="Canvas height">
 	<button name="reset" class="ux" title="Reset">Reset</button>
 
 	<div class="row">
@@ -12,12 +12,12 @@
 
 	<i class="hs"></i>
 
-	<input type="color" name="fill" value="#eeeeee">
-	<input type="number" name="strokeWidth" value="1" style="max-width: 30px;">
-	<input type="color" name="stroke" value="#111111">
+	<input type="color" name="fill" value="#eeeeee" title="Fill color">
+	<input type="number" name="strokeWidth" value="1" style="max-width: 30px;" title="Stroke width">
+	<input type="color" name="stroke" value="#111111" title="Stroke color">
 	<div class="row ci relative" style="width: 80px;">
 
-		<input name="zoom" list="zoom" value="100%" style="width:100%;box-sizing: border-box;">
+		<input name="zoom" class="text-right" list="zoom" value="100%" style="width:100%;box-sizing: border-box;" title="Zoom">
 		<div class="dropdown text-right scroll" id="zoomDropdown">
 			<div class="dropdown-option">80%</div>
 			<div class="dropdown-option">90%</div>

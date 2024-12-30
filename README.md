@@ -33,6 +33,7 @@
 npm install
 ```
 
+
 ## Start web server
 
 Start web server. Default port is **3013**
@@ -48,6 +49,7 @@ PORT=5000 npm run server
 ```
 
 [Open in browser](http://127.0.0.1:3013)
+
 
 ## Start desktop app
 
@@ -86,23 +88,28 @@ the package will be generated in **out** directory
 
 > Note: Not tested for Windows
 
+
 ## Demo
 
 [Open editor](https://www.sipme.io/memed)
+
 
 ## Next
 
 * Stroke **tapered ends**
 * Circle/ellipse object
 * Fill gradient
-* SVG export/import
+* SVG import
 * Object grouping
 * Better handling of curve's node manipulation
 * Undo/Redo functionality 
+* Animations
+
 
 ## Known issues
 
 * History Undo/Redo functionality is not completed
+* SVG files are imported as images rather than objects
 
 
 ### Windows

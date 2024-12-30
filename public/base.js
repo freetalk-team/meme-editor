@@ -152,6 +152,10 @@ export class Base {
 		obj.assign(Object.fromInstance(this));
 	}
 
+	fillColor() {
+		return this.#fill + this.#alpha;
+	}
+
 	isSelected() {
 		return this.#selected;
 	}
@@ -236,7 +240,7 @@ export class Base {
 		
 		//ctx.globalAlpha = 0.4;
 
-		ctx.fillStyle = this.#fill + this.#alpha;
+		ctx.fillStyle = this.fillColor();
 
 		if (this.#shadowWidth > 0) {
 			
@@ -449,6 +453,19 @@ export class Base {
 
 	release() {}
 	getNodes() { return []; }
+
+	toSVG() { return ''; }
+	toSVGFilter() {
+
+		if (!this.#shadow) return '';
+
+		const id = this.#id + '-shadow'
+			, dx = this.#shadowWidth
+			, color = this.#shadowColor
+			;
+
+		return `<filter id="${id}" x="-50%" y="-50%" width="200%" height="200%"><feFlood flood-color="${color}" result="flood"/><feComposite in2="SourceAlpha" operator="in" result="shadow"/><feGaussianBlur in="shadow" stdDeviation="3"/><feOffset dx="${dx}" dy="${dx}" result="offsetblur"/><feMerge><feMergeNode in="offsetblur"/><feMergeNode in="SourceGraphic"/></feMerge></filter>`;
+	}
 
 	handleClick(x, y) {
 		let X = this.x + this.width / 2

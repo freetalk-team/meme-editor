@@ -54,10 +54,12 @@ function wrap(container, props={}) {
 							else {
 								e.value = e.children[0].value;
 							}
-							
-							if (checked != p.checked)
+
+							if (checked != p.checked) {
 								// p.click();
 								p.checked = checked;
+								p.dispatchEvent(new Event('change', { 'bubbles': true }));
+							}
 						}
 						else {
 							e.value = value;
@@ -146,7 +148,7 @@ export function wrapProperties(container, handler) {
 			handler.update(id, value);
 	}
 
-	container.onclick = e => {
+	container.onclick = async e => {
 
 		const target = e.target;
 
@@ -168,7 +170,9 @@ export function wrapProperties(container, handler) {
 				const e = target.previousElementSibling;
 				const threshold = parseFloat(e.value);
 
-				handler.detectBody(threshold);
+				target.disabled = true;
+				await delayResolve(handler.detectBody(threshold), 2000);
+				target.disabled = false;
 			}
 			break;
 		}
@@ -543,17 +547,30 @@ export function wrapActions(container, editor) {
 
 		},
 
+		assign(values) {
+
+			for (const [name, value] of Object.entries(values))
+				this.set(name, value);
+		},
+
 		set(prop, value) {
 
 			switch (prop) {
 				case 'zoom':
 				zoomInput.value = parseInt(value * 100) + '%';
 				break;
+
+				default: {
+					const e = container.querySelector(`[name="${prop}"]`);
+					if (e)
+						e.value = value;
+				}
+				
 			}
 		}
 	};
 
-	container.onclick = e => {
+	container.onclick = async e => {
 		const target = e.target;
 
 		switch (target.tagName) {
@@ -583,7 +600,9 @@ export function wrapActions(container, editor) {
 
 				case 'save': {
 					const name = target.previousElementSibling.value || 'test';
-					editor.save(name);
+					target.disabled = true;
+					await delayResolve(editor.save(name), 2000);
+					target.disabled = false;
 				}
 				break;
 
@@ -676,4 +695,27 @@ export function wrapActions(container, editor) {
 	editor.on('open', e => project.value = e.detail);
 
 	return actions;
+}
+
+export function wrapNotifications(container, template) {
+
+	if (typeof container == 'string')
+		container = document.getElementById(container);
+
+	const list = UX.List.createMixin(container);
+
+	list.add = function(md, status) {
+
+		const styles = {
+			success: 'w3-green',
+			error: 'w3-red'
+		};
+		
+		const e = this.addItemTemplate(template, md);
+		e.classList.add(styles[status]);
+
+		setTimeout(() => dom.removeElement(e), 3000);
+	}
+
+	return list;
 }

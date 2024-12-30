@@ -86,6 +86,48 @@ class Text extends Base {
 		super.drawSelection(ctx);
 	}
 
+	toSVG(x=this.x, y=this.y) {
+		const fill = this.fill
+			, stroke = this.stroke
+			, alpha = this.alpha
+			, shadow = this.shadow
+			, angle = this.angle * (180 / Math.PI)
+			;
+
+		let xml = '';
+		
+		xml += `<text x="${x}" y="${y}" font-size="${this.#size}" font-family="${this.#font}" dy="${this.#size}"`;
+
+		if (this.#bold)
+			xml += ' font-weight="bold"';
+
+		if (this.#italic)
+			xml += ' font-style="italic"';
+
+		if (fill) {
+			xml += ` fill="${fill}"`;
+
+			if (alpha < 1)
+				xml += ` fill-opacity="${alpha}"`;
+		}
+
+		if (stroke)
+			xml += ` stroke="${stroke}" stroke-width="${this.strokeWidth}"`;
+
+		if (shadow) 
+			xml += ` filter="url(#${this.id + '-shadow'})"`;
+
+		if (angle) {
+			const [x, y] = this.center();
+			xml += ` transform="rotate(${angle},${x},${y})"`;
+		}
+
+		
+		xml += `>${this.#text}</text>`;
+
+		return xml;
+	}
+
 	#recalcBorder() {
 		if (this.#text) {
 			const lines = this.#text.trim().split('\n');

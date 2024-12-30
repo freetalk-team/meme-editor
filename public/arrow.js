@@ -116,6 +116,70 @@ export class Arrow extends Base {
 		ctx.restore();
 
 	}
+
+	toSVGFilter() {
+
+		if (!this.shadow) return '';
+
+		const id = this.id + '-shadow'
+			, dx = this.shadowWidth
+			, color = this.shadowColor
+			;
+
+		return `<filter id="${id}" x="-50%" y="-50%" width="200%" height="200%"><feDropShadow dx="${dx}" dy="${dx}" stdDeviation="5" flood-color="${color}"/></filter>`;
+		// return `<filter id="${id}" x="-50%" y="-50%" width="200%" height="200%"><feDropShadow dx="2" dy="2" stdDeviation="5" flood-color="${color}"/></filter>`;
+	}
+
+	toSVG() {
+		const m = M + this.strokeWidth*1.3;
+
+		const stroke = this.stroke
+			, angle = this.angle * (180 / Math.PI)
+			, x = this.x
+			, y = this.y;
+
+		let x1 = x
+			, x2 = this.x + this.width
+			, r = this.strokeWidth * 0.7
+			, xml = '';
+
+		if (r < 2) r = 2;
+
+		xml += `<g stroke="${stroke}" stroke-width="${this.strokeWidth}" fill="${stroke}"`;
+
+		if (angle)
+			xml += ` transform="rotate(${angle},${x},${y})"`;
+
+		// not supported by Inkscape, Chrome, Firefox
+		// if (shadow) 
+		// 	xml += ` filter="url(#${this.id + '-shadow'})"`;
+
+		xml += '>'
+
+		if (this.#arrow == 'end' || this.#arrow == 'both') {
+			x2 -= m;
+			xml += `<path d="M ${x2} ${y + m/2} L ${x2 + m} ${y} L ${x2} ${y - m/2} Z"/>`;
+		}
+		else {
+			xml += `<circle cx="${x2}" cy="${y}" r="${r}"/>`;
+		}
+
+		if (this.#arrow == 'begin' || this.#arrow == 'both') {
+			x1 += m;
+			xml += `<path d="M ${x1} ${y + m/2} L ${x1 - m} ${y} L ${x1} ${y - m/2} Z"/>`;
+		}
+		else {
+			xml += `<circle cx="${x}" cy="${y}" r="${r}" fill="${stroke}"/>`;
+		}
+		
+		xml += `<line x1="${x1}" y1="${y}" x2="${x2}" y2="${y}"/>`;
+		// xml += `<path d="M${x1},${y} L${x2},${y}"`;
+
+		
+		xml += '</g>'
+
+		return xml;
+	}
 	 
 	handleClick(x, y) {
 		const [x0, y0, x1, y1] = this.#getCoordinates(true);
