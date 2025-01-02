@@ -110,6 +110,7 @@ the package will be generated in **out** directory
 
 * History Undo/Redo functionality is not completed
 * SVG files are imported as images rather than objects
+* SVG bubble export
 
 
 ### Windows

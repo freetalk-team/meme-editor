@@ -4,7 +4,6 @@ import { Text } from "./text.js";
 
 export class Rect extends Base {
 	#radius = 0;
-	#path;
 
 	get type() { return 'rect'; }
 	get radius() { return this.#radius; }
@@ -12,87 +11,16 @@ export class Rect extends Base {
 	set radius(n) {
 		if (typeof n == 'string') n = parseInt(n);
 		this.#radius = n;
-		this.#path = this.getPath();
-	}
-
-	get width() { return super.width; }
-	set width(n) {
-		super.width = n;
-
-		if (this.#radius)
-			this.updatePath()
-	}
-
-	get height() { return super.height; }
-	set height(n) {
-		super.height = n;
-
-		if (this.#radius)
-			this.updatePath()
 	}
 
 	draw(ctx) {
-		if (this.#path)
-			this.drawPath(ctx, this.#path);
-		else
-			this.drawRectangle(ctx);
+		this.drawRoundRectangle(ctx, this.#radius);
 	}
 
 	strokeBorder(ctx) {
 
 		if (this.strokeWidth > 0)
 			super.drawBorder(ctx, this.strokeWidth, this.stroke, -this.strokeWidth / 2);
-	}
-
-	getPath(radius=this.#radius) {
-
-		let  width = this.width
-			, height = this.height
-			, x = -width / 2
-			, y = -height / 2
-			;
-		
-		if (typeof radius === 'number') {
-
-			if (radius == 0) return;
-
-			radius = {
-				tl: radius,
-				tr: radius,
-				br: radius,
-				bl: radius
-			};
-		} else {
-			var defaultRadius = {
-				tl: 0,
-				tr: 0,
-				br: 0,
-				bl: 0
-			};
-			for (var side in defaultRadius) {
-				radius[side] = radius[side] || defaultRadius[side];
-			}
-		}
-
-		const path = new Path2D;
-
-		path.moveTo(x + radius.tl, y);
-		path.lineTo(x + width - radius.tr, y);
-		path.quadraticCurveTo(x + width, y, x + width, y + radius.tr);
-		path.lineTo(x + width, y + height - radius.br);
-		path.quadraticCurveTo(x + width, y + height, x + width - radius.br, y + height);
-		path.lineTo(x + radius.bl, y + height);
-		path.quadraticCurveTo(x, y + height, x, y + height - radius.bl);
-		path.lineTo(x, y + radius.tl);
-		
-		path.quadraticCurveTo(x, y, x + radius.tl, y);
-		path.closePath();
-
-		return path;
-	}
-
-	updatePath() {
-		this.#path = this.getPath();
 	}
 
 	toSVG(group=false) {
@@ -137,8 +65,6 @@ export class Rect extends Base {
 
 		return xml;
 	}
-
-	
 }
 
 export class Rectangle extends Rect {
@@ -157,9 +83,6 @@ export class Rectangle extends Rect {
 		t.shadowColor = '#555555';
 
 		this.#text = t;
-
-		this.width = 200;
-		this.height = 150;
 	}
 	
 	// get x() { return super.x; }

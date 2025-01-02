@@ -274,7 +274,7 @@ export class Base {
 		
 		//ctx.globalAlpha = 0.4;
 
-		ctx.fillStyle = this.#fill + this.#alpha;
+		ctx.fillStyle = this.fillColor();
 
 		if (this.#shadow && this.#shadowWidth > 0) {
 			
@@ -320,6 +320,9 @@ export class Base {
 
 			this.addShadow(ctx);
 
+			ctx.fillStyle = this.fillColor();
+			ctx.strokeStyle = this.#stroke;
+
 			if (this.#shadow == 'fill')
 				ctx.fillRect(x, y, this.#width, this.#height);
 			else if (this.#shadow == 'stroke')
@@ -332,7 +335,7 @@ export class Base {
 
 			ctx.save();
 
-			ctx.fillStyle = this.#fill + this.#alpha;
+			ctx.fillStyle = this.fillColor();
 			ctx.fillRect(x, y, this.#width, this.#height);
 
 			ctx.restore();
@@ -345,6 +348,61 @@ export class Base {
 			ctx.lineWidth = this.#strokeWidth;
 
 			ctx.strokeRect(x, y, this.#width, this.#height);
+
+			ctx.restore();
+		}
+
+
+		ctx.restore();
+	}
+
+	drawRoundRectangle(ctx, radius=5) {
+
+		ctx.save();
+
+		const { x, y } = this.setGeometry(ctx);
+
+		if (this.#shadowWidth > 0) {
+			
+			ctx.save();
+
+			this.addShadow(ctx);
+
+			ctx.fillStyle = this.fillColor();
+			ctx.strokeStyle = this.#stroke;
+
+			ctx.beginPath();
+			ctx.roundRect(x, y, this.#width, this.#height, radius);
+
+			if (this.#shadow == 'fill')
+				ctx.fill();
+			else if (this.#shadow == 'stroke')
+				ctx.stroke();
+
+			ctx.restore();
+		}
+
+		if (this.#fill) {
+
+			ctx.save();
+
+			ctx.fillStyle = this.fillColor();
+			ctx.beginPath();
+			ctx.roundRect(x, y, this.#width, this.#height, radius);
+			ctx.fill();
+
+			ctx.restore();
+		}
+
+		if (this.#stroke && this.#strokeWidth > 0) {
+			ctx.save();
+
+			ctx.strokeStyle = this.#stroke;
+			ctx.lineWidth = this.#strokeWidth;
+
+			ctx.beginPath();
+			ctx.roundRect(x, y, this.#width, this.#height, radius);
+			ctx.stroke();
 
 			ctx.restore();
 		}
@@ -549,6 +607,8 @@ export class Base {
 		 
 		// console.debug('NODE:', x, y);
 
+		ctx.save();
+
 		ctx.strokeStyle = color;
 		ctx.lineWidth = 1;
 
@@ -562,6 +622,8 @@ export class Base {
 		}
 
 		ctx.stroke();
+
+		ctx.restore();
 	}
 
 	static inNode(x, y, X, Y) {

@@ -1,4 +1,3 @@
-import { Base } from "./base.js";
 import { Rectangle } from "./rect.js";
 
 class Bubble extends Rectangle {
@@ -8,8 +7,28 @@ class Bubble extends Rectangle {
 
 	#pX;
 	#pY;
+	#path;
 
 	get type() { return 'bubble'; }
+
+	set radius(n) {
+		if (typeof n == 'string') n = parseInt(n);
+		super.radius = n;
+		this.updatePath()
+	}
+	get radius() { return super.radius; }
+
+	get width() { return super.width; }
+	set width(n) {
+		super.width = n;
+		this.updatePath()
+	}
+
+	get height() { return super.height; }
+	set height(n) {
+		super.height = n;
+		this.updatePath()
+	}
 
 	get px() { return this.#pX; }
 	get py() { return this.#pY; }
@@ -44,6 +63,10 @@ class Bubble extends Rectangle {
 
 		this.radius = 10;
 	}
+
+	draw(ctx) {
+		this.drawPath(ctx, this.#path);
+	}
 	
 	handleClick(x, y) {
 
@@ -64,6 +87,10 @@ class Bubble extends Rectangle {
 			};
 
 		return super.handleClick(x, y);
+	}
+
+	updatePath() {
+		this.#path = this.getPath();
 	}
 
 	getPath() {

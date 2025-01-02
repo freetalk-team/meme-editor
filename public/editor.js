@@ -304,11 +304,15 @@ export default class Editor extends EventTarget {
 
 			case 'bubble':
 			o = new Bubble;
+			o.width = 200;
+			o.height = 150;
 			break;
 
 			case 'rect':
 			case 'rectext':
 			o = new Rectangle;
+			o.width = 200;
+			o.height = 200;
 			break;
 
 			case 'text':
