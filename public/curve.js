@@ -58,7 +58,7 @@ export class Point {
 	}
 
 	toArray() { return [this.x, this.y ]; }
-	toSVG(X=0, Y=0) { return `L ${this.x + X} ${this.y + Y}`; }
+	toSVG(X=0, Y=0) { return `L${this.x + X},${this.y + Y}`; }
 
 	static create(x, y) {
 		const p = new Point;
@@ -81,7 +81,7 @@ export class Curve2 extends Point {
 
 	isLine() { return false; }
 	toArray() { return [this.cp.x, this.cp.y, this.x, this.y ]; }
-	toSVG(X=0, Y=0) { return `Q ${this.cp.x + X} ${this.cp.y +Y}, ${this.x + X} ${this.y+ Y}`; }
+	toSVG(X=0, Y=0) { return `Q${this.cp.x + X},${this.cp.y +Y},${this.x + X},${this.y + Y}`; }
 
 	clone() {
 		const p = new Curve2(this.x, this.y);
@@ -155,7 +155,7 @@ export class Curve3 extends Curve2 {
 	cp2 = new Point;
 
 	toArray() { return [this.cp.x, this.cp.y, this.cp2.x, this.cp2.y, this.x, this.y ]; }
-	toSVG(X=0, Y=0) { return `C ${this.cp.x + X} ${this.cp.y + Y}, ${this.cp2.x + X} ${this.cp2.y + Y}, ${this.x + X} ${this.y + Y}`; }
+	toSVG(X=0, Y=0) { return `C${this.cp.x + X},${this.cp.y + Y},${this.cp2.x + X},${this.cp2.y + Y},${this.x + X},${this.y + Y}`; }
 
 	clone() {
 		const p = new Curve3(this.x, this.y);

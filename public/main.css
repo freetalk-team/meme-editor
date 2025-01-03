@@ -98,6 +98,28 @@ canvas:focus {
 	outline: none;
 }
 
+.dnd:before {
+	font-family: "Font Awesome 5 Free";
+	font-weight: 900;
+	content: '\f382';
+	position: absolute;
+	z-index: 99;
+	opacity: .2;
+	text-align: center;
+	/* align-self: center; */
+	font-size: 20em;
+	/* top: 20px; */
+	/* text-align: center; */
+	/* width: 100%; */
+	/* height: inherit; */
+	top: 50%;
+	left: 50%;
+	/* line-height: 100px; */
+	/* font-size-adjust: 1.5; */
+	/* vertical-align: middle; */
+	transform: translate(-50%,-50%);
+}
+
 .item[selected] {
 	color: #11e;
 	border: 1px solid #115;
@@ -157,6 +179,9 @@ button.tab.selected:after {
 	content: '\f0ec';
 }
 
+.fa[type="chart"]::before {
+	content: '\e0e3';
+}
 
 .fa.collapse::before {
 	content: '\f107';
@@ -175,8 +200,8 @@ button.tab.selected:after {
 	display: none;
 }
 
+[desktop] [display="electron"],
 [mode] [display="all"],
-[mode="electron"] [display="electron"],
 [mode="edit"] [display="edit"],
 [mode="bubble"] [display*="bubble"],
 [mode="bubble"] [display*="rect"],
@@ -189,8 +214,14 @@ button.tab.selected:after {
 [mode="path"] [display*="path"],
 [mode="text"] [display*="text"],
 [mode="arrow"] [display*="arrow"],
+[mode="chart"] [display*="chart"],
 [mode="emoji"] [display*="emoji"] { 
 	display: inherit!important; 
+}
+
+[mode="emoji"] [nodisplay*="emoji"],
+[mode="arrow"] [nodisplay*="arrow"] {
+	display: none;
 }
 
 [filter="triangleBlur"] [display*="triangleBlur"],

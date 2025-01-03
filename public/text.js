@@ -86,46 +86,27 @@ class Text extends Base {
 		super.drawSelection(ctx);
 	}
 
-	toSVG(x=this.x, y=this.y) {
-		const fill = this.fill
-			, stroke = this.stroke
-			, alpha = this.alpha
-			, shadow = this.shadow
-			, angle = this.angle * (180 / Math.PI)
+	drawSVG(svg, x=this.x, y=this.y, group=false) {
+		const fill = this.fill ? { color: this.fill, alpha: this.alpha } : null
+			, stroke = this.stroke ? { color: this.stroke, width: this.strokeWidth } : null
+			, shadow = this.shadow ? { id: this.id, color: this.shadowColor, width: this.shadowWidth } : null
+			, box = this.box()
+			, text = { 
+				value: this.#text,
+				font: this.#font,
+				size: this.#size,
+				bold: this.#bold,
+				italic: this.#italic
+			 }
 			;
 
-		let xml = '';
-		
-		xml += `<text x="${x}" y="${y}" font-size="${this.#size}" font-family="${this.#font}" dy="${this.#size}"`;
+		box.x = x;
+		box.y = y;
 
-		if (this.#bold)
-			xml += ' font-weight="bold"';
+		if (group)
+			 box.angle = 0;
 
-		if (this.#italic)
-			xml += ' font-style="italic"';
-
-		if (fill) {
-			xml += ` fill="${fill}"`;
-
-			if (alpha < 1)
-				xml += ` fill-opacity="${alpha}"`;
-		}
-
-		if (stroke)
-			xml += ` stroke="${stroke}" stroke-width="${this.strokeWidth}"`;
-
-		if (shadow) 
-			xml += ` filter="url(#${this.id + '-shadow'})"`;
-
-		if (angle) {
-			const [x, y] = this.center();
-			xml += ` transform="rotate(${angle},${x},${y})"`;
-		}
-
-		
-		xml += `>${this.#text}</text>`;
-
-		return xml;
+		svg.text(box, text, fill, stroke, shadow);
 	}
 
 	#recalcBorder() {

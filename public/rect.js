@@ -23,47 +23,19 @@ export class Rect extends Base {
 			super.drawBorder(ctx, this.strokeWidth, this.stroke, -this.strokeWidth / 2);
 	}
 
-	toSVG(group=false) {
+	
 
-		const fill = this.fill
-			, stroke = this.stroke
-			, alpha = this.alpha
-			, shadow = this.shadow
-			, angle = this.angle * (180 / Math.PI)
-			;
+	drawSVG(svg, group=false) {
 
-		let xml = '';
-		
-		xml += `<rect x="${this.x}" y="${this.y}" width="${this.width}" height="${this.height}"`;
+		const fill = this.fill ? { color: this.fill, alpha: this.alpha } : null
+			, stroke = this.stroke ? { color: this.stroke, width: this.strokeWidth } : null
+			, shadow = this.shadow ? { id: this.id, color: this.shadowColor, width: this.shadowWidth } : null
+			, box = this.box();
 
-		if (this.#radius > 0)
-			xml += ` rx="${this.#radius}" ry="${this.#radius}"`;
+		if (group) 
+			box.angle = 0;
 
-		if (!group) {
-
-			if (fill) {
-				xml += ` fill="${fill}"`;
-
-				if (alpha < 1)
-					xml += ` fill-opacity="${alpha}"`;
-			}
-
-			if (stroke)
-				xml += ` stroke="${stroke}" stroke-width="${this.strokeWidth}"`;
-
-			if (shadow) 
-				xml += ` filter="url(#${this.id + '-shadow'})"`;
-			
-			if (angle) {
-				const [x, y] = this.center();
-				xml += ` transform="rotate(${angle},${x},${y})"`;
-			}
-
-		}
-		
-		xml += '/>';
-
-		return xml;
+		svg.rect(box, this.#radius, fill, stroke, shadow);
 	}
 }
 
@@ -222,17 +194,18 @@ export class Rectangle extends Rect {
 		this.#text.draw(ctx);
 	}
 
-	toSVG() {
-		let xml = '<g>';
-		
+	drawSVG(svg) {
+
 		const x = this.x + this.#text.x
-			, y = this.y + this.#text.y;
+			, y = this.y + this.#text.y
+			, box= this.box();
 
-		xml += super.toSVG();
-		xml += this.#text.toSVG(x, y);
+		svg.group(box);
 
-		xml += '</g>';
+		super.drawSVG(svg, true);
 
-		return xml;
+		this.#text.drawSVG(svg, x, y, true);
+
+		svg.groupEnd();
 	}
 }

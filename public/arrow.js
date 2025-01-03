@@ -1,5 +1,6 @@
 
 import { Base } from "./base.js";
+import { Point } from "./curve.js";
 
 const M = 8;
 
@@ -117,68 +118,114 @@ export class Arrow extends Base {
 
 	}
 
-	toSVGFilter() {
+	// toSVGFilter() {
 
-		if (!this.shadow) return '';
+	// 	if (!this.shadow) return '';
 
-		const id = this.id + '-shadow'
-			, dx = this.shadowWidth
-			, color = this.shadowColor
-			;
+	// 	const id = this.id + '-shadow'
+	// 		, dx = this.shadowWidth
+	// 		, color = this.shadowColor
+	// 		;
 
-		return `<filter id="${id}" x="-50%" y="-50%" width="200%" height="200%"><feDropShadow dx="${dx}" dy="${dx}" stdDeviation="5" flood-color="${color}"/></filter>`;
-		// return `<filter id="${id}" x="-50%" y="-50%" width="200%" height="200%"><feDropShadow dx="2" dy="2" stdDeviation="5" flood-color="${color}"/></filter>`;
-	}
+	// 	return `<filter id="${id}" x="-50%" y="-50%" width="200%" height="200%"><feDropShadow dx="${dx}" dy="${dx}" stdDeviation="5" flood-color="${color}"/></filter>`;
+	// 	// return `<filter id="${id}" x="-50%" y="-50%" width="200%" height="200%"><feDropShadow dx="2" dy="2" stdDeviation="5" flood-color="${color}"/></filter>`;
+	// }
 
-	toSVG() {
-		const m = M + this.strokeWidth*1.3;
+	drawSVG(svg) {
+
+		const m = M /*+ this.strokeWidth*1.3*/
+			, mh = m/2;
 
 		const stroke = this.stroke
-			, angle = this.angle * (180 / Math.PI)
 			, x = this.x
-			, y = this.y;
+			, y = this.y
+			, box = this.box();
 
 		let x1 = x
 			, x2 = this.x + this.width
 			, r = this.strokeWidth * 0.7
-			, xml = '';
+			;
 
 		if (r < 2) r = 2;
 
-		xml += `<g stroke="${stroke}" stroke-width="${this.strokeWidth}" fill="${stroke}"`;
+		let segments;
 
-		if (angle)
-			xml += ` transform="rotate(${angle},${x},${y})"`;
+		box.x = 0;
+		box.y = 0;
+		box.width = 0;
+		box.height = 0;
 
-		// not supported by Inkscape, Chrome, Firefox
-		// if (shadow) 
-		// 	xml += ` filter="url(#${this.id + '-shadow'})"`;
+		svg.group(box, { color: stroke, alpha: 1 }, { color: stroke, width: this.strokeWidth });
+		
+		box.angle = 0;
 
-		xml += '>'
-
-		if (this.#arrow == 'end' || this.#arrow == 'both') {
+		if (this.#arrow == 'both') {
 			x2 -= m;
-			xml += `<path d="M ${x2} ${y + m/2} L ${x2 + m} ${y} L ${x2} ${y - m/2} Z"/>`;
-		}
-		else {
-			xml += `<circle cx="${x2}" cy="${y}" r="${r}"/>`;
-		}
-
-		if (this.#arrow == 'begin' || this.#arrow == 'both') {
 			x1 += m;
-			xml += `<path d="M ${x1} ${y + m/2} L ${x1 - m} ${y} L ${x1} ${y - m/2} Z"/>`;
+
+			segments = [
+				new Point(x1, y),
+				new Point(x1, y + mh),
+				new Point(x1 - m, y), 
+				new Point(x1, y - mh),
+
+				new Point(x1, y),
+				new Point(x2, y),
+
+				new Point(x2, y + mh),
+				new Point(x2 + m, y),
+				new Point(x2, y - mh),
+
+				new Point(x2, y)
+			];
+		}	
+		else if (this.#arrow == 'end') {
+			x2 -= m;
+
+			segments = [
+				new Point(x1, y),
+				new Point(x2, y),
+
+				new Point(x2, y + mh),
+				new Point(x2 + m, y),
+				new Point(x2, y - mh),
+
+				new Point(x2, y)
+
+			];
+
+			svg.circle(x1, y, r);
+		}
+		else if (this.#arrow == 'begin') {
+
+			x1 += m;
+
+			segments = [
+				new Point(x2, y),
+				new Point(x1, y),
+				
+				new Point(x1, y + mh),
+				new Point(x1 - m, y), 
+				new Point(x1, y - mh),
+				
+				new Point(x1, y)
+			];
+
+			svg.circle(x2, y, r);
 		}
 		else {
-			xml += `<circle cx="${x}" cy="${y}" r="${r}" fill="${stroke}"/>`;
+
+			segments = [
+				new Point(x1, y),
+				new Point(x2, y)
+			];
+
+			svg.circle(x1, y, r);
+			svg.circle(x2, y, r);
 		}
-		
-		xml += `<line x1="${x1}" y1="${y}" x2="${x2}" y2="${y}"/>`;
-		// xml += `<path d="M${x1},${y} L${x2},${y}"`;
 
-		
-		xml += '</g>'
-
-		return xml;
+		svg.path(box, { segments, closed: true });
+		svg.groupEnd();
 	}
 	 
 	handleClick(x, y) {

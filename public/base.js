@@ -155,6 +155,10 @@ export class Base {
 	fillColor() {
 		return this.#fill + this.#alpha;
 	}
+	
+	alphaHex() { 
+		return this.#alpha; 
+	}
 
 	isSelected() {
 		return this.#selected;
@@ -168,7 +172,21 @@ export class Base {
 		return [ this.#x + this.#width / 2, this.y + this.#height / 2];
 	}
 
+	box() {
+		return {
+			x: this.#x,
+			y: this.#y,
+			width: this.#width,
+			height: this.#height,
+			angle: this.angle * (180 / Math.PI),
+			center() {
+				return [ this.x + this.width / 2, this.y + this.height / 2 ];
+			}
+		}
+	}
+
 	draw() {}
+	drawSVG() {}
 
 	drawSelection(ctx, mode) {
 
@@ -185,10 +203,7 @@ export class Base {
 	}
 
 	drawLine(ctx, x, y, X=this.#x, Y=this.#y, shadow=this.#shadow) {
-		ctx.save();
-
-		ctx.strokeStyle = this.#stroke;
-		ctx.lineWidth = this.#strokeWidth;
+		
 
 		if (shadow && this.#shadowWidth > 0) {
 			
@@ -204,12 +219,7 @@ export class Base {
 			ctx.restore();
 		}
 
-		ctx.beginPath();
-		ctx.moveTo(X, Y);
-		ctx.lineTo(x, y);
-		ctx.stroke();
-
-		ctx.restore();
+		Base.drawLine(ctx, X, Y, x, y, this.#stroke, this.#strokeWidth);
 	}
 
 	drawLineShadow(ctx, x, y, X=this.#x, Y=this.#y) {
@@ -601,6 +611,20 @@ export class Base {
 				return [i[0], i[1]];
 
 		
+	}
+
+	static drawLine(ctx, x1, y1, x2, y2, stroke='#111111', strokeWidth=1) {
+		ctx.save();
+
+		ctx.strokeStyle = stroke;
+		ctx.lineWidth = strokeWidth;
+
+		ctx.beginPath();
+		ctx.moveTo(x1, y1);
+		ctx.lineTo(x2, y2);
+		ctx.stroke();
+
+		ctx.restore();
 	}
 
 	static drawNode(ctx, x, y, color='#00f', fill=false, r=kNodeRadius) {

@@ -7,9 +7,11 @@ import { Text as Letterpress } from './text.js';
 import { Emoji } from './emoji.js';
 import { Path } from './path.js';
 import { Arrow } from './arrow.js';
+import { Chart } from './chart.js';
 
 import { IndexDB } from './db.js';
 import { WebGL } from './webgl.js';
+import { SVG } from './svg.js';
 
 import { wrapProjects, wrapObjects, wrapProperties, wrapTools, wrapCanvas, wrapStatus, wrapActions, wrapNotifications } from './wrappers.js';
 
@@ -327,6 +329,13 @@ export default class Editor extends EventTarget {
 			case 'arrow':
 			o = new Arrow;
 			break;
+
+			case 'chart':
+			o = new Chart;
+			o.width = 400;
+			o.height = 300;
+			
+			break;
 		}
 
 		if (o) {
@@ -460,10 +469,11 @@ export default class Editor extends EventTarget {
 			const pickerOpts = {
 				types: [
 					{
-					description: "Images",
-					accept: {
-						"image/*": [".png", ".webp", ".jpeg", ".jpg"],
-					},
+						description: "Images & CSV",
+						accept: {
+							"image/*": [".png", ".webp", ".jpeg", ".jpg"],
+							'text/csv': ['.csv']
+						},
 					},
 				],
 				excludeAcceptAllOption: true,
@@ -473,6 +483,35 @@ export default class Editor extends EventTarget {
 			const handles = await showOpenFilePicker(pickerOpts);
 			
 			files = await Promise.all(handles.map(i => i.getFile()));
+		}
+
+		if (files.length == 1 && files[0].type == 'text/csv') {
+
+			console.debug('Parsing csv file');
+
+			const text = await files[0].text();
+
+			const data = parseCSV(text);
+			if (data.length > 1) {
+
+				if (!this.#selected || this.#selected.type != 'chart') {
+					this.#dom.notify.add('No chart selected !', 'error');
+				}
+				else {
+
+					this.#selected.setData(data);
+					this.draw();
+				}
+
+				// processData(data);
+			}
+			else {
+				console.error('Invalid CSV data');
+
+				this.#dom.notify.add('Failed to import CSV !', 'error');
+			}
+
+			return;
 		}
 
 		let img;
@@ -935,12 +974,27 @@ export default class Editor extends EventTarget {
 
 		const body = document.body;
 
-		body.ondragover = (e) => e.preventDefault();
+		let counter = 0;
+
+		body.ondragover = (e) => {
+			e.preventDefault();
+			if (counter == 0)
+				body.classList.add('dnd');
+		}	
+		
+		body.ondragleave = e => {
+			if (--counter == 0)
+				body.classList.remove('dnd');
+		}
+
 		body.ondrop = (e) => {
 			// console.log("File(s) dropped");
 
 			// Prevent default behavior (Prevent file from being opened)
 			e.preventDefault();
+
+			counter = 0;
+			body.classList.remove('dnd');
 
 			const files = [];
 
@@ -1624,19 +1678,29 @@ export default class Editor extends EventTarget {
 					, h = this.#bg.height
 					;				
 	
-				let xml = `<svg width="${w}" height="${h}" xmlns="http://www.w3.org/2000/svg"><defs>`, inner = '';
+				// let xml = `<svg width="${w}" height="${h}" xmlns="http://www.w3.org/2000/svg"><defs>`, inner = '';
 
 				
 	
-				for (const i of this.#objects) {
+				// for (const i of this.#objects) {
 
-					xml += i.toSVGFilter();
-					inner += i.toSVG();
+				// 	xml += i.toSVGFilter();
+				// 	inner += i.toSVG();
+				// }
+
+				// xml += '</defs>' + inner + '</svg>';
+
+				// content = xml;
+
+				const svg = new SVG(w, h);
+
+				for (const i of this.#objects) {
+					if (!i.visible) continue;
+
+					i.drawSVG(svg, this.#bg);
 				}
 
-				xml += '</defs>' + inner + '</svg>';
-
-				content = xml;
+				content = svg.toString();
 			}
 			else {
 				content = await new Promise(resolve => canvas.toBlob(resolve, mime));
@@ -1715,3 +1779,46 @@ class Database extends IndexDB {
 	}
 }
 
+function parseCSV(csvText) {
+	const rows = [];
+	let currentRow = [];
+	let currentCell = '';
+	let insideQuotes = false;
+
+	for (let i = 0; i < csvText.length; i++) {
+		const char = csvText[i];
+		const nextChar = csvText[i + 1];
+
+		if (char === '"') {
+			if (insideQuotes && nextChar === '"') {
+				// Handle double quotes as an escaped quote
+				currentCell += '"';
+				i++;  // Skip next quote
+			} else {
+				// Toggle quote state
+				insideQuotes = !insideQuotes;
+			}
+		} else if (char === ',' && !insideQuotes) {
+			// End of cell
+			currentRow.push(currentCell.trim());
+			currentCell = '';
+		} else if (char === '\n' && !insideQuotes) {
+			// End of row
+			currentRow.push(currentCell.trim());
+			rows.push(currentRow);
+			currentRow = [];
+			currentCell = '';
+		} else {
+			// Regular character
+			currentCell += char;
+		}
+	}
+	
+	// Push the last row if it wasn't added
+	if (currentRow.length > 0 || currentCell !== '') {
+		currentRow.push(currentCell.trim());
+		rows.push(currentRow);
+	}
+	
+	return rows;
+}

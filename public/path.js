@@ -296,55 +296,15 @@ export class Path extends Base {
 		this.#path = this.getPath();
 	}
 
-	toSVG() {
+	drawSVG(svg) {
 
-		const fill = this.fill
-			, stroke = this.stroke
-			, alpha = this.alpha
-			, shadow = this.shadow
-			, angle = this.angle * (180 / Math.PI)
-			, [X, Y] = this.center()
-			;
+		const fill = this.fill ? { color: this.fill, alpha: this.alpha } : null
+			, stroke = this.stroke ? { color: this.stroke, width: this.strokeWidth } : null
+			, shadow = this.shadow ? { id: this.id, color: this.shadowColor, width: this.shadowWidth } : null
+			, path = { segments: this.#segments, closed: this.#closed }
+			, box = this.box();
 
-		const start = this.#closed ? this.#segments.last() : this.#segments[0];
-
-		let xml = '<path d="';
-
-		// Move to the starting point of the first segment
-		xml += `M ${start.x + X} ${start.y + Y}`;
-
-		for (const i of this.#segments) 
-			xml += ' ' + i.toSVG(X, Y);
-
-		if (this.#closed)
-			xml += ' Z';
-
-		xml += '"';
-
-		if (fill) {
-			xml += ` fill="${fill}"`;
-
-			if (alpha < 1)
-				xml += ` fill-opacity="${alpha}"`;
-		}
-
-		if (stroke)
-			xml += ` stroke="${stroke}" stroke-width="${this.strokeWidth}"`;
-
-		if (shadow) 
-			xml += ` filter="url(#${this.id + '-shadow'})"`;
-
-		if (angle) {
-			xml += ` transform="rotate(${angle},${X},${Y})"`;
-		}
-
-		xml += '/>';
-		
-		return xml;
-
-		// Arc
-		// const [rx, ry, xAxisRotation, largeArcFlag, sweepFlag] = arcParams;
-		// path += `A ${rx} ${ry} ${xAxisRotation} ${largeArcFlag} ${sweepFlag} ${p2[0]} ${p2[1]} `;
+		svg.path(box, path, fill, stroke, shadow);
 	}
 
 	close(updateSize=true) {
