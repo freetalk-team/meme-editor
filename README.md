@@ -100,7 +100,6 @@ the package will be generated in **out** directory
 * Circle/ellipse object
 * Fill gradient
 * SVG import
-* Object grouping
 * Better handling of curve's node manipulation
 * Undo/Redo functionality 
 * Animations
@@ -111,6 +110,7 @@ the package will be generated in **out** directory
 * History Undo/Redo functionality is not completed
 * SVG files are imported as images rather than objects
 * SVG bubble export
+* Object nested grouping
 
 
 ### Windows
@@ -120,8 +120,9 @@ WebGL is not working in VM. Not tested on Windows host machine
 
 ## In Loving Memory of Marina Nedeva 💖
 
-| ![Picture of Marina](public/ui/png/marina.png) | This project is dedicated to the memory of Marina, my dearest friend, an extraordinary software developer, and a kind, inspiring soul who left an indelible mark on both this work and my life. <br><br> Her contributions to this project showcase her dedication to clean code, her problem-solving skills, and her commitment to excellence. Her friendship and professional brilliance will always be remembered. |
-|------------------------------------------------------|-------------------------------------------------------------------------------------------------------------------------------------------
+<img align="left" width="100" height="100" src="public/ui/png/marina.png">
+
+This project is dedicated to the memory of Marina, my dearest friend, an extraordinary software developer, and a kind, inspiring soul who left an indelible mark on both this work and my life. <br><br> Her contributions to this project showcase her dedication to clean code, her problem-solving skills, and her commitment to excellence. Her friendship and professional brilliance will always be remembered.
 
 
 ### Her Contribution
