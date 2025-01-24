@@ -1,108 +1,27 @@
 <div class="cr fit noverflow">
 
-	<div id="tools" class="tools w3-card-2 w3-margin w3-padding-small cc selected" style="width: 30px;">
-		<button name="select" class="icon fa fa-arrow-pointer" disabled title="Select (s)" selectable></button>
-		<button name="edit" class="icon fa sm fa-circle-nodes w3-text-green" title="Edit path (e)" selectable></button>
-		<button name="draw" class="icon fa sm fa-bezier-curve w3-text-indigo" title="Bezier curve (d)" selectable></button>
-		<i class="vs"></i>
-		<button name="bubble" class="icon fa fa-message w3-text-blue" title="Bubble (b)"></button>
-		<button name="rect" class="icon fa fa-square w3-text-orange" title="Rectangle (r)"></button>
-		<button name="arrow" class="icon fa fa-arrow-right-arrow-left w3-text-purple" title="Arrow (a)"></button>
-		<button name="text" class="icon fa sm fa-t w3-text-black" title="Text (t)"></button>
-		<%- include('icon-picker.html') %>
-		<h4 class="nomargin fit text-center ellipsis" style="writing-mode:vertical-rl;rotate:180deg;opacity:.2;">Freetalk Team</h4>
-	</div>
+	<%- include('tools.html') %>
 
-	<div class="column relative" style="height: 100%; width:100%">
+	<div class="column relative noverflow" style="height: 100%; width:100%">
 		<div id="notifications" class="top-right w3-margin-right" style="z-index:100;opacity:.9;"></div>
 
 		<%- include('toolbar.html') %>
 
-		<div class="column noverflow" style="height:100%;width:calc(100% - 15px);">
+		<div class="row reverse noverflow fit" style="height:100%">
 
-			<div class="row noverflow" style="height:100%;">
+			<%- include('sidebar') %>
+			
+			<div class="column noverflow fit dnd-area" style="height:100%;">
 				<div class="canvas">
-					<canvas id="canvas" tabindex="1" width="1200" height="900">Create meme with canvas</canvas>
+					<canvas id="canvas" class="" tabindex="1" width="1200" height="900">Create meme with canvas</canvas>
 				</div>
-				<div class="column w3-container w3-card-2 w3-padding" style="max-width:300px;min-width:300px;margin: 2px 2px 2px 10px;">
-					<div class="cr ci smaller">
-						<button class="icon tab fit selected" tab="properties" onclick="dom.switchTab(this)">
-							<i class="fa fa-cog"></i>
-						</button>
-						<button class="icon tab fit" tab="background" onclick="dom.switchTab(this)">
-							<i class="fa fa-square"></i>
-						</button>
-						<button class="icon tab fit" tab="objects" onclick="dom.switchTab(this)">
-							<i class="fa fa-object-ungroup"></i>
-						</button>
-						<button class="icon tab fit" tab="projects" onclick="dom.switchTab(this)">
-							<i class="fa fa-list-check"></i>
-						</button>
-					</div>
-					<div class="column monospace noverflow">
-						
-						<%- include('properties.html') %>
-						<%- include('canvas.html') %>
 
-						<div class="column hidden" tab="objects" id="objects">
-							<div class="cr ci">
-								<h2 class="wm8 inconsolata fit">Objects</h2>
-								<button name="align" class="icon fa fa-image w3-text-blue" title="Align images"></button>
-							</div>
-							<div class="cc show-empty list list2"></div>
-						</div>
-						<div class="column hidden" tab="projects" id="projects">
-							<h2 class="wm8 inconsolata">Projects</h2>
-							<div class="cc show-empty list list2"></div>
-						</div>
-
-					</div>
-				</div>
-				
-			</div>
-
-			<div id="status" class="cr ci" style="max-width: 1000px;">
-				<span class="footer fit">© 2018-2022 <b>FreeTalk Technologies</b></span>
-				<span class="cr ci smaller">
-					<b>Z:</b>
-					<output name="zoom">1</output>
-				</span>
-				<span class="cr ci smaller">
-					<b>X:</b>
-					<output name="x"></output>
-				</span>
-				<span class="cr ci smaller">
-					<b>Y:</b>
-					<output name="y"></output>
-				</span>
+				<%- include('status.html') %>
 			</div>
 		</div>
-
 	</div>
 </div>
 
-<template id="item-object" class="w3-padding-tiny cr ci m2 noevents fade" data-id="{{this.id}}" type="{{this.type}}">
-	<i class="fa fa-fw smaller wm8" type="{{this.type}}"></i>
-	<button name="visible" class="icon wm6 fa sm eye" title="Show/Hide" onclick="this.classList.toggle('hide')"></button>
-	<div class="fit noverflow">
-		<span class="fit noverflow">
-			<span contenteditable spellcheck=false>{{this.name}}</span>
-		</span>
-	</div>
-	<div class="row ci display-hover smaller justify-end">
-		<button name="apply" class="icon fa fa-regular fa-circle-up" title="Apply mask"></button>
-		<button name="up" class="icon fa fa-angle-up" title="Move up"></button>
-		<button name="down" class="icon fa fa-angle-down" title="Move down"></button>
-		<button name="duplicate" class="icon fa fa-copy" title="Duplicate"></button>
-		<button name="rm" class="icon fa" title="Remove"></button>
-	</div>
-</template>
-
-<template id="item-project" class="w3-padding-tiny cr ci noevents fade" data-id="{{this.id}}">
-	<span class="fit ellipsis">{{this.id.toUpperCase()}}</span>
-	<i class="smaller">{{this.objects.length}}</i>
-	<button name="rm" class="icon fa display-hover" title="Remove"></button>
-</template>
 
 <template id="item-notification" class="w3-padding fade" style="min-width:200px;">
 	{{dom.markdown(this)}}

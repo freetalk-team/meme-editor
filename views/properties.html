@@ -2,14 +2,14 @@
 	<div class="row ci">
 		<h2 class="wm8 inconsolata fit">Properties</h2>
 		<button name="center" class="icon fa fa-arrows-to-dot" title="Center image" display="image"></button>
-		<button name="export" class="icon fa fa-file-export" title="Export" display="rect image"></button>
+		<button name="export" class="icon fa fa-file-export" title="Export" display="rect image chart"></button>
 		<button name="remove" class="icon fa lg" title="Remove" display="all"></button>
 	</div>
 	
 	<div class="properties cc scroll">
 
 		<div class="cr ci noevents wm8 w3-padding-tiny w3-round w3-light-grey" onclick="this.classList.toggle('collapsed');this.nextElementSibling.classList.toggle('hidden')">
-			<b class="fit">Object</b>
+			<b class="fit">Geometry</b>
 			<i class="fa xs collapse"></i>
 		</div>
 		
@@ -22,59 +22,81 @@
 				<b class="fit">y</b>
 				<input id="object-y" type="number">
 			</span>
-			<span class="row" display="rect">
+			<span class="row" nodisplay="arrow">
 				<b class="fit">width</b>
 				<input id="object-width" type="number">
 			</span>
-			<span class="row" display="rect">
+			<span class="row" nodisplay="arrow">
 				<b class="fit">height</b>
 				<input id="object-height" type="number">
 			</span>
+			<span class="row" display="all">
+				<b class="fit">angle</b>
+				<span class="cr ci fit">
+					<input id="object-angle" type="range" min="0" max="6.28" step="0.02" style="width:100%;" oninput="this.nextElementSibling.value=Math.round(parseFloat(this.value)*(180/Math.PI))" onchange="this.nextElementSibling.value=Math.round(parseFloat(this.value)*(180/Math.PI))">
+					<output style="text-align:right">0</output>
+				</span>
+			</span>
+		</div>
+
+		<div class="cr ci noevents wm8 w3-padding-tiny w3-round w3-light-grey" onclick="this.classList.toggle('collapsed');this.nextElementSibling.classList.toggle('hidden')">
+			<b class="fit">Object</b>
+			<i class="fa xs collapse"></i>
+		</div>
+		
+		<div class="cc fade">
+			
 			<span class="row" display="rect">
 				<b class="fit">radius</b>
-				<input id="object-radius" type="range">
+				<span class="cr ci fit">
+					<input id="object-radius" type="range" style="width:100%;" oninput="dom.nextInt(this)" onchange="dom.nextInt(this)">
+					<output style="text-align:right">0</output>
+				</span>
 			</span>
-			<span class="row" display="rect text path arrow">
+			<span class="row" nodisplay="emoji group">
 				<b class="fit">stroke</b>
 				<input id="object-stroke" type="color">
 			</span>
-			<span class="row" display="rect text path arrow">
-				<b class="fit">stroke width</b>
-				<input id="object-strokeWidth" type="range">
+			<span class="row" nodisplay="emoji group">
+				<b class="fit ellipsis">stroke width</b>
+				<span class="cr ci fit">
+					<input id="object-strokeWidth" type="range" style="width:100%;" oninput="dom.nextInt(this)" onchange="dom.nextInt(this)">
+					<output style="text-align:right">0</output>
+				</span>
 			</span>
 			<span class="row" display="rect text path">
 				<b class="fit">fill</b>
 				<input for="object-fill" class="checkbox w3-margin-right" type="checkbox" checked onchange="this.nextElementSibling.disabled=!this.checked">
 				<input id="object-fill" type="color">
 			</span>
-			<span class="row" display="rect path text emoji">
-				<b class="fit">transparency</b>
-				<input id="object-alpha" type="range" min="0" max="1" step="0.01">
-			</span>
-
-			<span class="row" display="all">
-				<b class="fit">angle</b>
-				<input id="object-angle" type="range" min="0" max="6.28" step="0.02">
-			</span>
-
-			<span class="row">
-				<b class="fit">shadow</b>
-				<input for="object-shadow" class="checkbox w3-margin-right" type="checkbox" onchange="this.nextElementSibling.disabled=!this.checked;this.parentElement.nextElementSibling.classList.toggle('hidden')">
-				<select id="object-shadow" disabled>
-					<option value="fill" selected>fill</option>
-					<option value="stroke">stroke</option>
-				</select>
-			</span>
-			<div class="cc fade hidden">
-				<span class="row">
-					<b class="fit">shadow color</b>
-					<input id="object-shadowColor" type="color">
+			<span class="row" nodisplay="arrow group">
+				<b class="fit">fill alpha</b>
+				<span class="cr ci fit">
+					<input id="object-alpha" type="range" min="0" max="1" step="0.01" style="width:100%;" oninput="dom.nextFloat(this)" onchange="dom.nextFloat(this)">
+					<output style="text-align:right">0</output>
 				</span>
+			</span>
+			<div class="cc" nodisplay="group">
 				<span class="row">
-					<b class="fit">shadow offset</b>
-					<input id="object-shadowWidth" type="range">
+					<b class="fit">shadow</b>
+					<input for="object-shadow" class="checkbox w3-margin-right" type="checkbox" onchange="this.nextElementSibling.disabled=!this.checked;this.parentElement.nextElementSibling.classList.toggle('hidden')">
+					<select id="object-shadow" disabled>
+						<option value="fill" selected>fill</option>
+						<option value="stroke">stroke</option>
+					</select>
 				</span>
-				
+
+				<div class="cc fade hidden">
+					<span class="row">
+						<b class="fit">shadow color</b>
+						<input id="object-shadowColor" type="color">
+					</span>
+					<span class="row">
+						<b class="fit">shadow offset</b>
+						<input class="fit" id="object-shadowWidth" type="range">
+					</span>
+					
+				</div>
 			</div>
 			
 			<span class="row" display="bubble">
@@ -86,7 +108,7 @@
 			</span>
 			<span class="row" display="bubble">
 				<b class="fit">beak width</b>
-				<input id="object-beakWidth" type="range" min="0.1" max="1" step="0.02">
+				<input class="fit" id="object-beakWidth" type="range" min="0.1" max="1" step="0.02">
 			</span>
 
 			<span class="row" display="arrow">
@@ -98,8 +120,32 @@
 					<option value="none">none</option>
 				</select>
 			</span>
+
+			<div class="cc" display="chart">
+				<span class="row">
+					<b class="fit">type</b>
+					<select id="object-kind">
+						<option value="bar" selected>bar</option>
+						<option value="line">line</option>
+						<option value="spline">spline</option>
+						<option value="scatter">scatter</option>
+					</select>
+				</span>
+				<span class="row">
+					<b class="fit">labels</b>
+					<input type="checkbox" class="checkbox" id="object-labels">
+				</span>
+				<span class="row">
+					<b class="fit">legend</b>
+					<input type="checkbox" class="checkbox" id="object-legend">
+				</span>
+				<span class="row">
+					<b class="fit">axis</b>
+					<input type="checkbox" class="checkbox" id="object-axis">
+				</span>
+			</div>
 			
-			<span class="row" display="text emoji">
+			<span class="row" display="text emoji chart">
 				<b class="fit">size</b>
 				<input id="object-size" type="number">
 			</span>
@@ -111,13 +157,18 @@
 				<b class="fit">italic</b>
 				<input id="object-italic" type="checkbox" class="checkbox">
 			</span>
-			<span class="row" display="text">
+			<span class="row" display="text chart">
 				<b class="fit">font</b>
 				<select id="object-font">
 					<option value="Arial" selected>Arial</option>
 					<option value="Serif">Serif</option>
 					<option value="Monospace">Monospace</option>
 					<option value="Helvetica">Helvetica</option>
+					<option value="Calibri">Calibri</option>
+					<option value="Optima">Optima</option>
+					<option value="Comic Sans MS">Comic</option>
+					<!-- <option value="Verdana">Verdana</option>
+					<option value="Geneva">Geneva</option> -->
 					<option value="Ubuntu">Ubuntu</option>
 				</select>
 			</span>
@@ -167,7 +218,7 @@
 				
 				<span class="cr ci m2">
 					<b class="fit">scale</b>
-					<input id="object-imgScale" min="0.1" max="5" step="0.01" type="range" oninput="this.nextElementSibling.value=parseFloat(this.value).toFixed(1)"><output>1.0</output>
+					<input class="fit" id="object-imgScale" min="0.1" max="5" step="0.01" type="range" oninput="this.nextElementSibling.value=parseFloat(this.value).toFixed(1)"><output>1.0</output>
 				</span>
 				<span class="row">
 					<b class="fit">mirror</b>
@@ -239,19 +290,19 @@
 						
 					<span class="row w3-margin-left" display="triangleBlur lensBlur swirl bulgePinch unsharpMask">
 						<b class="fit smaller wm8">Radius:</b>
-						<input id="object-filterRadius" type="range" min="0" max="200">
+						<input class="fit" id="object-filterRadius" type="range" min="0" max="200">
 					</span>
 					<span class="row w3-margin-left" display="zoomBlur ink bulgePinch unsharpMask">
 						<b class="fit smaller wm8">Strength:</b>
-						<input id="object-filterStrength" type="range" min="0" max="1" step="0.01">
+						<input class="fit" id="object-filterStrength" type="range" min="0" max="1" step="0.01">
 					</span>
 					<span class="row w3-margin-left" display="lensBlur brightnessContrast">
 						<b class="fit smaller wm8">Brightness:</b>
-						<input id="object-filterBrightness" type="range" min="-1" max="1" step="0.01">
+						<input class="fit" id="object-filterBrightness" type="range" min="-1" max="1" step="0.01">
 					</span>
 					<span class="row w3-margin-left" display="lensBlur swirl">
 						<b class="fit smaller wm8">Angle:</b>
-						<input id="object-filterAngle" type="range" min="-3.14" max="3.14" step="0.01">
+						<input class="fit" id="object-filterAngle" type="range" min="-3.14" max="3.14" step="0.01">
 					</span>
 					<span class="row w3-margin-left" display="brightnessContrast">
 						<b class="fit smaller wm8">Contrast:</b>
@@ -321,6 +372,9 @@
 						<option value="Serif">Serif</option>
 						<option value="Monospace">Monospace</option>
 						<option value="Helvetica">Helvetica</option>
+						<option value="Calibri">Calibri</option>
+						<option value="Optima">Optima</option>
+						<option value="Comic Sans MS">Comic</option>
 						<option value="Ubuntu">Ubuntu</option>
 					</select>
 				</span>

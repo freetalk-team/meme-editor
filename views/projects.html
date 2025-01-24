@@ -1,0 +1,10 @@
+<div class="column noverflow hidden" tab="projects" id="projects">
+	<h2 class="wm8 inconsolata">Projects</h2>
+	<div class="cc show-empty list list2 scroll"></div>
+</div>
+
+<template id="item-project" class="w3-padding-tiny cr ci noevents fade" data-id="{{this.id}}">
+	<b class="fit ellipsis">{{this.id.toUpperCase()}}</b>
+	<i class="smaller">{{this.objects.length}}</i>
+	<button name="rm" class="icon fa display-hover" title="Remove"></button>
+</template>

@@ -1,0 +1,28 @@
+<div class="column noverflow hidden" tab="images" id="images">
+	<h2 class="wm8 inconsolata">Images</h2>
+	<div class="cc show-empty list list2 scroll"></div>
+</div>
+
+<template id="item-image" class="w3-padding-small cr ci noevents fade" data-id="{{this.id}}" style="align-items:start;">
+	<div class="w3-round w3-card-2 w3-padding-tiny row" style="width:100px;">
+		<img class="w3-round" src="{{this.link}}" style="max-width:100px;max-height:60px;margin:auto;">
+	</div>
+	<div class="cc m2 fit">
+		<div class="cr ci" style="margin-bottom:10px;" hoverable>
+			<h3 class="fit ellipsis wm8 nomargin">{{this.id.split('.')[0]}}</h3>
+			<button name="rm" class="icon fa display-hover" title="Remove"></button>
+		</div>
+		<div class="cr ci smaller">
+			<b>Dimensions:</b>
+			<i>{{this.width}} / {{this.height}}</i>
+		</div>
+		<div class="cr ci smaller">
+			<b>Type:</b>
+			<i>{{this.type}}</i>
+		</div>
+		<div class="cr ci smaller">
+			<b>Size:</b>
+			<i>{{size(this.size)}}</i>
+		</div>
+	</div>
+</template>

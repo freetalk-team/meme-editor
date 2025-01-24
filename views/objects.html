@@ -1,0 +1,38 @@
+<div class="column noverflow hidden" tab="objects" id="objects">
+	<div class="cr ci">
+		<h2 class="wm8 inconsolata fit">Objects</h2>
+		<button name="group" class="icon fa fa-object-group" title="Group Objects" disabled></button>
+	</div>
+	<div class="cc m2 reverse show-empty list list2 scroll"></div>
+</div>
+
+<template id="item-object" class="cc m2 item noevents fade" data-id="{{this.id}}" type="{{this.type}}">
+	<div class="w3-padding-tiny cr ci m2">
+		@if{{this.type=='group'}}
+			<button class="icon fa fa-fw smaller wm8" type="{{this.type}}" onclick="this.parentElement.nextElementSibling.classList.toggle('hidden')"></button>
+		@else
+			<i class="fa fa-fw smaller wm8" type="{{this.type}}"></i>
+		@endif
+		<button name="visible" class="icon wm6 fa xs eye" title="Show/Hide" onclick="this.classList.toggle('hide')"></button>
+		<div class="fit noverflow">
+			<span class="fit noverflow">
+				<span contenteditable spellcheck=false>{{this.name}}</span>
+			</span>
+		</div>
+		<div class="row ci display-hover smaller justify-end">
+			<button name="apply" class="icon fa fa-regular fa-circle-up" title="Apply mask"></button>
+			<button name="agroup" class="icon fa fa-square-caret-up" title="Add to group"></button>
+			<button name="down" class="icon fa fa-angle-up" title="Move up"></button>
+			<button name="up" class="icon fa fa-angle-down" title="Move down"></button>
+			<button name="duplicate" class="icon fa fa-copy" title="Duplicate"></button>
+			<button name="rm" class="icon fa" title="Remove"></button>
+		</div>
+	</div>
+	@if{{this.type=='group'}}
+	<div class="col reverse list list2 hide-empty w3-border-left" style="margin:2px 0 2px 5px;">
+		@foreach{{this.objects}}
+			[[item-object]]
+		@endforeach
+	</div>
+	@endif
+</template>
