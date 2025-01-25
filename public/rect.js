@@ -1,5 +1,5 @@
 
-import { Base } from "./base.js";
+import { Base } from "./object.js";
 import { Text } from "./text.js";
 
 export class Rect extends Base {
@@ -25,12 +25,12 @@ export class Rect extends Base {
 
 	
 
-	drawSVG(svg, group=false) {
+	drawSVG(svg, canvas={ x: 0, y: 0 }, group=false) {
 
-		const fill = this.fill ? { color: this.fill, alpha: this.alpha } : null
-			, stroke = this.stroke ? { color: this.stroke, width: this.strokeWidth } : null
-			, shadow = this.shadow ? { id: this.id, color: this.shadowColor, width: this.shadowWidth } : null
-			, box = this.box();
+		const fill = this.getFill()
+			, stroke = this.getStroke()
+			, shadow = this.getShadow()
+			, box = this.box(0, canvas);
 
 		if (group) 
 			box.angle = 0;
@@ -61,7 +61,6 @@ export class Rectangle extends Rect {
 	// get y() { return super.y; }
 	get width() { return super.width; }
 	get height() { return super.height; }
-	get angle() { return super.angle; }
 
 	get text() { return this.#text.value; }
 	get textOffsetX() { return this.#text.x; }
@@ -89,13 +88,6 @@ export class Rectangle extends Rect {
 		super.height = n;
 		this.#text.height = n - this.#text.y*2;
 	}
-
-	set angle(n) {
-		if (typeof n == 'string') n = parseFloat(n);
-		super.angle = n;
-		this.#text.angle = n;
-	}
-
 
 	set textOffsetX(n) {
 		if (typeof n == 'string') n = parseInt(n);
@@ -156,34 +148,15 @@ export class Rectangle extends Rect {
 		this.#text.value = s;
 	}
 
-	// set properties(obj) {
-	// 	super.properties = obj;
-	// 	this.textProperties = obj
-	// }
-
-	// set textProperties(obj) {
-
-	// 	const data = {
-	// 		textOffsetX: Math.floor(this.#text.x - this.x),
-	// 		textOffsetY: Math.floor(this.#text.y - this.y),
-	// 		textSize: this.#text.size,
-	// 		text: this.#text.value,
-	// 		textFont: this.#text.font,
-
-	// 		textFill: !!this.#text.fill ? this.#text.fill : false,
-	// 		textStroke: !!this.#text.stroke ? this.#text.stroke : false
-	// 	};
-
-	// 	obj.assign(data);
-		
-	// }
-
 	draw(ctx) {
 
 		super.draw(ctx);
 
 		ctx.save();
-		ctx.translate(this.x, this.y);
+
+		const { x, y } = this.setGeometry(ctx);
+
+		ctx.translate(x, y);
 
 		this.#text.draw(ctx);
 
@@ -194,17 +167,18 @@ export class Rectangle extends Rect {
 		this.#text.draw(ctx);
 	}
 
-	drawSVG(svg) {
+	drawSVG(svg, canvas) {
 
-		const x = this.x + this.#text.x
-			, y = this.y + this.#text.y
-			, box= this.box();
+		const box = this.box(0, canvas)
+			, x = -(this.x - canvas.x)
+			, y = -(this.y - canvas.y)
+			;
 
-		svg.group(box);
+		svg.group(null, box);
 
-		super.drawSVG(svg, true);
+		super.drawSVG(svg, canvas, true);
 
-		this.#text.drawSVG(svg, x, y, true);
+		this.#text.drawSVG(svg, { x, y }, true);
 
 		svg.groupEnd();
 	}

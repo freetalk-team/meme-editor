@@ -1,5 +1,5 @@
 
-import { Base } from "./base.js";
+import { Base } from "./object.js";
 import { Point, Curve2, Curve3 } from './curve.js';
 
 
@@ -53,9 +53,10 @@ export class Path extends Base {
 		this.updatePath();
 	}
 
-	getNodes() {
+	getNodes(canvas={ x: 0, y: 0 }) {
 
-		const nodes = this.#segments.map(i => new Node(this, i));
+		const box = Object.assign({}, canvas, { x: -canvas.x, y: -canvas.y });
+		const nodes = this.#segments.map(i => new Node(this, i, box));
 
 		for (let i = 1; i < nodes.length; ++i) {
 			nodes[i].prev = nodes[i - 1];
@@ -74,9 +75,6 @@ export class Path extends Base {
 		return nodes;
 	}
 
-	getPath() {
-		return this.#path;
-	}
 
 	draw(ctx, mode='select') {
 
@@ -155,10 +153,20 @@ export class Path extends Base {
 			
 		}
 		else {
+			this.drawBorder(ctx, 1, '#888', -2, true);
 			super.drawSelection(ctx, mode);
-
-			this.drawBorder(ctx, 1, '#888', 8, true);
 		}
+	}
+
+	drawSVG(svg, canvas) {
+
+		const fill = this.getFill()
+			, stroke = this.getStroke()
+			, shadow = this.getShadow()
+			, path = { segments: this.#segments, closed: this.#closed }
+			, box = this.box(0, canvas);
+
+		svg.path(box, path, fill, stroke, shadow);
 	}
 
 	addPoint(x, y) {
@@ -262,31 +270,7 @@ export class Path extends Base {
 
 	
 	getPath(closed=this.#closed) {
-
-		// console.debug('Generating path', this.#segments);
-
-		const path = new Path2D;
-		
-		let start, segments;
-
-		if (closed) {
-			start = this.#segments.last();
-			segments = this.#segments;
-		}
-		else {
-			start = this.#segments[0];
-			segments = this.#segments.slice(1);
-		}
-		
-		path.moveTo(start.x, start.y);
-
-		for (const i of segments)
-			i.draw(path);
-
-		if (closed)
-			path.closePath();
-
-		return path;
+		return Path.getPath(this.#segments, closed);
 	}
 
 	updatePath() {
@@ -294,17 +278,6 @@ export class Path extends Base {
 		// this.#updateSize(x, y);
 
 		this.#path = this.getPath();
-	}
-
-	drawSVG(svg) {
-
-		const fill = this.fill ? { color: this.fill, alpha: this.alpha } : null
-			, stroke = this.stroke ? { color: this.stroke, width: this.strokeWidth } : null
-			, shadow = this.shadow ? { id: this.id, color: this.shadowColor, width: this.shadowWidth } : null
-			, path = { segments: this.#segments, closed: this.#closed }
-			, box = this.box();
-
-		svg.path(box, path, fill, stroke, shadow);
 	}
 
 	close(updateSize=true) {
@@ -469,6 +442,7 @@ export class Path extends Base {
 
 		this.#path = this.getPath();
 	}
+	
 
 	// #last() {
 	// 	return this.#segments[this.#last ?? 0];
@@ -584,6 +558,11 @@ Path.detectBody = async function(image, threshold=0.7) {
 	// invertMask(mask);
 
 	const points = createMaskPath(mask);
+	if (points.length == 0) {
+		// not detected
+		return null;
+	}
+
 	const path = new Path;
 
 	path.x = 0;
@@ -616,7 +595,69 @@ Path.detectBody = async function(image, threshold=0.7) {
 	return path;
 }
 
+Path.toSpline = function(points, tension=0.5) {
+	if (points.length < 2) return '';
 
+	//let path = `M${points[0].x},${points[0].y}`;  // Move to first point
+
+	const path = [points[0].clone()];
+	
+	const n = points.length;
+
+	for (let i = 0; i < n - 1; i++) {
+		const p0 = i > 0 ? points[i - 1] : points[0];       // Previous point
+		const p1 = points[i];                               // Current point
+		const p2 = points[i + 1];                           // Next point
+		const p3 = i < n - 2 ? points[i + 2] : points[n - 1];  // Point after next
+
+		const c = new Curve3(p2.x, p2.y);
+
+		c.cp.set(p1.x + (p2.x - p0.x) * tension / 6, p1.y + (p2.y - p0.y) * tension / 6);
+		c.cp2.set(p2.x - (p3.x - p1.x) * tension / 6, p2.y - (p3.y - p1.y) * tension / 6);
+
+		path.push(c);
+		
+		// // Calculate control points
+		// const cp1x = p1.x + (p2.x - p0.x) * tension / 6;
+		// const cp1y = p1.y + (p2.y - p0.y) * tension / 6;
+		// const cp2x = p2.x - (p3.x - p1.x) * tension / 6;
+		// const cp2y = p2.y - (p3.y - p1.y) * tension / 6;
+
+
+		
+		// Cubic Bézier curve
+		//path += ` C${cp1x},${cp1y} ${cp2x},${cp2y} ${p2[0]},${p2[1]}`;
+	}
+	
+	return path;
+}
+
+Path.getPath = function(segments, closed) {
+
+		// console.debug('Generating path', this.#segments);
+
+	const path = new Path2D;
+	
+	let start;
+
+	if (closed) {
+		start = segments.last();
+	}
+	else {
+		start = segments[0];
+		segments = segments.slice(1);
+	}
+	
+	path.moveTo(start.x, start.y);
+
+	for (const i of segments)
+		i.draw(path);
+
+	if (closed)
+		path.closePath();
+
+	return path;
+}
 
 class Node {
 
@@ -635,16 +676,16 @@ class Node {
 	get segment() { return this.#p; }
 	get control() { return true; }
 
-	constructor(path, p) {
+	constructor(path, p, canvas) {
 
-		const [X, Y] = path.center();
+		const [X, Y] = path.center(canvas);
 
 		this.#origin.set(X, Y);
 		this.#p = p;
 		this.#path = path;
 
 		if (!p.isLine())
-			this.#node = new TangentNode(p, path);
+			this.#node = new TangentNode(p, path, canvas);
 	}
 
 	set next(node) {
@@ -707,11 +748,11 @@ class TangentNode {
 	#o;
 	#path;
 
-	constructor(curve, path) {
+	constructor(curve, path, canvas) {
 		this.#p0 = curve.cp2 || curve;
 		this.#p = this.#p1 = curve;
 
-		const [X, Y] = path.center();
+		const [X, Y] = path.center(canvas);
 
 		this.#o = new Point(X, Y);
 		this.#path = path;
@@ -950,7 +991,7 @@ function smoothAndReducePoints(points, targetCount) {
 	}
 
 	// Step 1: Smooth the points using a simple Catmull-Rom spline
-	function catmullRomSpline(points, numSegments = 10) {
+	function catmullRomSpline(points, numSegments = 10, tension=0.5) {
 		const smoothedPoints = [];
 		for (let i = 0; i < points.length - 1; i++) {
 			const p0 = points[Math.max(i - 1, 0)];

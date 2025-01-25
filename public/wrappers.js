@@ -33,7 +33,7 @@ function wrap(container, props={}) {
 							if (checked != p.checked)
 								p.checked = checked;
 						}
-						else if (value) {
+						else if (value || typeof value == 'number') {
 							e.value = value;
 						}
 					}
@@ -73,6 +73,8 @@ function wrap(container, props={}) {
 				}
 
 			}
+
+			return e;
 		},
 
 		assign(data) {
@@ -111,6 +113,21 @@ export function wrapProperties(container, handler) {
 				container.removeAttribute('mode');
 		}
 	});
+
+	props.set_ = props.set;
+	props.set = function(prop, value, id) {
+
+		const e = this.set_(prop, value, id);
+
+		switch (prop) {
+			case 'angle':
+			case 'radius':
+			case 'strokeWidth':
+			case 'alpha':
+			e.dispatchEvent(new Event('change', { 'bubbles': true }));
+			break;
+		}
+	}
 
 	container.oninput = (e) => {
 
@@ -194,8 +211,12 @@ export function wrapObjects(container, handler, template) {
 		const target = e.target;
 
 		if (target.tagName == 'BUTTON') {
-
 			
+			switch (target.name) {
+				case 'group':
+				handler.group();
+				return;
+			}
 
 			const e = target.closest('[data-id]');
 
@@ -211,11 +232,11 @@ export function wrapObjects(container, handler, template) {
 					break;
 					
 					case 'up':
-					handler.move(id, 1);
+					handler.move(id, -1);
 					break;
 
 					case 'down':
-					handler.move(id, -1);
+					handler.move(id, 1);
 					break;
 
 					case 'visible':
@@ -229,6 +250,7 @@ export function wrapObjects(container, handler, template) {
 					case 'apply':
 					handler.applyMask(id);
 					break;
+
 				}
 			}
 
@@ -238,9 +260,9 @@ export function wrapObjects(container, handler, template) {
 		if (UX.List.isItem(target)) {
 
 			const id = target.dataset.id;
+			const add = e.ctrlKey;
 
-			handler.select(id);
-			list.selectItem(id);
+			handler.select(id, add);
 		}
 
 	}
@@ -259,7 +281,7 @@ export function wrapObjects(container, handler, template) {
 		
 	}
 
-	list.add = function(o, i) {
+	list.add = function(o, after) {
 
 		const id = o.id;
 
@@ -267,10 +289,14 @@ export function wrapObjects(container, handler, template) {
 
 		if (template) {
 			e = list.addItemTemplate(template, o);
-			if (typeof i == 'number') {
-				const p = list.area.childNodes[i];
-				if (p)
-					dom.insertAfter(e, p);
+
+			if (after) {
+
+				if (typeof after == 'string')
+					after = list.getElement(after);
+
+				dom.insertAfter(e, after);
+
 			}
 		}
 		else {
@@ -285,9 +311,25 @@ export function wrapObjects(container, handler, template) {
 		return e;
 	}
 
-	list.select = function(id) {
-		this.selectItem(id);
+	list.select = function(id, add) {
+		this.selectItem(id, add);
 	}
+
+	list.enable = function(name, b) {
+		const button = container.querySelector(`button[name="${name}"]`);
+		if (button)
+			button.disabled = !b;
+	}
+
+	list.swap = function(a, b) {
+
+		const e1 = this.getElement(a)
+			, e2 = this.getElement(b)
+			;
+
+		dom.swap(e1, e2);
+	}
+
 
 	return list;
 }
@@ -362,6 +404,72 @@ export function wrapProjects(container, handler, template) {
 
 	list.select = function(id) {
 		this.selectItem(id);
+	}
+
+	
+
+	return list;
+}
+
+export function wrapImages(container, handler, template) {
+	
+	if (typeof container == 'string')
+		container = document.getElementById(container);
+
+	const e = container.querySelector('.list');
+	const list = UX.List.createMixin(e);
+
+	container.onclick = (e) => {
+
+		const target = e.target;
+
+		if (target.tagName == 'BUTTON') {
+			
+
+			const e = target.closest('[data-id]');
+
+			if (e) {
+
+				const id = e.dataset.id;
+
+				switch (target.name) {
+
+				}
+			}
+
+			return;
+		}
+
+		if (UX.List.isItem(target)) {
+			const id = target.dataset.id;
+
+			handler.add('image', id);
+		}
+	}
+
+	list.add = function(o, after) {
+
+		const id = o.id;
+
+		let e;
+
+		if (template) {
+			e = list.addItemTemplate(template, o);
+		}
+		else {
+			e = document.createElement('span');
+			e.innerText = id;
+			e.dataset.id = id;
+			e.classList.add('item');
+
+			container.appendChild(e);
+		}
+
+		return e;
+	}
+
+	list.select = function(id, add) {
+		this.selectItem(id, add);
 	}
 
 	return list;
@@ -440,6 +548,26 @@ export function wrapCanvas(container, handler) {
 
 		if (handler)
 			handler.update(id, value, 'canvas');
+	}
+
+	container.onclick = (e) => {
+
+		const target = e.target;
+
+		if (target.tagName == 'BUTTON') {
+
+			switch (target.name) {
+
+				case 'align':
+				handler.alignImages();
+				break;
+
+				case 'fit':
+				// todo
+				break;
+			}
+		}
+
 	}
 
 	return props;

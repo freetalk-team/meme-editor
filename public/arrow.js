@@ -1,5 +1,5 @@
 
-import { Base } from "./base.js";
+import { Base } from "./object.js";
 import { Point } from "./curve.js";
 
 const M = 8;

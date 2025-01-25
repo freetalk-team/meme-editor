@@ -1,4 +1,4 @@
-import { Base } from "./base.js";
+import { Base } from "./object.js";
 
 class Text extends Base {
 
@@ -52,7 +52,7 @@ class Text extends Base {
 	}
 
 	set value(s) {
-		console.debug('Setting text:', s);
+		// console.debug('Setting text:', s);
 		this.#text = s;
 
 		if (!this.#parent)
@@ -62,8 +62,6 @@ class Text extends Base {
 	set text(v) {
 		this.value = v;
 	}
-
-	
 
 	draw(ctx) {
 		if (!this.#text) return;
@@ -81,16 +79,16 @@ class Text extends Base {
 
 	drawSelection(ctx) {
 
-		this.drawBorder(ctx, 1, '#888', 5, true);
+		this.drawBorder(ctx, 1, '#888', -5, true);
 
 		super.drawSelection(ctx);
 	}
 
-	drawSVG(svg, x=this.x, y=this.y, group=false) {
-		const fill = this.fill ? { color: this.fill, alpha: this.alpha } : null
-			, stroke = this.stroke ? { color: this.stroke, width: this.strokeWidth } : null
-			, shadow = this.shadow ? { id: this.id, color: this.shadowColor, width: this.shadowWidth } : null
-			, box = this.box()
+	drawSVG(svg, canvas, group=false) {
+		const fill = this.getFill()
+			, stroke = this.getStroke()
+			, shadow = this.getShadow()
+			, box = this.box(0, canvas)
 			, text = { 
 				value: this.#text,
 				font: this.#font,
@@ -99,9 +97,6 @@ class Text extends Base {
 				italic: this.#italic
 			 }
 			;
-
-		box.x = x;
-		box.y = y;
 
 		if (group)
 			 box.angle = 0;
@@ -115,7 +110,7 @@ class Text extends Base {
 
 			lines.sort((a, b) => b.length - a.length);
 
-			this.width = lines[0].length * this.#size;
+			this.width = lines[0].length * this.#size * 0.6;
 			this.height = lines.length * this.#size * 1.1;
 		}
 		else {
@@ -129,3 +124,14 @@ export {
 	Base,
 	Text	
 }
+
+/*
+
+Canvas (textBaseline)	SVG (dominant-baseline)
+top						text-before-edge
+middle					middle
+bottom					text-after-edge or auto
+alphabetic				alphabetic
+hanging					hanging
+
+*/

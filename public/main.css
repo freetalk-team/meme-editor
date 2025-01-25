@@ -8,6 +8,7 @@ body {
 	font-family: ubuntu, cursive;
 
 	border: 1px solid #555;
+	user-select: none;
 }
 
 .footer {
@@ -83,28 +84,56 @@ select optgroup {
 
 .canvas {
 	width: 100%;
-	aspect-ratio: 4 / 3;
+	height: 100%;
+	/* aspect-ratio: 4 / 3; */
+	position: relative;
+	overflow: hidden;
+
+	display: flex; /* Enable centering */
+	align-items: center; /* Vertically center the canvas */
+	justify-content: center; /* Horizontally center the canvas */
 }
 
 canvas {
+	display: block;
 	border: 1px dashed #555;
-	max-height: 100%;
-	/* width: 100%; */
-	height: 100%;
-	aspect-ratio: 4/3;
 }
 
 canvas:focus {
 	outline: none;
 }
 
-.dnd:before {
+.responsive-canvas {
+	max-width: 100%; /* Limit width to parent's width */
+	max-height: 100%; /* Limit height to parent's height */
+	aspect-ratio: 4 / 3; /* Maintain the 4:3 aspect ratio */
+	background-color: #f0f0f0; /* Optional: Visualize the canvas */
+	display: block; /* Remove inline-block gaps */
+	border: 1px dashed #555;
+  }
+
+.responsive-canvas-fit {
+	width: 100%;
+	height: auto;
+	aspect-ratio: 4 / 3; /* Ensures 4:3 aspect ratio */
+	max-height: 100%; /* Ensures it doesn't exceed parent's height */
+	max-width: 100%; /* Ensures it doesn't exceed parent's width */
+	display: block; /* Removes inline-block extra space */
+	background-color: #f0f0f0; /* Optional: to visualize the canvas */
+	border: 1px dashed #555;
+}
+
+.dnd-area {
+	position: relative;
+}
+
+.dnd .dnd-area:before {
 	font-family: "Font Awesome 5 Free";
 	font-weight: 900;
 	content: '\f382';
 	position: absolute;
 	z-index: 99;
-	opacity: .2;
+	opacity: .4;
 	text-align: center;
 	/* align-self: center; */
 	font-size: 20em;
@@ -183,6 +212,10 @@ button.tab.selected:after {
 	content: '\e0e3';
 }
 
+.fa[type="group"]::before {
+	content: '\f0d7'; /* caret-down */
+}
+
 .fa.collapse::before {
 	content: '\f107';
 }
@@ -219,6 +252,7 @@ button.tab.selected:after {
 	display: inherit!important; 
 }
 
+[mode="group"] [nodisplay*="group"],
 [mode="emoji"] [nodisplay*="emoji"],
 [mode="arrow"] [nodisplay*="arrow"] {
 	display: none;
@@ -581,4 +615,16 @@ output {
 	height: var(--size);
 	width: var(--size);
 	float: left;
+}
+
+button[name="agroup"] {
+	display: none;
+}
+
+.item:has(+ .item[type="group"]) button[name="agroup"] {
+	display: unset;
+}
+
+.noevents .list > .item {
+	pointer-events: all;
 }

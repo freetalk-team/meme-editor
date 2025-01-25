@@ -6,6 +6,8 @@ export class SVG {
 	#width = 400;
 	#height = 300;
 
+	#filters = new Set;
+
 	set width(n) { this.#width = n; }
 	set height(n) { this.#height = n; }
 
@@ -34,10 +36,8 @@ export class SVG {
 		if (stroke)
 			xml += ` stroke="${stroke.color}" stroke-width="${stroke.width}"`;
 
-		if (shadow) {
-			this.#defs += shadowFilter(shadow);
-			xml += ` filter="url(#${shadow.id})"`;
-		}
+		if (shadow)
+			xml += ` filter="url(#${this.#addShadow(shadow)})"`;
 		
 		if (box.angle) {
 			const [x, y] = box.center();
@@ -68,21 +68,32 @@ export class SVG {
 
 		xml += '"';
 
-		if (fill) {
+		if (closed && fill) {
 			xml += ` fill="${fill.color}"`;
 
 			if (fill.alpha < 1)
 				xml += ` fill-opacity="${fill.alpha}"`;
 		}
-
-		if (stroke)
-			xml += ` stroke="${stroke.color}" stroke-width="${stroke.width}"`;
-
-		if (shadow) {
-			this.#defs += shadowFilter(shadow);
-
-			xml += ` filter="url(#${shadow.id})"`;
+		else {
+			xml += ` fill="none"`;
 		}
+
+		if (stroke) {
+			xml += ` stroke="${stroke.color}" stroke-width="${stroke.width}"`;
+			
+			/*
+				stroke-linecap:
+				butt (default): Flat ends at the exact path endpoint.
+				round: Rounded ends extending slightly beyond the path endpoint.
+				square: Square ends extending beyond the endpoint by half the stroke width.
+			*/
+			if (stroke.linecap) 
+				xml += ` stroke-linecap="${stroke.linecap}"`;
+			
+		}
+
+		if (shadow) 
+			xml += ` filter="url(#${this.#addShadow(shadow)})"`;
 
 		if (box.angle) 
 			xml += ` transform="rotate(${box.angle},${X},${Y})"`;
@@ -109,11 +120,8 @@ export class SVG {
 		if (stroke)
 			xml += ` stroke="${stroke.color}" stroke-width="${stroke.width}"`;
 
-		if (shadow) {
-			this.#defs += shadowFilter(shadow);
-
-			xml += ` filter="url(#${shadow.id})"`;
-		}
+		if (shadow)
+			xml += ` filter="url(#${this.#addShadow(shadow)})"`;
 		
 		xml += '/>';
 
@@ -128,6 +136,9 @@ export class SVG {
 
 			if (stroke.alpha < 1)
 				xml += ` stroke-opacity="${stroke.alpha}"`;
+
+			if (stroke.linecap) 
+				xml += ` stroke-linecap="${stroke.linecap}"`;
 		}
 
 		xml += '/>';
@@ -176,11 +187,8 @@ export class SVG {
 		if (stroke)
 			xml += ` stroke="${stroke.color}" stroke-width="${stroke.width}"`;
 
-		if (shadow) {
-			this.#defs += shadowFilter(shadow);
-
-			xml += ` filter="url(#${shadow.id})"`;
-		}
+		if (shadow) 
+			xml += ` filter="url(#${this.#addShadow(shadow)})"`;
 		
 		if (box.angle) {
 			const [x, y] = center(box);
@@ -192,9 +200,14 @@ export class SVG {
 		this.#body += xml;
 	}
 
-	group(box, fill, stroke) {
+	group(id, box, fill, stroke) {
 
 		let xml = '<g';
+
+		if (id) {
+			// if (id.id) xml += ` id="${id.id}"`;
+			if (id.name) xml += ` id="${id.name}"`;
+		}
 
 		if (fill) {
 			xml += ` fill="${fill.color}"`;
@@ -233,15 +246,26 @@ export class SVG {
 
 		return xml;
 	}
+
+	#addShadow(shadow) {
+
+		const id = Object.hashHex(shadow);
+
+		if (!this.#filters.has(id)) {
+			this.#filters.add(id);
+			this.#defs += shadowFilter(id, shadow);
+		}
+
+		return id;
+	}
 }
 
 function center(box) {
 	return [box.x + box.width/2, box.y + box.height/2];
 }
 
-function shadowFilter(shadow) {
-	const id = shadow.id
-		, dx = shadow.width
+function shadowFilter(id, shadow) {
+	const dx = shadow.width
 		, color = shadow.color
 		;
 

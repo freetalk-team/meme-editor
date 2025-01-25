@@ -1,19 +1,15 @@
 import './utils.js';
 
-import { Bubble, Rectangle } from './bubble.js';
 import { Canvas } from './canvas.js';
-import { Picture } from './picture.js';
-import { Text as Letterpress } from './text.js';
-import { Emoji } from './emoji.js';
 import { Path } from './path.js';
-import { Arrow } from './arrow.js';
+import { Picture } from './picture.js';
 import { Chart } from './chart.js';
 
-import { IndexDB } from './db.js';
+import { EditorCanvas as Base } from './base.js';
 import { WebGL } from './webgl.js';
-import { SVG } from './svg.js';
+import { IndexDB } from './db.js';
 
-import { wrapProjects, wrapObjects, wrapProperties, wrapTools, wrapCanvas, wrapStatus, wrapActions, wrapNotifications } from './wrappers.js';
+import { wrapProjects, wrapObjects, wrapProperties, wrapImages, wrapTools, wrapCanvas, wrapStatus, wrapActions, wrapNotifications } from './wrappers.js';
 
 const kSite = 'www.sipme.io';
 
@@ -23,7 +19,8 @@ const defaultListHandler = {
 	delete() {},
 	clear() {},
 	clearSelection() {},
-	swap() {}
+	swap() {},
+	enable(name, b) {}
 };
 
 const defaultHandler = {
@@ -32,18 +29,11 @@ const defaultHandler = {
 	mode() {}
 };
 
-export default class Editor extends EventTarget {
+export default class Editor extends Base {
+	#db;
 
-	#ctx;
-	#gl;
-	#r;
-
-	#objects = [];
 	#bg = new Canvas;
-	#image;
 	#selected;
-	#crop = [1, 1];
-	#border = 2;
 	#fill = '#eeeeee';
 	#stroke = '#111111';
 	#strokeWidth = 1;
@@ -51,12 +41,8 @@ export default class Editor extends EventTarget {
 	#mode = 'select';
 	#vkeys = {};
 	#hover = false;
+	#projects;
 
-	#db;
-
-	#zoom = 1;
-	#X = 0;
-	#Y = 0;
 	#x = 0;
 	#y = 0;
 
@@ -65,6 +51,8 @@ export default class Editor extends EventTarget {
 	#node;
 	#nodes = [];
 	#selectedNodes = [];
+	#images = new Map;
+	#data = new Map;
 
 	#history = [];
 	#historyIndex = 0;
@@ -79,15 +67,22 @@ export default class Editor extends EventTarget {
 		status: defaultHandler,
 		tools: defaultHandler,
 		actions: defaultHandler,
-		notify: defaultListHandler
+		notify: defaultListHandler,
+		images: defaultListHandler,
+
+		reset() {
+			this.properties.mode();
+			this.projects.clearSelection();
+			this.objects.clear();
+			this.tools.mode('select');
+		}
 		
 	};
 
-	get canvas()  { return this.#ctx.canvas; }
-	get context() { return this.#ctx; }
+	get db() { return this.#db; }
 
-	get width() { return this.canvas.width; }
-	get height() { return this.canvas.height; }
+	get x() { return 0; }
+	get y() { return 0; }
 
 	set width(n) {
 
@@ -126,14 +121,6 @@ export default class Editor extends EventTarget {
 		this.draw();
 	}
 
-	// set border(v) { this.#border = v; }
-	// set color(v) { 
-	// 	this.#color = v;
-	// 	this.#objects[0].fill = v;
-
-	// 	this.draw(this.#ctx);
-	// }
-
 	set fill(v) {
 		this.#fill = v;
 	}
@@ -147,7 +134,6 @@ export default class Editor extends EventTarget {
 	}
 
 	set mode(v) {
-
 
 		switch (this.#mode) {
 			case 'draw':
@@ -165,8 +151,11 @@ export default class Editor extends EventTarget {
 
 		switch (this.#mode) {
 			case 'edit':
-			if (this.#selected)
-				this.#nodes = this.#selected.getNodes();
+			if (this.#selected) {
+				const g = this.findGroup(this.#selected);
+
+				this.#nodes = this.#selected.getNodes(g);
+			}
 			break;
 		}
 
@@ -175,31 +164,19 @@ export default class Editor extends EventTarget {
 		this.#dom.tools.mode(this.#mode);
 	}
 
-	set zoom(n) {
-
-		this.#zoom = n;
-		this.#updateView();
-
-		this.draw();
-	}
-
 	constructor(canvas) {
-		super();
-		
-		this.#ctx = canvas.getContext('2d');
+		super(canvas);
 
+		window.app = this;
+		
 		try {
 			if (!window.glfx) 
 				window.glfx = new WebGL();
 
-			this.#gl = glfx;
 		}
 		catch (e) {
 			console.error('Failed to init WbGL');
 		}
-
-		const r = canvas.getBoundingClientRect();
-		this.#onResize(r);
 
 		this.#registerCanvasEvents();
 		this.#registerResizeEvents();
@@ -212,32 +189,45 @@ export default class Editor extends EventTarget {
 		this.reset();
 	}
 
-	on(event, cb) { 
-		this.addEventListener(event, cb); 
-	}
-
 	async init(db) {
 
 		if (!db) {
-
 			db = new Database;
-
 			await db.init();
 		}
 
 		this.#db = db;
 
-		await this.#loadProjects();
-
 		await tf.setBackend('webgl');
+
+		// await this.#loadProjects();
+	}
+
+	loadProjects() {
+		if (this.#projects) return;
+
+		this.#loadProjects();
+	}
+
+	center() {
+		return [ this.width / 2, this.height / 2];
 	}
 
 	reset() {
-		if (this.#image)
-			URL.revokeObjectURL(this.#image.src);
+
+		const objects = super.reset();
+		const charts = objects.filter(i => i.type == 'chart');
+
+		let data;
+
+		for (let i of charts) {
+			data = i.getData();
+
+			if (data.refs == 0)
+				this.#data.delete(i.file);
+		}
 
 		this.#selected = null;
-		this.#image = null;
 		this.#current = null;
 		this.#history = [];
 		this.#historyIndex = 0;
@@ -246,96 +236,74 @@ export default class Editor extends EventTarget {
 		this.#nodes = [];
 		// this.#objects.splice(1, this.#objects.length - 1);
 
-		this.#zoom = 1;
-		this.#X = 0;
-		this.#Y = 0;
-
-		this.#objects = [this.#bg];
-
-		this.draw();
 		this.canvas.focus();
 
-		this.#dom.projects.clearSelection();
-		this.#dom.objects.clear();
 		this.#bg.properties = this.#dom.canvas;
-
-		this.#dom.tools.mode('select');
+		this.#dom.reset();
 	}
 
-	draw() {
+	drawBefore(ctx) {
+		this.#bg.draw(ctx);
+	}
 
-		const ctx = this.#ctx;
-
-		ctx.save();
-
-		ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
-
-		ctx.scale(this.#zoom, this.#zoom);
-		ctx.translate(this.#X, this.#Y);
-
-		// ctx.fillStyle = '#fff';
-		// ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
-
-		if (this.#image)
-			ctx.drawImage(this.#image, 0, 0);
-
-		for (const i of this.#objects)
-			if (i.visible)
-				i.draw(ctx, this.#mode);
-
-		if (this.#selected?.visible)
-			this.#selected.drawSelection(ctx, this.#mode);	
-
+	drawAfter(ctx) {
 		if (this.#path)
 			this.#path.draw(ctx, this.#mode);
+
+		// ctx.restore();
 		
 		if (this.#mode == 'edit' && this.#selected?.visible) {
 			for (const i of this.#nodes)
 				i.draw(ctx);
 		}
-
-		ctx.restore();
-		
 	}
 
-	add(type='bubble', value='') {
+	draw(selection=true) {
+		super.draw(selection, this.#mode);
+	}
 
-		let o;
+	add(type='bubble', value='', parent=null) {
+
+		const o = super.create(type, parent);
 
 		switch (type) {
 
 			case 'bubble':
-			o = new Bubble;
 			o.width = 200;
 			o.height = 150;
 			break;
 
 			case 'rect':
 			case 'rectext':
-			o = new Rectangle;
 			o.width = 200;
 			o.height = 200;
 			break;
 
 			case 'text':
-			o = new Letterpress;
 			o.value = 'Text';
+			o.fill = o.stroke;
 			break;
 
 			case 'emoji':
-			o = new Emoji(value);
-			break;
-
-			case 'arrow':
-			o = new Arrow;
+			o.value = value;
 			break;
 
 			case 'chart':
-			o = new Chart;
 			o.width = 400;
 			o.height = 300;
-			
 			break;
+
+			case 'image': {
+				const id = value;
+				const image = this.#images.get(id);
+
+				if (image)
+					o.setImage(id, image);
+				else
+					o = null;
+			}
+			break;
+
 		}
 
 		if (o) {
@@ -349,13 +317,11 @@ export default class Editor extends EventTarget {
 			o.x = 50 + Math.round(Math.random() * 400);
 			o.y = 10 + Math.round(Math.random() * 300);
 
-			this.#objects.push(o);
+			this.#dom.objects.add(o);
+
 			this.select(o);
 
-			this.#emit('newobject', o.id);
-
-			this.#dom.objects.add(o);
-			
+			this.emit('newobject', o.id);
 		}
 		else {
 			console.error('Unknown object type:', type);
@@ -366,59 +332,46 @@ export default class Editor extends EventTarget {
 
 	remove(id=this.#selected?.id) {
 
-		const i = this.#objects.findIndex(i => i.id == id);
+		const o = this.find(id);
 
-		if (i != -1) {
-			
-			const [o] = this.#objects.splice(i, 1);
+		super.remove(id);
 
-			o.release();
+		if (o.type == 'chart' && o.getData().refs == 0)
+			this.#data.delete(o.file);
 
+		if (id == this.#selected?.id) {
 
-			if (id == this.#selected?.id) {
-
-				this.#selected = null;
-				this.#emit('select', null);
-				this.#dom.properties.mode();
-			}
-
-			this.draw();
+			this.#selected = null;
+			this.emit('select', null);
+			this.#dom.properties.mode();
 		}
 	}
 
 	move(id, offset) {
-		const i = this.#objects.findIndex(o => o.id == id);
 
-		if (i == -1) return;
-
-		const j = i - offset > 0 ? i - offset : 1;
-		if (i == j) return;
-
-		const [o] = this.#objects.splice(i, 1);
-
-		this.#objects.splice(j, 0, o);
-		this.#dom.objects.swap(i - 1, j - 1);
+		const id2 = super.reorderObject(id, offset);
 
 		this.draw();
+		this.#dom.objects.swap(id, id2);
 	}
 
 	applyMask(id) {
-		let i = this.#objects.findIndex(o => o.id == id);
-		if (i < 2) return;
+		// let i = this.#objects.findIndex(o => o.id == id);
+		// if (i < 2) return;
 
-		const path = this.#objects[i];
+		// const path = this.#objects[i];
 
-		for (i--; i >= 0; --i) {
-			const o = this.#objects[i];
-			if (o.type == 'image') {
-				o.setMask(path);
+		// for (i--; i >= 0; --i) {
+		// 	const o = this.#objects[i];
+		// 	if (o.type == 'image') {
+		// 		o.setMask(path);
 
-				this.#dom.properties.set('mask', path.name, path.id);
-				this.draw();
+		// 		this.#dom.properties.set('mask', path.name, path.id);
+		// 		this.draw();
 
-				return;
-			}
-		}
+		// 		return;
+		// 	}
+		// }
 	}
 
 	export(name='meme', type='jpeg') {
@@ -426,10 +379,15 @@ export default class Editor extends EventTarget {
 		const e = document.createElement('canvas');
 		const ctx = e.getContext('2d');
 
-		const canvas = this.#objects[0];
+		const canvas = this.#bg;
 
 		e.width = canvas.width;
 		e.height = canvas.height;
+
+		/* todo: Slection must be removed
+			1. Translate to canvas origin ctx.translate(-canvas.x, - canvas.y)  
+			2. call draw in canvas (this.draw(ctx))
+		*/
 
 		ctx.drawImage(this.canvas, canvas.x, canvas.y, canvas.width, canvas.height, 0, 0, canvas.width, canvas.height);
 
@@ -450,17 +408,20 @@ export default class Editor extends EventTarget {
 		// const e = new OffscreenCanvas(o.width, o.height);
 		const ctx = e.getContext('2d');
 
-		e.width = o.width;
-		e.height = o.height;
+		const m = o.strokeWidth / 2 + o.shadowWidth + 5;
+		const b = o.boundingBox(-m);
 
-		ctx.drawImage(this.canvas, o.x, o.y, o.width, o.height, 0, 0, o.width, o.height);
+		e.width = b.width;
+		e.height = b.height;
+
+		ctx.drawImage(this.canvas, b.x, b.y, b.width, b.height, 0, 0, b.width, b.height);
 
 		o.selected = true;
 		this.draw();
 
 		// drawWatermark(ctx, kSite);
 
-		return this.#exportCanvas(e, o.name, 'png');
+		return this.#exportCanvas(e, o.name, 'png', b);
 	}
 
 	async import(files) {
@@ -486,157 +447,35 @@ export default class Editor extends EventTarget {
 		}
 
 		if (files.length == 1 && files[0].type == 'text/csv') {
-
-			console.debug('Parsing csv file');
-
-			const text = await files[0].text();
-
-			const data = parseCSV(text);
-			if (data.length > 1) {
-
-				if (!this.#selected || this.#selected.type != 'chart') {
-					this.#dom.notify.add('No chart selected !', 'error');
-				}
-				else {
-
-					this.#selected.setData(data);
-					this.draw();
-				}
-
-				// processData(data);
-			}
-			else {
-				console.error('Invalid CSV data');
-
-				this.#dom.notify.add('Failed to import CSV !', 'error');
-			}
-
-			return;
-		}
-
-		let img;
-
-		const maxWidth = this.#bg.width
-			, maxHeight = this.#bg.height
-			;
-		
-		for (const i of files) {
-
-			img = new Picture(this.#gl);
-
-			await img.load(i, maxWidth, maxHeight);
-
-			img.x = Math.round(Math.random() * (this.width - img.width));
-			img.y = Math.round(Math.random() * (this.height - img.height));
-
-			this.#objects.push(img);
-			this.#dom.objects.add(img);
-		}
-
-		if (files.length > 1) {
-			this.alignImages();
+			this.#importCSV(files[0]);
 		}
 		else {
-			this.draw();
+			this.#importImages(files);
 		}
-
-	}
-
-	async importInImage(files) {
-		if (this.#image)
-			URL.revokeObjectURL(this.#image.src);
-
-		const e = document.createElement('canvas');
-		const canvas = this.canvas;
-
-		e.width = canvas.width;
-		e.height = canvas.height;
-
-		const ctx = e.getContext("2d");
-
-		let x = 0, y = 0, r, width = canvas.width, height, img;
-
-		let maxWidth = 0, maxHeight = 0;
-		let images = [];
-
-		for (const i of files) {
-			img = await loadImage(i);
-			images.push(img);
-
-			if (maxWidth < img.width)
-				maxWidth = img.width;
-
-			if (maxHeight < img.height)
-				maxHeight = img.height;
-		}
-
-		const totalWidth = images.map(i => i.width).reduce((a, b) => a + b, 0);
 		
-		r = canvas.width / totalWidth;
-
-		maxWidth *= r;
-		maxHeight *= r;
-		
-		for (let i = 0, p; i < images.length; ++i) {
-
-			img = images[i];
-
-			p = img.width / totalWidth;
-			width = img.width * r;
-			height = img.height * r;
-
-			y = 0;
-
-			if (height < maxHeight) {
-				y += (maxHeight - height) / 2;
-			}
-
-			console.log('Draw image:', x, y, width, height);
-			ctx.drawImage(img, x, y, width, height);
-
-			ctx.lineWidth = 1;
-			ctx.strokeStyle = '#eeeeee';
-			ctx.strokeRect(x, 0, width, maxHeight);
-
-			drawWatermark(ctx, 'www.sipme.io', maxHeight);
-
-			URL.revokeObjectURL(img.src);
-
-			x += width;
-		}
-
-		this.#image = await loadImage(e.toDataURL('image/png'));
-		// image = await loadImage(e.toDataURL('image/octet-stream'));
-
-		this.#crop[1] = maxHeight / canvas.height;
-		this.draw();
 	}
 
 	async save(id) {
 
-		if (this.#objects.length < 2) {
-			console.warn('Nothing to save');
-			return;
-		}
-
-		const objects = this.#objects.map(i => Object.fromInstance(i, {}));
-
-		console.debug(objects);
 
 		try {
 
-			await this.#db.put('meme', { id, objects, ts: Date.now() });
+			const objects = super.save();
+			const canvas = this.#bg.save();
+
+			await this.#db.put('meme', { id, canvas, objects, ts: Date.now() });
+
 
 			if (this.#dom.projects) {
 				const projects = this.#dom.projects.getElementIds();
 
 				if (!projects.includes(id))
-					this.#dom.projects.add({ id, objects: this.#objects }, true);
+					this.#dom.projects.add({ id, objects: this.objects }, true);
 
 				this.#dom.projects.selectItem(id);
 			}
 
-			this.#emit('save', id);
+			this.emit('save', id);
 
 			this.#dom.notify.add('Saved !', 'success');
 		}
@@ -653,33 +492,21 @@ export default class Editor extends EventTarget {
 
 		this.reset();
 
-		const ObjectType = {
-			rect: Rectangle,
-			label: Rectangle,
-			bubble: Bubble,
-			text: Letterpress,
-			emoji: Emoji,
-			image: Picture,
-			path: Path,
-			arrow: Arrow,
-			canvas: Canvas
-		};
-
 		try {
 
-			const data = await this.#db.get('meme', id);
+			const project = await this.#db.get('meme', id);
 
-			console.debug('Open projects', data);
+			// backward compatibility
+			if (!project.canvas) 
+				[ project.canvas ] = project.objects.splice(0, 1);
+			
+			const objects = super.open(project.objects);
+			const images = objects.filter(i => i.type == 'image');
+			const paths = objects.filter(i => i.type == 'path');
 
-			for (const i of this.#objects)
-				i.release();
-
-			this.#objects = data.objects.map(i => Object.instanceFrom(new ObjectType[i.type], i));
-
-			this.#current = id;
-
-			const images = this.#objects.filter(i => i.type == 'image');
-			const paths = Object.fromArray(this.#objects.filter(i => i.type == 'path'));
+			this.#bg.load(project.canvas);
+			
+			// console.debug('Open projects', data);
 
 			await Promise.all(images.map(i => i.image()));
 
@@ -695,14 +522,14 @@ export default class Editor extends EventTarget {
 				}
 			}
 
-			this.#bg = this.#objects[0];
+			this.#current = id;
 
 			this.draw();
-			this.#emit('open', id);
+			this.emit('open', id);
 
 			this.#dom.projects.select(id);
 
-			for (const i of this.#objects.slice(1)) 
+			for (const i of this.objects) 
 				this.#dom.objects.add(i);
 
 			this.#bg.properties = this.#dom.canvas;
@@ -713,7 +540,7 @@ export default class Editor extends EventTarget {
 
 		}
 		catch(e) {
-			console.error('Failed to load objects');
+			console.error('Failed to load objects', e);
 		}
 
 	}
@@ -728,21 +555,18 @@ export default class Editor extends EventTarget {
 
 			await this.#db.rm('meme', project);
 
-			this.#emit('delete', project);
+			this.emit('delete', project);
 			this.#dom.projects.delete(project);
 
 		}
 		catch (e) {
 			console.error('Failed to delete project');
 		}
-
 	}
-
-	
 	
 	update(prop, value, o=this.#selected) {
 
-		if (typeof o == 'string') o = this.#objects.find(i => i.id == o);
+		if (typeof o == 'string') o = o == 'canvas' ? this.#bg : this.find(o);
 		if (!o) return;
 
 		const { setter, getter } = Object.getProperty(o, prop);
@@ -797,18 +621,42 @@ export default class Editor extends EventTarget {
 				case 'imgHeight':
 				this.#dom.properties.assign({ imgWidth: o.imgWidth });
 				break;
-				
 			}
 		}
 	}
 
-	select(id) {
-		if (this.#select(id))
+	select(id, add) {
+		if (this.#select(id, add))
 			this.draw();
 	}
 
-	removeNode() {
+	group() {
 
+		const selected = [];
+
+		for (const i of this.all) {
+			if (i.isSelected()) {
+
+				this.findGroup(i, true);
+
+				selected.push(i);
+				i.selected = false;
+			}
+		}
+
+		const o = super.add('group');
+		o.addObjects(selected);
+
+		for (const i of selected)
+			this.#dom.objects.delete(i.id);
+
+		this.#dom.objects.add(o);
+
+		this.select(o);
+		this.emit('newobject', o.id);
+	}
+
+	removeNode() {
 		const node = this.#selectedNodes.shift();
 		if (node == null) return;
 
@@ -816,7 +664,6 @@ export default class Editor extends EventTarget {
 			this.#nodes = this.#nodes.filter(i => i != node);
 			this.draw();
 		}
-
 	}
 
 	insertNode() {
@@ -831,32 +678,15 @@ export default class Editor extends EventTarget {
 	}
 
 	copy(id) {
-		let o, i = this.#objects.length;
 
-		if (typeof id == 'string') {
-			i = this.#objects.findIndex(i => i.id == id);
-			if (i == -1) return;
+		const b = super.copy(id);
 
-			o = this.#objects[i];
-			
-		}
-		else
-			o = id;
-
-
-		const data = Object.fromInstance(o);
-		const b = new o.__proto__.constructor(o);
-
-		Object.instanceFrom(b, data);
-
-		b.id = data.id + '_2';
 		b.x += 10;
 		b.y += 10;
 
-		this.#objects.splice(i + 1, 0, b);
 		this.draw();
 
-		this.#dom.objects.add(b, i - 1); // canvas is 0
+		this.#dom.objects.add(b, id); 
 	}
 
 	undo() {
@@ -874,7 +704,7 @@ export default class Editor extends EventTarget {
 	alignImages() {
 		const H = this.#bg.height
 			, W = this.#bg.width
-			, images = this.#objects.filter(i => i.type == 'image')
+			, images = this.objects.filter(i => i.type == 'image')
 			, totalWidth = images.map(i => i.width).sum()
 			;
 
@@ -942,7 +772,7 @@ export default class Editor extends EventTarget {
 	}
 
 	centerView() {
-		this.#updateView(true);
+		this.updateView(true);
 		this.draw();
 	}
 
@@ -950,15 +780,22 @@ export default class Editor extends EventTarget {
 
 		if (!this.#selected || this.#selected.type != 'image') return;
 
-		const path = await Path.detectBody(this.#selected, threshold);
+		const image = this.#selected;
+		const path = await Path.detectBody(image, threshold);
 
 		if (path) {
-			this.#path = path;
-			this.#addPath();
+
+			const g = this.findGroup(image);
+
+			this.#addPath(g, path);
 			this.draw();
+
+			this.#dom.properties.set('mask', path.name, path.id);
+		}
+		else {
+			this.#dom.notify.add('Failed to detect human !', 'error');
 		}
 
-		this.#dom.properties.set('mask', path.name, path.id);
 	}
 
 	wrap() {
@@ -966,6 +803,7 @@ export default class Editor extends EventTarget {
 		this.wrapProperties('properties');
 		this.wrapObjects('objects', 'item-object');
 		this.wrapProjects('projects', 'item-project');
+		this.wrapImages('images', 'item-image');
 		this.wrapCanvas('background');
 		this.wrapStatus('status');
 		this.wrapActions('actions');
@@ -1022,6 +860,55 @@ export default class Editor extends EventTarget {
 
 			this.import(files);
 		}
+
+		document.onmousedown = (e) => {
+
+			const target = e.target;
+
+			if (target.classList.contains('v-sash')) {
+
+				const area = target.previousElementSibling;
+				const reverse = target.classList.contains('reverse');
+				//console.log('SASH mousedown', e.target);
+	
+				const startX = e.clientX;
+				// const startW = parseInt(document.defaultView.getComputedStyle(area).width, 10);
+				const startW = area.offsetWidth;
+	
+				//console.log('SASH resize start', startX, startW);
+	
+				document.body.style.cursor = 'e-resize';
+	
+				const doDrag = (e) => {
+					// console.log('###', e.clientX);
+					const delta = startX - e.clientX;
+					const width = reverse ? startW + delta : startW - delta;
+					
+					// console.log('SASH => ', reverse, delta, width);
+	
+					area.style.width = `${width}px`;
+				};
+	
+				const stopDrag = (e) => {
+					document.documentElement.removeEventListener('mousemove', doDrag, false);
+					document.documentElement.removeEventListener('mouseup', stopDrag, false);
+	
+					document.body.style.cursor = 'default';
+	
+					// todo: use custom attribute
+					const id = area.id;
+					if (id) {
+						const width = parseInt(area.style.width);
+						this.updateWidth(id, width);
+					}
+				};
+	
+				document.documentElement.addEventListener('mousemove', doDrag, false);
+				document.documentElement.addEventListener('mouseup', stopDrag, false);
+			}
+
+			// todo: handle v slider properly
+		}
 	}
 
 	wrapProperties(container) {
@@ -1035,6 +922,11 @@ export default class Editor extends EventTarget {
 	wrapProjects(container, template) {
 		return this.#dom.projects = wrapProjects(container, this, template);
 	}
+
+	wrapImages(container, template) {
+		return this.#dom.images = wrapImages(container, this, template);
+	}
+
 
 	wrapCanvas(container) {
 		this.#dom.canvas = wrapCanvas(container, this);
@@ -1062,7 +954,7 @@ export default class Editor extends EventTarget {
 	#updateFromHistory(index, undo=false) {
 		const { id, values } = this.#history[index];
 		const latest = {};
-		const o = this.#objects.find(i => i.id == id);
+		const o = this.find(id);
 
 		if (o) {
 
@@ -1090,16 +982,16 @@ export default class Editor extends EventTarget {
 		}
 	}
 
-	#select(id) {
+	#select(id, add) {
 		let o;
 
-		console.debug('## Select:', id);
+		// console.debug('## Select:', id);
 
 		if (typeof id == 'string') {
 			if (this.#selected && id == this.#selected.id)
 				return false;
 
-			o = this.#objects.find(i => i.id == id);
+			o = this.find(id);
 
 		}
 		else {
@@ -1119,41 +1011,39 @@ export default class Editor extends EventTarget {
 
 		if (changed) {
 
-			if (this.#selected) 
-				this.#selected.selected = false;
+			if (this.#selected) {
+				if (add)
+					this.#dom.objects.enable('group', true);
+				else {
+					this.#selected.selected = false;
+					this.#dom.objects.enable('group', false);
+				}
+			}
+			else {
+				this.#dom.objects.enable('group', false);
+			}
 
 			this.#selected = o;
 
 			this.#dom.properties.mode(o?.type);
-			this.#dom.objects.select(o?.id);
+			this.#dom.objects.select(o?.id, add);
 
-			this.#emit('select', data);
+			this.emit('select', data);
 		}
 
 		return changed;
 	}
 
 	#onResize(r) {
-
-		const canvas = this.canvas;
-
-		// this.width = r.width;
-		this.#r = [ canvas.width / r.width,  canvas.height / r.height];
-
-		// const bg = this.#objects[0];
-
-		
-
-		this.draw();
-
+		this.setSize(r.width, r.height);
 	}
 
-	#addPath(path=this.#path) {
+	#addPath(group, path=this.#path) {
 		
 		if (!path.closed)
 			path.end();
 
-		this.#objects.push(path);
+		super.add(path, group);
 		this.#path = null;
 
 		this.#select(path);
@@ -1186,27 +1076,27 @@ export default class Editor extends EventTarget {
 			return;
 		}
 
-		if (this.#selected)
+		const add = this.#vkeys.Control;
+
+		if (this.#selected && !add)
 			this.#selected.selected = false;
 
 		let o;
 
-		for (const i of [...this.#objects].reverse()) {
+		for (const i of [...this.objects].reverse()) {
 
-			if (i.visible && i.handleSelect(x, y)) {
-				o = i;
+			if (i.visible && (o = i.handleSelect(x, y, add)))
 				break;
-			}
 		}
 
-		this.select(o);
+		this.select(o, add);
 	}
 
 	#handleSelectDown(x, y) {
 		this.#node = null;
 
-		for (const i of this.#objects) {
-			if (this.#node = i.handleClick(x, y, 'select')) {
+		for (const i of this.objects) {
+			if (this.#node = i.handleClick(x, y)) {
 
 				this.#node.x = i.x;
 				this.#node.y = i.y;
@@ -1221,9 +1111,9 @@ export default class Editor extends EventTarget {
 	#handleSelectMove(x, y) {
 		if (!this.#node) return;
 
-		for (let i = 1, p, o; i < this.#objects.length; ++i) {
+		for (let i = 0, p, o; i < this.objects.length; ++i) {
 
-			o = this.#objects[i];
+			o = this.objects[i];
 
 			if (o == this.#selected)
 				continue;
@@ -1253,7 +1143,7 @@ export default class Editor extends EventTarget {
 			};
 
 			this.#dom.properties.assign(data);
-			this.#emit('update', data);
+			this.emit('update', data);
 		}
 
 	}
@@ -1272,7 +1162,7 @@ export default class Editor extends EventTarget {
 		this.#path.mouseDown(x, y, this.#vkeys);
 
 		if (this.#path.closed) {
-			this.#addPath();
+			this.#addPath(this);
 		}
 
 		this.draw();
@@ -1328,7 +1218,7 @@ export default class Editor extends EventTarget {
 		// 	}
 		// }
 
-		// this.#emit('update', { x, y });
+		// this.emit('update', { x, y });
 	}
 
 	#handleEditClick(x, y) {
@@ -1344,20 +1234,14 @@ export default class Editor extends EventTarget {
 		this.#node = null;
 	}
 
-	#getCordinates(x, y) {
-		return [
-			x * this.#r[0] / this.#zoom - this.#X,
-			y * this.#r[1] / this.#zoom - this.#Y
-		];
-	}
-
+	
 	#registerCanvasEvents() {
 
 		const canvas = this.canvas;
 
 		canvas.onclick = (e) => {
 
-			const [x, y ] = this.#getCordinates(e.offsetX, e.offsetY);
+			const [x, y ] = this.getCordinates(e.offsetX, e.offsetY);
 
 			switch (this.#mode) {
 
@@ -1378,7 +1262,7 @@ export default class Editor extends EventTarget {
 
 		canvas.onmousemove = (e) => {
 
-			let [x, y ] = this.#getCordinates(e.offsetX, e.offsetY);
+			let [x, y ] = this.getCordinates(e.offsetX, e.offsetY);
 
 			this.#dom.status.assign({ x: Math.round(x), y: Math.round(y) });
 
@@ -1414,7 +1298,7 @@ export default class Editor extends EventTarget {
 
 		canvas.onmousedown = (e) => {
 
-			const [x, y ] = this.#getCordinates(e.offsetX, e.offsetY);
+			const [x, y ] = this.getCordinates(e.offsetX, e.offsetY);
 
 			this.#x = x;
 			this.#y = y;
@@ -1438,7 +1322,7 @@ export default class Editor extends EventTarget {
 
 		canvas.onmouseup = (e) => {
 
-			const [x, y ] = this.#getCordinates(e.offsetX, e.offsetY);
+			const [x, y ] = this.getCordinates(e.offsetX, e.offsetY);
 
 			switch (this.#mode) {
 
@@ -1471,7 +1355,7 @@ export default class Editor extends EventTarget {
 
 					case 'Enter':
 					if (this.#path)
-						this.#addPath();
+						this.#addPath(this);
 
 					case 'Escape':
 					this.#path = null;
@@ -1486,6 +1370,21 @@ export default class Editor extends EventTarget {
 					return;
 				}
 
+			}
+			else if (this.#mode == 'edit') {
+				switch (key) {
+
+					case 'Delete':
+					this.removeNode();
+					this.draw();
+					return;
+
+					case 'n':
+					this.insertNode();
+					this.draw();
+					return;
+					
+				}
 			}
 
 			if (this.#selected) {
@@ -1546,6 +1445,10 @@ export default class Editor extends EventTarget {
 				this.add('text');
 				break;
 
+				case 'g':
+				this.group();
+				break;
+
 				// case 'j':
 				// this.add('emoji');
 				// break;
@@ -1558,29 +1461,20 @@ export default class Editor extends EventTarget {
 			if (this.#hover) {
 
 				if (this.#vkeys.Control) {
-					if (e.deltaY < 0)
-						this.#zoom += 0.1;
-					else
-						this.#zoom -= 0.1;
 
-					this.#updateView();
-					this.#dom.actions.set('zoom', this.#zoom);
+					const d = e.deltaY < 0 ? 0.1 : -0.1;
+
+					this.updateZoom(d);
+					this.#dom.actions.set('zoom', this.zoom);
 				}
 				else if (this.#vkeys.Shift) {
-					
-					if (e.deltaY < 0)
-						this.#X -= 30;
-					else
-						this.#X += 30;
+					const dx = e.deltaY < 0 ? -30 : 30;
+					this.updatePosition(dx, 0);
 				}
 				else {
-					
-					if (e.deltaY < 0)
-						this.#Y -= 30;
-					else
-						this.#Y += 30;
+					const dy = e.deltaY < 0 ? -30 : 30;
+					this.updatePosition(0, dy);
 				}
-
 
 				this.draw();
 			}
@@ -1607,46 +1501,34 @@ export default class Editor extends EventTarget {
 
 	#registerResizeEvents() {
 		const resizeObserver = new ResizeObserver(e => this.#onResize(e[0].contentRect));
-		resizeObserver.observe(this.canvas);
-	}
-
-	#emit(event, data) { 
-		this.dispatchEvent(new CustomEvent(event, { detail: data })); 
+		resizeObserver.observe(this.canvas.parentElement);
 	}
 
 	async #loadProjects() {
+
+		this.#projects = [];
 
 		const projects = await this.#db.latest('meme');
 
 		console.debug('Projects loaded', projects);
 
 		for (const i of projects) {
-			if (this.#dom.projects) 
-				this.#dom.projects.add(i);
+			this.#projects.push({ name: i.id, objects: i.objects.length });
+			this.#dom.projects.add(i);
 		}
 
-		this.#emit('projects', projects);
+		this.emit('projects', projects);
 
 	}
 
-	#updateView(center=false) {
+	updateView(center=false) {
 
-		const width = this.canvas.width
-			, height = this.canvas.height
-			, w = width * this.#zoom
-			, h = height * this.#zoom;
+		super.updateView(center);
 
-		if (this.#zoom <= 1 || center) {
-
-			this.#X = (width - w) / 2;
-			this.#Y = (height - h) / 2;
- 
-		} 
-
-		this.#dom.status.set('zoom', this.#zoom.toFixed(2));
+		this.#dom.status.set('zoom', this.zoom.toFixed(2));
 	}
 
-	async #exportCanvas(canvas, name, type) {
+	async #exportCanvas(canvas, name, type, box=this.#bg.box()) {
 		if (showSaveFilePicker) {
 	
 			const opts = {
@@ -1661,53 +1543,36 @@ export default class Editor extends EventTarget {
 				},
 				],
 			};
+
+			try {
 			
-			const file = await showSaveFilePicker(opts);
-		// console.log('#', file);
-	
-			let content, [, ext] = file.name.split('.');
-	
-			if (ext == 'jpg') ext = 'jpeg';
-	
-			const mime = 'image/' + ext;
-			const writable = await file.createWritable();
-	
-			if (ext == 'svg') {
-	
-				const w = this.#bg.width
-					, h = this.#bg.height
-					;				
-	
-				// let xml = `<svg width="${w}" height="${h}" xmlns="http://www.w3.org/2000/svg"><defs>`, inner = '';
-
-				
-	
-				// for (const i of this.#objects) {
-
-				// 	xml += i.toSVGFilter();
-				// 	inner += i.toSVG();
-				// }
-
-				// xml += '</defs>' + inner + '</svg>';
-
-				// content = xml;
-
-				const svg = new SVG(w, h);
-
-				for (const i of this.#objects) {
-					if (!i.visible) continue;
-
-					i.drawSVG(svg, this.#bg);
+				const file = await showSaveFilePicker(opts);
+			// console.log('#', file);
+		
+				let content, [, ext] = file.name.split('.');
+		
+				if (ext == 'jpg') ext = 'jpeg';
+		
+				const mime = 'image/' + ext;
+				const writable = await file.createWritable();
+		
+				if (ext == 'svg') {
+					content = super.toSVG(box);
 				}
+				else {
+					content = await new Promise(resolve => canvas.toBlob(resolve, mime));
+				}
+		
+				await writable.write(content);
+				await writable.close();
 
-				content = svg.toString();
+				this.#dom.notify.add('Exported !', 'success');
 			}
-			else {
-				content = await new Promise(resolve => canvas.toBlob(resolve, mime));
+			catch (e) {
+				console.error('Failed to export image', e);
+				
+				this.#dom.notify.add('Failed export !', 'error');
 			}
-	
-			await writable.write(content);
-			await writable.close();
 	
 		}
 		else {
@@ -1720,21 +1585,118 @@ export default class Editor extends EventTarget {
 			a.click();
 		}
 	}
+
+	async #importCSV(file) {
+		console.debug('Parsing csv file');
+
+		const id = file.name;
+		const text = await file.text();
+		const data = parseCSV(text);
+
+		let error = 0;
+
+		if (data.length > 1) {
+
+			const content = Chart.processData(data); 
+			if (content) {
+				if (!this.#selected || this.#selected.type != 'chart') {
+					this.add('chart');
+				}
+	
+				const o = this.#selected;
+	
+				content.refs = 0;
+				o.setData(content);
+	
+				this.#data.set(id, content);
+
+				this.draw();
+	
+				await this.#db.put('file', { id, file, type: 'csv' });
+	
+				this.#dom.properties.set('kind', this.#selected.kind);
+			}
+			else {
+				error = true;
+			}
+
+			
+		}
+		
+		if (error) {
+			console.error('Invalid CSV data');
+
+			this.#dom.notify.add('Failed to import CSV !', 'error');
+		}
+	}
+
+	async #importImages(files) {
+		let img, image, id, link;
+
+		const maxWidth = this.#bg.width
+			, maxHeight = this.#bg.height
+			;
+		
+		for (const i of files) {
+
+			id = i.name;
+			
+			// await this.db.put('file', { id, i, type: 'image' });
+
+			img = Editor.create('image');
+
+			image = this.#images.get(id);
+
+			if (image && image._refs > 0) {
+				img.setImage(id, image);
+			}
+			else {
+				image = await img.loadImage(i, maxWidth, maxHeight);
+
+				this.#images.set(id, image);
+
+				link = await Picture.thumb(image); 
+
+				this.#dom.images.add({ id, link, type: i.type, size: i.size, width: image.width, height: image.height });
+			}
+
+			img.x = Math.round(Math.random() * (this.width - img.width));
+			img.y = Math.round(Math.random() * (this.height - img.height));
+
+			super.add(img);
+
+			this.#dom.objects.add(img);
+			
+		}
+
+		if (files.length > 1) {
+			this.alignImages();
+		}
+		else {
+			this.draw();
+		}
+	}
 }
 
+class Database extends IndexDB {
 
-function loadImage(file) {
+	get name() { return 'meme'; }
+	get version() { return 2; }
 
-	return new Promise((resolve, reject) => {
+	onUpgrade(db, txn, ver) {
+		switch (ver) {
+		
+			case 0:
+			Database.addTable(db, 'meme');
+			Database.addIndex('meme', 'ts', txn);
 
-		const img = new Image;
+			case 1:
+			Database.addTable(db, 'file');
+			Database.addIndex('file', 'type', txn);
 
-		img.src = file instanceof Blob ? URL.createObjectURL(file) : file;
-
-		img.onload = () => resolve(img);
-		img.onerror = reject;
-
-	});
+			break;
+		}
+	}
 }
 
 function drawWatermark(ctx, text, height=ctx.canvas.height) {
@@ -1759,24 +1721,6 @@ function drawWatermark(ctx, text, height=ctx.canvas.height) {
 	ctx.fillText(text, x, y);
 
 	ctx.restore();
-}
-
-
-
-class Database extends IndexDB {
-
-	get name() { return 'meme'; }
-	get version() { return 1; }
-
-	onUpgrade(db, txn, ver) {
-		switch (ver) {
-		
-			case 0:
-			Database.addTable(db, 'meme');
-			Database.addIndex('meme', 'ts', txn);
-			break;
-		}
-	}
 }
 
 function parseCSV(csvText) {

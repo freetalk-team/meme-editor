@@ -1,5 +1,5 @@
 
-import { Base } from "./base.js";
+import { Base } from "./object.js";
 
 export class Canvas extends Base {
 

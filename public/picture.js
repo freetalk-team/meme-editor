@@ -50,6 +50,7 @@ export class Picture extends Rect {
 
 		if (imgOrCtx instanceof Picture) {
 			this.#img = imgOrCtx.image();
+			this.#img;
 			this.#file = imgOrCtx.file;	
 		}
 		
@@ -352,10 +353,23 @@ export class Picture extends Rect {
 	get filterAmount() { return this.#filter?.amount ?? 0; }
 	get filterSize() { return this.#filter?.size ?? 0; }
 
-	
 
 	image() { return this.#img; }
+	setImage(id, img) {
+		this.#file = id;
+		this.#img = img;
+		this.#imgWidth = img.width;
+		this.#imgHeight = img.height;
+		this.#cropWidth = this.#imgWidth;
+		this.#cropHeight = this.#imgHeight;
+		this.width = this.#imgWidth;
+		this.height = this.#imgHeight;
+
+		img._refs++;
+	}
+
 	glfx() { return glfx; }
+
 
 	setMask(path, offset=true) { 
 		this.#mask = path.name;
@@ -370,10 +384,21 @@ export class Picture extends Rect {
 			this.#maskY = y - Y;
 		}
 	}
+
+	clone() {
+
+		this.#img._refs++;
+
+		const o = super.clone();
+		o.#img = this.#img;
+
+		return o;
+	}
 	
 	release() {
-		if (this.#img)
+		if (this.#img && --this.#img._refs == 0) {
 			URL.revokeObjectURL(this.#img.src);
+		}
 
 		if (this.#bitmap)
 			this.#bitmap.close();
@@ -527,9 +552,10 @@ export class Picture extends Rect {
 		ctx.putImageData(imageData, x, y);
 	}
 
-	async load(file, maxWidth=1200, maxHeight=900) {
-		this.#file = file;
+	async loadImage(file, maxWidth=1200, maxHeight=900) {
+		this.#file = file.name;
 		this.#img = await Picture.load(file);
+		this.#img._refs = 1;
 
 		console.debug('Image imported:', this.#img.width, this.#img.height);
 
@@ -570,36 +596,8 @@ export class Picture extends Rect {
 		this.#cropWidth = this.#img.width;
 		this.#cropHeight = this.#img.height;
 
-		// await this.#detectBody();
+		return this.#img;
 	}
-
-	// async detectBody(threshold=0.7) {
-
-	// 	await loadTensorflow();
-
-	// 	const img = this.#bitmap || this.#img;
-	// 	const segmentation = await net.segmentPerson(this.#img, {
-	// 		flipHorizontal: false,
-	// 		// internalResolution: 'medium',
-	// 		internalResolution: 0.75,
-	// 		segmentationThreshold: threshold
-	// 		// segmentationThreshold: 0.2
-	// 	});
-
-	// 	// this.#mask = bodyPix.toMask(segmentation);
-	// 	// invertMask(this.#mask);
-	// 	// this.#mask = bodyPix.toMaskImageData(segmentation, true);
-	// 	// console.debug(mask);
-
-	// 	const mask = bodyPix.toMask(segmentation);
-	// 	// console.debug(mask);
-	// 	// invertMask(mask);
-
-	// 	[ this.#mask, this.#maskPoints ] = createMaskPath3(mask);
-
-	// 	const n = this.imgScale;
-	// 	this.#nodes = this.#maskPoints.map(i => [i[0]*n, i[1]*n]);
-	// }
 
 	async detectBodySelfie(threshold=0.7) {
 
@@ -625,6 +623,7 @@ export class Picture extends Rect {
 	}
 
 	static load = loadImage;
+	static thumb = createThumbnail;
 }
 
 function loadImage(fileOrBlob) {
@@ -638,6 +637,31 @@ function loadImage(fileOrBlob) {
 		img.onerror = reject;
 
 	});
+}
+
+async function createThumbnail(image, maxWidth=100, maxHeight=100) {
+
+	// Calculate the aspect ratio
+	const aspectRatio = image.width / image.height;
+
+	let thumbnailWidth = maxWidth;
+	let thumbnailHeight = maxHeight;
+
+	if (image.width > image.height) {
+		thumbnailHeight = Math.min(maxHeight, maxWidth / aspectRatio);
+	} else {
+		thumbnailWidth = Math.min(maxWidth, maxHeight * aspectRatio);
+	}
+
+	// Set canvas dimensions to the calculated size
+	maskCanvas.width = thumbnailWidth;
+	maskCanvas.height = thumbnailHeight;
+
+	maskCtx.drawImage(image, 0, 0, thumbnailWidth, thumbnailHeight);
+
+	const blob = await canvasToBlob(maskCanvas, 'image/jpg');
+
+	return URL.createObjectURL(blob);
 }
 
 function canvasToBlob(canvas, mime='image/png') {
@@ -749,75 +773,75 @@ function invertMask(mask) {
 }
 
 function applyMaskAndDraw(ctx, image, mask, x, y, width, height) {
-    // Create a temporary canvas for the mask
-    // const maskCanvas = document.createElement('canvas');
-    // const maskCtx = maskCanvas.getContext('2d');
-    maskCanvas.width = mask.width;
-    maskCanvas.height = mask.height;
+	// Create a temporary canvas for the mask
+	// const maskCanvas = document.createElement('canvas');
+	// const maskCtx = maskCanvas.getContext('2d');
+	maskCanvas.width = mask.width;
+	maskCanvas.height = mask.height;
 
-    // Draw the mask image data onto the temporary mask canvas
-    maskCtx.putImageData(mask, 0, 0);
+	// Draw the mask image data onto the temporary mask canvas
+	maskCtx.putImageData(mask, 0, 0);
 
-    // Get the mask image data pixels
-    const maskData = maskCtx.getImageData(0, 0, mask.width, mask.height);
-    const data = maskData.data;
+	// Get the mask image data pixels
+	const maskData = maskCtx.getImageData(0, 0, mask.width, mask.height);
+	const data = maskData.data;
 
-    // Begin a new path for the main canvas
-    ctx.save(); // Save the current state of the main canvas
-    ctx.beginPath();
+	// Begin a new path for the main canvas
+	ctx.save(); // Save the current state of the main canvas
+	ctx.beginPath();
 
-    // Create a path based on non-transparent pixels in the mask
-    for (let i = 0; i < data.length; i += 4) {
-        const alpha = data[i + 3]; // Alpha channel
-        if (alpha > 0) {
-            const px = (i / 4) % mask.width;
-            const py = Math.floor(i / 4 / mask.width);
-            ctx.rect(x + px, y + py, 1, 1);
-        }
-    }
+	// Create a path based on non-transparent pixels in the mask
+	for (let i = 0; i < data.length; i += 4) {
+		const alpha = data[i + 3]; // Alpha channel
+		if (alpha > 0) {
+			const px = (i / 4) % mask.width;
+			const py = Math.floor(i / 4 / mask.width);
+			ctx.rect(x + px, y + py, 1, 1);
+		}
+	}
 
-    // Clip the drawing region to the defined path
-    ctx.clip();
+	// Clip the drawing region to the defined path
+	ctx.clip();
 
-    // Draw the image onto the main canvas within the clipped region
-    ctx.drawImage(image, x, y, width, height);
+	// Draw the image onto the main canvas within the clipped region
+	ctx.drawImage(image, x, y, width, height);
 
-    // Restore the original state of the canvas to remove the clip
-    ctx.restore();
+	// Restore the original state of the canvas to remove the clip
+	ctx.restore();
 }
 
 function drawImageWithMask(ctx, image, maskPath, scale, x, y, width, height) {
 
 	console.debug('Draw image with mask', scale, x, y, width, height);
 
-    ctx.save();
-    ctx.translate(x, y); // Move the context to the correct position
+	ctx.save();
+	ctx.translate(x, y); // Move the context to the correct position
 	ctx.scale(scale, scale);
 
-    // Apply the precomputed mask path
-    ctx.clip(maskPath);
+	// Apply the precomputed mask path
+	ctx.clip(maskPath);
 
-    // Draw the image within the clipped area
-    ctx.drawImage(image, 0, 0, width, height);
+	// Draw the image within the clipped area
+	ctx.drawImage(image, 0, 0, width, height);
 
-    ctx.restore();
+	ctx.restore();
 }
 
 
 function createMaskPath(mask) {
-    const path = new Path2D();
-    const { width, height, data } = mask;
+	const path = new Path2D();
+	const { width, height, data } = mask;
 
-    for (let i = 0; i < data.length; i += 4) {
-        const alpha = data[i + 3]; // Alpha channel
-        if (alpha > 0) {
-            const px = (i / 4) % width;
-            const py = Math.floor(i / 4 / width);
-            path.rect(px, py, 1, 1);
-        }
-    }
+	for (let i = 0; i < data.length; i += 4) {
+		const alpha = data[i + 3]; // Alpha channel
+		if (alpha > 0) {
+			const px = (i / 4) % width;
+			const py = Math.floor(i / 4 / width);
+			path.rect(px, py, 1, 1);
+		}
+	}
 
-    return path;
+	return path;
 }
 
 function createBinaryMaskPath(mask) {
@@ -829,156 +853,156 @@ function createBinaryMaskPath(mask) {
 }
 
 function createMaskPath2(mask) {
-    const { width, height, data } = mask;
-    const edgePoints = [];
+	const { width, height, data } = mask;
+	const edgePoints = [];
 
-    // Find edge points by detecting where the alpha changes from 0 to > 0
-    for (let y = 0; y < height; y++) {
-        for (let x = 0; x < width; x++) {
-            const i = (y * width + x) * 4;
-            const alpha = data[i + 3];
+	// Find edge points by detecting where the alpha changes from 0 to > 0
+	for (let y = 0; y < height; y++) {
+		for (let x = 0; x < width; x++) {
+			const i = (y * width + x) * 4;
+			const alpha = data[i + 3];
 
-            if (alpha > 	0) {
-                // Check if any neighbor is transparent (indicating an edge)
-                if (
-                    x === 0 || y === 0 || x === width - 1 || y === height - 1 ||
-                    data[((y - 1) * width + x) * 4 + 3] === 0 ||
-                    data[((y + 1) * width + x) * 4 + 3] === 0 ||
-                    data[(y * width + (x - 1)) * 4 + 3] === 0 ||
-                    data[(y * width + (x + 1)) * 4 + 3] === 0
-                ) {
-                    edgePoints.push([x, y]);
-                }
-            }
-        }
-    }
+			if (alpha > 	0) {
+				// Check if any neighbor is transparent (indicating an edge)
+				if (
+					x === 0 || y === 0 || x === width - 1 || y === height - 1 ||
+					data[((y - 1) * width + x) * 4 + 3] === 0 ||
+					data[((y + 1) * width + x) * 4 + 3] === 0 ||
+					data[(y * width + (x - 1)) * 4 + 3] === 0 ||
+					data[(y * width + (x + 1)) * 4 + 3] === 0
+				) {
+					edgePoints.push([x, y]);
+				}
+			}
+		}
+	}
 
-    // Function to smooth points using a simplified Chaikin's algorithm
-    function smoothPoints(points) {
-        const smoothed = [];
-        for (let i = 0; i < points.length - 1; i++) {
-            const p0 = points[i];
-            const p1 = points[i + 1];
+	// Function to smooth points using a simplified Chaikin's algorithm
+	function smoothPoints(points) {
+		const smoothed = [];
+		for (let i = 0; i < points.length - 1; i++) {
+			const p0 = points[i];
+			const p1 = points[i + 1];
 
-            const q = [(3 * p0[0] + p1[0]) / 4, (3 * p0[1] + p1[1]) / 4];
-            const r = [(p0[0] + 3 * p1[0]) / 4, (p0[1] + 3 * p1[1]) / 4];
+			const q = [(3 * p0[0] + p1[0]) / 4, (3 * p0[1] + p1[1]) / 4];
+			const r = [(p0[0] + 3 * p1[0]) / 4, (p0[1] + 3 * p1[1]) / 4];
 
-            smoothed.push(q);
-            smoothed.push(r);
-        }
-        return smoothed;
-    }
+			smoothed.push(q);
+			smoothed.push(r);
+		}
+		return smoothed;
+	}
 
-    // Smooth the edge points to create smoother curves
-    let smoothedPoints = smoothPoints(edgePoints);
+	// Smooth the edge points to create smoother curves
+	let smoothedPoints = smoothPoints(edgePoints);
 
-    // Create the Path2D and draw the Bezier curve
-    const path = new Path2D();
+	// Create the Path2D and draw the Bezier curve
+	const path = new Path2D();
 
-    if (smoothedPoints.length > 0) {
-        // Move to the first point
-        path.moveTo(smoothedPoints[0][0], smoothedPoints[0][1]);
+	if (smoothedPoints.length > 0) {
+		// Move to the first point
+		path.moveTo(smoothedPoints[0][0], smoothedPoints[0][1]);
 
-        for (let i = 1; i < smoothedPoints.length - 2; i += 2) {
-            const cp1 = smoothedPoints[i];
-            const cp2 = smoothedPoints[i + 1];
-            const end = smoothedPoints[i + 2];
-            path.bezierCurveTo(cp1[0], cp1[1], cp2[0], cp2[1], end[0], end[1]);
-        }
+		for (let i = 1; i < smoothedPoints.length - 2; i += 2) {
+			const cp1 = smoothedPoints[i];
+			const cp2 = smoothedPoints[i + 1];
+			const end = smoothedPoints[i + 2];
+			path.bezierCurveTo(cp1[0], cp1[1], cp2[0], cp2[1], end[0], end[1]);
+		}
 
-        // Close the path by connecting back to the first point
-        path.closePath();
-    }
+		// Close the path by connecting back to the first point
+		path.closePath();
+	}
 
-    return path;
+	return path;
 }
 
 function createMaskPath3(mask) {
-    const { width, height, data } = mask;
-    const edgePoints = [];
+	const { width, height, data } = mask;
+	const edgePoints = [];
 
-    // Step 1: Detect edge points by finding boundary pixels
-    for (let y = 1; y < height - 1; y++) {
-        for (let x = 1; x < width - 1; x++) {
-            const i = (y * width + x) * 4;
-            const alpha = data[i + 3];
+	// Step 1: Detect edge points by finding boundary pixels
+	for (let y = 1; y < height - 1; y++) {
+		for (let x = 1; x < width - 1; x++) {
+			const i = (y * width + x) * 4;
+			const alpha = data[i + 3];
 
-            if (alpha > 0) {
-                // Check if the current pixel has any neighboring transparent pixel (indicating an edge)
-                if (
-                    data[((y - 1) * width + x) * 4 + 3] === 0 ||
-                    data[((y + 1) * width + x) * 4 + 3] === 0 ||
-                    data[(y * width + (x - 1)) * 4 + 3] === 0 ||
-                    data[(y * width + (x + 1)) * 4 + 3] === 0
-                ) {
-                    edgePoints.push([x, y]);
-                }
-            }
-        }
-    }
+			if (alpha > 0) {
+				// Check if the current pixel has any neighboring transparent pixel (indicating an edge)
+				if (
+					data[((y - 1) * width + x) * 4 + 3] === 0 ||
+					data[((y + 1) * width + x) * 4 + 3] === 0 ||
+					data[(y * width + (x - 1)) * 4 + 3] === 0 ||
+					data[(y * width + (x + 1)) * 4 + 3] === 0
+				) {
+					edgePoints.push([x, y]);
+				}
+			}
+		}
+	}
 
-    // Step 2: Sort the edge points to create a continuous path
-    function sortEdgePoints(points) {
-        if (points.length === 0) return [];
+	// Step 2: Sort the edge points to create a continuous path
+	function sortEdgePoints(points) {
+		if (points.length === 0) return [];
 
-        const sorted = [points.shift()];
-        
-        while (points.length > 0) {
-            const lastPoint = sorted[sorted.length - 1];
-            let closestIndex = 0;
-            let closestDistance = Infinity;
+		const sorted = [points.shift()];
+		
+		while (points.length > 0) {
+			const lastPoint = sorted[sorted.length - 1];
+			let closestIndex = 0;
+			let closestDistance = Infinity;
 
-            for (let i = 0; i < points.length; i++) {
-                const [x1, y1] = lastPoint;
-                const [x2, y2] = points[i];
-                const distance = Math.hypot(x2 - x1, y2 - y1);
+			for (let i = 0; i < points.length; i++) {
+				const [x1, y1] = lastPoint;
+				const [x2, y2] = points[i];
+				const distance = Math.hypot(x2 - x1, y2 - y1);
 
-                if (distance < closestDistance) {
-                    closestDistance = distance;
-                    closestIndex = i;
-                }
-            }
+				if (distance < closestDistance) {
+					closestDistance = distance;
+					closestIndex = i;
+				}
+			}
 
-            sorted.push(points.splice(closestIndex, 1)[0]);
-        }
+			sorted.push(points.splice(closestIndex, 1)[0]);
+		}
 
-        return sorted;
-    }
+		return sorted;
+	}
 
-    const sortedPoints = sortEdgePoints(edgePoints);
+	const sortedPoints = sortEdgePoints(edgePoints);
 
-    // Step 3: Smooth the points using Chaikin's Algorithm
-    function smoothPoints(points, iterations = 2) {
-        let smoothed = points;
+	// Step 3: Smooth the points using Chaikin's Algorithm
+	function smoothPoints(points, iterations = 2) {
+		let smoothed = points;
 
-        for (let it = 0; it < iterations; it++) {
-            const newPoints = [];
-            for (let i = 0; i < smoothed.length - 1; i++) {
-                const p0 = smoothed[i];
-                const p1 = smoothed[i + 1];
+		for (let it = 0; it < iterations; it++) {
+			const newPoints = [];
+			for (let i = 0; i < smoothed.length - 1; i++) {
+				const p0 = smoothed[i];
+				const p1 = smoothed[i + 1];
 
-                const q = [(3 * p0[0] + p1[0]) / 4, (3 * p0[1] + p1[1]) / 4];
-                const r = [(p0[0] + 3 * p1[0]) / 4, (p0[1] + 3 * p1[1]) / 4];
+				const q = [(3 * p0[0] + p1[0]) / 4, (3 * p0[1] + p1[1]) / 4];
+				const r = [(p0[0] + 3 * p1[0]) / 4, (p0[1] + 3 * p1[1]) / 4];
 
-                newPoints.push(q);
-                newPoints.push(r);
-            }
-            newPoints.push(smoothed[smoothed.length - 1]); // Add the last point
-            smoothed = newPoints;
-        }
+				newPoints.push(q);
+				newPoints.push(r);
+			}
+			newPoints.push(smoothed[smoothed.length - 1]); // Add the last point
+			smoothed = newPoints;
+		}
 
-        return smoothed;
-    }
+		return smoothed;
+	}
 
-    // const smoothedPoints = smoothPoints(sortedPoints);
-    const smoothedPoints = reducePoints(smoothPoints(sortedPoints), 60);
-    // const smoothedPoints = smoothAndReducePoints(sortedPoints, 60);
+	// const smoothedPoints = smoothPoints(sortedPoints);
+	const smoothedPoints = reducePoints(smoothPoints(sortedPoints), 60);
+	// const smoothedPoints = smoothAndReducePoints(sortedPoints, 60);
 
 	console.debug(smoothedPoints);
 
 	const path = pathFromPoints(smoothedPoints);
 
-    return [ path, smoothedPoints ];
+	return [ path, smoothedPoints ];
 }
 
 function pathFromPoints(points) {
@@ -1017,145 +1041,145 @@ async function loadTensorflow() {
 }
 
 function reducePoints(points, targetCount) {
-    if (points.length <= targetCount) {
-        return points; // No need to reduce if there are fewer points than the target
-    }
+	if (points.length <= targetCount) {
+		return points; // No need to reduce if there are fewer points than the target
+	}
 
-    // Step 1: Calculate cumulative distances along the path
-    const distances = [0]; // First point has distance 0
-    for (let i = 1; i < points.length; i++) {
-        const [x1, y1] = points[i - 1];
-        const [x2, y2] = points[i];
-        const distance = Math.hypot(x2 - x1, y2 - y1);
-        distances.push(distances[i - 1] + distance);
-    }
+	// Step 1: Calculate cumulative distances along the path
+	const distances = [0]; // First point has distance 0
+	for (let i = 1; i < points.length; i++) {
+		const [x1, y1] = points[i - 1];
+		const [x2, y2] = points[i];
+		const distance = Math.hypot(x2 - x1, y2 - y1);
+		distances.push(distances[i - 1] + distance);
+	}
 
-    const totalLength = distances[distances.length - 1];
+	const totalLength = distances[distances.length - 1];
 
-    // Step 2: Calculate the interval length for resampling
-    const interval = totalLength / (targetCount - 1);
+	// Step 2: Calculate the interval length for resampling
+	const interval = totalLength / (targetCount - 1);
 
-    // Step 3: Resample points at regular intervals
-    const resampledPoints = [points[0]]; // Start with the first point
-    let currentDistance = interval;
-    
-    for (let i = 1; i < distances.length; i++) {
-        while (currentDistance <= distances[i]) {
-            // Linear interpolation between points[i - 1] and points[i]
-            const t = (currentDistance - distances[i - 1]) / (distances[i] - distances[i - 1]);
-            const [x1, y1] = points[i - 1];
-            const [x2, y2] = points[i];
-            const interpolatedPoint = [
-                x1 + t * (x2 - x1),
-                y1 + t * (y2 - y1)
-            ];
+	// Step 3: Resample points at regular intervals
+	const resampledPoints = [points[0]]; // Start with the first point
+	let currentDistance = interval;
+	
+	for (let i = 1; i < distances.length; i++) {
+		while (currentDistance <= distances[i]) {
+			// Linear interpolation between points[i - 1] and points[i]
+			const t = (currentDistance - distances[i - 1]) / (distances[i] - distances[i - 1]);
+			const [x1, y1] = points[i - 1];
+			const [x2, y2] = points[i];
+			const interpolatedPoint = [
+				x1 + t * (x2 - x1),
+				y1 + t * (y2 - y1)
+			];
 
-            resampledPoints.push(interpolatedPoint);
-            currentDistance += interval;
-        }
-    }
+			resampledPoints.push(interpolatedPoint);
+			currentDistance += interval;
+		}
+	}
 
-    // Ensure the last point is included
-    resampledPoints.push(points[points.length - 1]);
+	// Ensure the last point is included
+	resampledPoints.push(points[points.length - 1]);
 
-    return resampledPoints;
+	return resampledPoints;
 }
 
 function smoothAndReducePoints(points, targetCount) {
-    if (points.length < 3) {
-        return points; // Not enough points to smooth
-    }
+	if (points.length < 3) {
+		return points; // Not enough points to smooth
+	}
 
-    // Step 1: Smooth the points using a simple Catmull-Rom spline
-    function catmullRomSpline(points, numSegments = 10) {
-        const smoothedPoints = [];
-        for (let i = 0; i < points.length - 1; i++) {
-            const p0 = points[Math.max(i - 1, 0)];
-            const p1 = points[i];
-            const p2 = points[i + 1];
-            const p3 = points[Math.min(i + 2, points.length - 1)];
+	// Step 1: Smooth the points using a simple Catmull-Rom spline
+	function catmullRomSpline(points, numSegments = 10) {
+		const smoothedPoints = [];
+		for (let i = 0; i < points.length - 1; i++) {
+			const p0 = points[Math.max(i - 1, 0)];
+			const p1 = points[i];
+			const p2 = points[i + 1];
+			const p3 = points[Math.min(i + 2, points.length - 1)];
 
-            for (let t = 0; t <= 1; t += 1 / numSegments) {
-                const t2 = t * t;
-                const t3 = t2 * t;
+			for (let t = 0; t <= 1; t += 1 / numSegments) {
+				const t2 = t * t;
+				const t3 = t2 * t;
 
-                const x = 0.5 * (
-                    (2 * p1[0]) +
-                    (-p0[0] + p2[0]) * t +
-                    (2 * p0[0] - 5 * p1[0] + 4 * p2[0] - p3[0]) * t2 +
-                    (-p0[0] + 3 * p1[0] - 3 * p2[0] + p3[0]) * t3
-                );
+				const x = 0.5 * (
+					(2 * p1[0]) +
+					(-p0[0] + p2[0]) * t +
+					(2 * p0[0] - 5 * p1[0] + 4 * p2[0] - p3[0]) * t2 +
+					(-p0[0] + 3 * p1[0] - 3 * p2[0] + p3[0]) * t3
+				);
 
-                const y = 0.5 * (
-                    (2 * p1[1]) +
-                    (-p0[1] + p2[1]) * t +
-                    (2 * p0[1] - 5 * p1[1] + 4 * p2[1] - p3[1]) * t2 +
-                    (-p0[1] + 3 * p1[1] - 3 * p2[1] + p3[1]) * t3
-                );
+				const y = 0.5 * (
+					(2 * p1[1]) +
+					(-p0[1] + p2[1]) * t +
+					(2 * p0[1] - 5 * p1[1] + 4 * p2[1] - p3[1]) * t2 +
+					(-p0[1] + 3 * p1[1] - 3 * p2[1] + p3[1]) * t3
+				);
 
-                smoothedPoints.push([x, y]);
-            }
-        }
-        smoothedPoints.push(points[points.length - 1]); // Add the last point
-        return smoothedPoints;
-    }
+				smoothedPoints.push([x, y]);
+			}
+		}
+		smoothedPoints.push(points[points.length - 1]); // Add the last point
+		return smoothedPoints;
+	}
 
-    // Step 2: Reduce the points by resampling to the target count
-    function resamplePoints(points, targetCount) {
-        const distances = [0];
-        for (let i = 1; i < points.length; i++) {
-            const [x1, y1] = points[i - 1];
-            const [x2, y2] = points[i];
-            distances.push(distances[i - 1] + Math.hypot(x2 - x1, y2 - y1));
-        }
+	// Step 2: Reduce the points by resampling to the target count
+	function resamplePoints(points, targetCount) {
+		const distances = [0];
+		for (let i = 1; i < points.length; i++) {
+			const [x1, y1] = points[i - 1];
+			const [x2, y2] = points[i];
+			distances.push(distances[i - 1] + Math.hypot(x2 - x1, y2 - y1));
+		}
 
-        const totalLength = distances[distances.length - 1];
-        const interval = totalLength / (targetCount - 1);
+		const totalLength = distances[distances.length - 1];
+		const interval = totalLength / (targetCount - 1);
 
-        const resampledPoints = [points[0]];
-        let currentDistance = interval;
+		const resampledPoints = [points[0]];
+		let currentDistance = interval;
 
-        for (let i = 1; i < distances.length; i++) {
-            while (currentDistance <= distances[i]) {
-                const t = (currentDistance - distances[i - 1]) / (distances[i] - distances[i - 1]);
-                const [x1, y1] = points[i - 1];
-                const [x2, y2] = points[i];
-                resampledPoints.push([
-                    x1 + t * (x2 - x1),
-                    y1 + t * (y2 - y1)
-                ]);
-                currentDistance += interval;
-            }
-        }
+		for (let i = 1; i < distances.length; i++) {
+			while (currentDistance <= distances[i]) {
+				const t = (currentDistance - distances[i - 1]) / (distances[i] - distances[i - 1]);
+				const [x1, y1] = points[i - 1];
+				const [x2, y2] = points[i];
+				resampledPoints.push([
+					x1 + t * (x2 - x1),
+					y1 + t * (y2 - y1)
+				]);
+				currentDistance += interval;
+			}
+		}
 
-        resampledPoints.push(points[points.length - 1]);
-        return resampledPoints;
-    }
+		resampledPoints.push(points[points.length - 1]);
+		return resampledPoints;
+	}
 
-    // Step 3: Remove collinear points
-    function removeCollinearPoints(points) {
-        if (points.length <= 2) {
-            return points;
-        }
+	// Step 3: Remove collinear points
+	function removeCollinearPoints(points) {
+		if (points.length <= 2) {
+			return points;
+		}
 
-        const reducedPoints = [points[0]];
+		const reducedPoints = [points[0]];
 
-        for (let i = 1; i < points.length - 1; i++) {
-            const [x1, y1] = reducedPoints[reducedPoints.length - 1];
-            const [x2, y2] = points[i];
-            const [x3, y3] = points[i + 1];
+		for (let i = 1; i < points.length - 1; i++) {
+			const [x1, y1] = reducedPoints[reducedPoints.length - 1];
+			const [x2, y2] = points[i];
+			const [x3, y3] = points[i + 1];
 
-            if ((x2 - x1) * (y3 - y1) !== (y2 - y1) * (x3 - x1)) {
-                reducedPoints.push(points[i]);
-            }
-        }
+			if ((x2 - x1) * (y3 - y1) !== (y2 - y1) * (x3 - x1)) {
+				reducedPoints.push(points[i]);
+			}
+		}
 
-        reducedPoints.push(points[points.length - 1]);
-        return reducedPoints;
-    }
+		reducedPoints.push(points[points.length - 1]);
+		return reducedPoints;
+	}
 
-    // Perform smoothing, resampling, and reduction
-    const smoothedPoints = catmullRomSpline(points);
-    const resampledPoints = resamplePoints(smoothedPoints, targetCount);
-    return removeCollinearPoints(resampledPoints);
+	// Perform smoothing, resampling, and reduction
+	const smoothedPoints = catmullRomSpline(points);
+	const resampledPoints = resamplePoints(smoothedPoints, targetCount);
+	return removeCollinearPoints(resampledPoints);
 }

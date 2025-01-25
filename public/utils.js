@@ -1,3 +1,8 @@
+Object.isClass = function(obj) {
+	// Check if obj has a constructor and prototype
+	return obj && typeof obj === 'object' && obj.constructor !== Object;
+}
+
 Object.clone = function(o) {
 	var newObj = (o instanceof Array) ? [] : {};
 	for (let i in o) {
@@ -101,11 +106,20 @@ Object.fromInstance = function(i, o={}, ...ignore) {
 
 	const getters = Object.getGetters(i);
 
+	let v, a;
+
 	for (const [name, get] of Object.entries(getters)) {
 		if (ignore.includes(name))
 			continue;
 
-		o[name] = get.call(i);
+		v = get.call(i);
+
+		if (Array.isArray(v)) 
+			v = v.map(i => Object.isClass(i) ? Object.fromInstance(i) : i);
+		else if (Object.isClass(v)) 
+			v = Object.fromInstance(v);
+
+		o[name] = v;
 	}
 		
 	return o;
@@ -122,6 +136,10 @@ Object.instanceFrom = function(i, o) {
 	return i;
 }
 
+
+Object.hashHex = function(o) {
+	return Object.hash(o).toString(16);
+}
 
 Array.repeat = function(n, v=0) {
 	return new Array(n).fill(0);
