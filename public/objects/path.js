@@ -349,6 +349,10 @@ export class Path extends Base {
 
 		this.#cursor = null;
 		this.move(0, 0);
+
+		console.group('Path end:');
+		console.table(this.segments);
+		console.groupEnd();
 	}
 
 	remove(i) {
@@ -433,6 +437,7 @@ export class Path extends Base {
 			segment.sharp(true);
 
 		this.#segments.splice(i + 1, 0, s);
+		// this.#segments.splice(i, 0, s);
 		this.updatePath();
 
 		const n = new Node(this, s);

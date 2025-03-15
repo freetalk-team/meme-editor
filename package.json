@@ -15,8 +15,7 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "server": "node server.js",
-    "start": "electron-forge start",
-    "vm": "electron-forge start -- --no-sandbox",
+    "start": "electron-forge start -- --no-sandbox",
     "build-js": "webpack",
     "build-css": "webpack -c webpack.css.config.js",
     "build": "npm run build-js && npm run build-css",

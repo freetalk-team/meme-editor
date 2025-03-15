@@ -49,13 +49,13 @@ export class Point {
 
 	tangent(x, y) {}
 
-	split(start, t=0.5) {
-		const m = midpoint(start, this);
-		const p = new Point(this.x, this.y);
+	split(next, t=0.5) {
 
-		this.set(m.x, m.y);
+		console.log('#', this);
+		console.log('##', next);
 
-		return p;
+		const m = midpoint(this, next, t);
+		return m;
 	}
 
 	moveTangent() {}
@@ -94,10 +94,10 @@ export class Point {
 export class Curve2 extends Point {
 	cp = new Point;
 
-	constructor(x, y) {
+	constructor(x, y, cpx=x, cpy=y) {
 		super(x, y);
 
-		this.cp.set(x, y);
+		this.cp.set(cpx, cpy);
 	}
 
 	isLine() { return false; }
@@ -210,11 +210,43 @@ export class Curve2 extends Point {
 		return this;
 	} 
 
+	// split(start, t=0.5) {
+		
+
+	// 	const M0 = midpoint(start, this.cp, t);
+	// 	const M1 = midpoint(this.cp, this.cp2, t);
+	// 	const M2 = midpoint(this.cp2, this, t);
+
+	// 	// Compute midpoints of second level
+	// 	const N0 = midpoint(M0, M1, t);
+	// 	const N1 = midpoint(M1, M2, t);
+
+	// 	// Compute midpoint of third level (the point on the curve)
+	// 	const Q = midpoint(N0, N1, t);
+
+	// 	const c = new Curve3(this.x, this.y);
+
+	// 	c.cp = N1;
+	// 	c.cp2 = M2;
+
+	// 	this.cp.set(M0.x, M0.y);
+	// 	this.cp2.set(N0.x, N0.y);
+	// 	this.set(Q.x, Q.y);
+
+	// 	return c;
+	// }
+
 	
 }
 
 export class Curve3 extends Curve2 {
 	cp2 = new Point;
+
+	constructor(x, y, cpx, cpy, cpx2, cpy2) {
+		super(x, y, cpx, cpy);
+
+		this.cp2.set(cpx2, cpy2);
+	}
 
 	toArray() { return [this.cp.x, this.cp.y, this.cp2.x, this.cp2.y, this.x, this.y ]; }
 	toSVG(X=0, Y=0) { return `C${this.cp.x + X},${this.cp.y + Y},${this.cp2.x + X},${this.cp2.y + Y},${this.x + X},${this.y + Y}`; }
@@ -356,4 +388,71 @@ function midpoint(p1, p2, t) {
 		(1 - t) * p1.x + t * p2.x,
 		(1 - t) * p1.y + t * p2.y
 	);
+}
+
+export class Path {
+	segments = [];
+	closed = false;
+
+
+	add(x, y, ...cp) {
+
+		let segment;
+
+		if (x instanceof Point) {
+			segment = x;
+		}
+		else {
+
+			if (cp.length == 2) {
+				segment = new Curve2(x, y, cp[0], cp[1]);
+			}
+			else if (cp.length == 4) {
+				segment = new Curve3(x, y, cp[0], cp[1], cp[2], cp[3]);
+			}
+			else {
+				segment = new Point(x, y);
+			}
+
+		}
+
+		if (this.segments.length > 0) {
+
+			const s = this.segments[0];
+
+			if (segment.x == s.x && segment.y == s.y) {
+				this.segments.shift();
+				this.closed = true;
+			}
+
+		}
+
+		this.segments.push(segment);
+	}
+
+	getPath() {
+		const p = new Path2D;
+
+		// todo
+	}
+
+	getNodes() {
+		return this.segments;
+	}
+
+	split(i) {
+
+		const s = this.segments[i];
+		const j = i > 0 ? i - 1 : this.segments.length - 1;
+		const n = this.segments[j];
+
+		const p = s.split(n);
+
+		this.segments.splice(j, 0, p);
+	}
+
+	dump() {
+		console.table(this.segments);
+	}
+
 }

@@ -370,12 +370,11 @@ button.tab.selected:after {
 .icon-item {
 	padding: 10px;
 	transition: background 0.3s;
-	/* font-family: var(--emoji-font); */
 	font-family: 'Fontawesome';
 }
 
 .icon-item.emoji {
-	font-family: emoji, "Noto Color Emoji";
+	font-family: var(--font-emoji);
 }
 
 .icon-item:hover {

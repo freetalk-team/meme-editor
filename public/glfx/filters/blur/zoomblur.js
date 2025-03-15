@@ -47,9 +47,6 @@ export function zoomBlur(centerX, centerY, strength) {
 		}\
 	');
 
-	const vertexAttribute = gl.getAttribLocation(gl.zoomBlur.program, 'vertex');
-	console.log("WEBGL Zoom vertext attr", vertexAttribute);
-
 	this.simpleShader.call(this, gl.zoomBlur, {
 		center: [centerX, centerY],
 		strength: strength,

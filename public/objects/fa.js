@@ -55,5 +55,3 @@ export class Icon extends Text {
 		return { width, height, data };
 	}
 }
-
-
