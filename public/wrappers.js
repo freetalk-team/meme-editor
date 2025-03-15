@@ -33,8 +33,11 @@ function wrap(container, props={}) {
 							if (checked != p.checked)
 								p.checked = checked;
 						}
-						else if (value || typeof value == 'number') {
-							e.value = value;
+						else if (typeof value == 'number') {
+							e.value = isNaN(value) ? 0 : value;
+						}
+						else {
+							e.value = value || '';
 						}
 					}
 					break;
@@ -171,18 +174,6 @@ export function wrapProperties(container, handler) {
 
 		switch (target.name) {
 			
-			case 'center':
-			handler.centerImage();
-			break;
-
-			case 'remove':
-			handler.remove();
-			break;
-
-			case 'export':
-			handler.exportObject();
-			break;
-
 			case 'detect': {
 				const e = target.previousElementSibling;
 				const threshold = parseFloat(e.value);
@@ -209,53 +200,6 @@ export function wrapObjects(container, handler, template) {
 	container.onclick = (e) => {
 
 		const target = e.target;
-
-		if (target.tagName == 'BUTTON') {
-			
-			switch (target.name) {
-				case 'group':
-				handler.group();
-				return;
-			}
-
-			const e = target.closest('[data-id]');
-
-			if (e) {
-
-				const id = e.dataset.id;
-
-				switch (target.name) {
-
-					case 'rm':
-					handler.remove(id);
-					list.delete(id);
-					break;
-					
-					case 'up':
-					handler.move(id, -1);
-					break;
-
-					case 'down':
-					handler.move(id, 1);
-					break;
-
-					case 'visible':
-					handler.update('visible', 'toggle', id);
-					break;
-
-					case 'duplicate':
-					handler.copy(id);
-					break;
-
-					case 'apply':
-					handler.applyMask(id);
-					break;
-
-				}
-			}
-
-			return;
-		}
 
 		if (UX.List.isItem(target)) {
 
@@ -288,7 +232,7 @@ export function wrapObjects(container, handler, template) {
 		let e;
 
 		if (template) {
-			e = list.addItemTemplate(template, o);
+			e = list.addItemTemplate(template, o, true);
 
 			if (after) {
 
@@ -423,23 +367,6 @@ export function wrapImages(container, handler, template) {
 
 		const target = e.target;
 
-		if (target.tagName == 'BUTTON') {
-			
-
-			const e = target.closest('[data-id]');
-
-			if (e) {
-
-				const id = e.dataset.id;
-
-				switch (target.name) {
-
-				}
-			}
-
-			return;
-		}
-
 		if (UX.List.isItem(target)) {
 			const id = target.dataset.id;
 
@@ -550,25 +477,10 @@ export function wrapCanvas(container, handler) {
 			handler.update(id, value, 'canvas');
 	}
 
-	container.onclick = (e) => {
+	// container.onclick = (e) => {
 
-		const target = e.target;
-
-		if (target.tagName == 'BUTTON') {
-
-			switch (target.name) {
-
-				case 'align':
-				handler.alignImages();
-				break;
-
-				case 'fit':
-				// todo
-				break;
-			}
-		}
-
-	}
+	// 	const target = e.target;
+	// }
 
 	return props;
 }
@@ -706,44 +618,12 @@ export function wrapActions(container, editor) {
 			case 'BUTTON':
 			switch (target.name) {
 
-				case 'undo':
-				editor.undo();
-				break;
-
-				case 'redo':
-				editor.redo();
-				break;
-
-				case 'export':
-				editor.export();
-				break;
-
-				case 'import':
-				editor.import();
-				break;
-
-				case 'reset':
-				editor.reset();
-				break;
-
 				case 'save': {
 					const name = target.previousElementSibling.value || 'test';
 					target.disabled = true;
 					await delayResolve(editor.save(name), 2000);
 					target.disabled = false;
 				}
-				break;
-
-				case 'rmnode':
-				editor.removeNode();
-				break;
-
-				case 'node':
-				editor.insertNode();
-				break;
-
-				case 'center':
-				editor.centerView();
 				break;
 
 			}

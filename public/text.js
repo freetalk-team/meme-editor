@@ -8,12 +8,11 @@ class Text extends Base {
 	#bold = false;
 	#italic = false;
 	#font = 'Arial';
-
-	#parent = false;
+	#align = 'left';
 
 	get type() { return 'text'; }
 
-	constructor(parent) {
+	constructor() {
 		super();
 
 		this.fill = '#111111';
@@ -21,13 +20,13 @@ class Text extends Base {
 		this.stroke = null;
 		this.shadow = null;
 
-		this.#parent = !!parent;
 	}
 
 	get size() { return this.#size; }
 	get bold() { return this.#bold; }
 	get italic() { return this.#italic; }
 	get font() { return this.#font; }
+	get align() { return this.#align; }
 	get value() { return this.#text; }
 
 	set size(n) {
@@ -35,8 +34,7 @@ class Text extends Base {
 		if (n < 8) n = 8;
 
 		this.#size = n;
-
-		this.#recalcBorder();
+		this.calculateBorderSize();
 	}
 
 	set bold(b) {
@@ -47,6 +45,10 @@ class Text extends Base {
 		this.#italic = b;
 	}
 
+	set align(v) {
+		this.#align = v;
+	}
+
 	set font(n) {
 		this.#font = n;
 	}
@@ -55,12 +57,15 @@ class Text extends Base {
 		// console.debug('Setting text:', s);
 		this.#text = s;
 
-		if (!this.#parent)
-			this.#recalcBorder();
 	}
 
 	set text(v) {
 		this.value = v;
+	}
+
+	setText(v) {
+		this.text = v;
+		this.calculateBorderSize();
 	}
 
 	draw(ctx) {
@@ -70,7 +75,8 @@ class Text extends Base {
 			size: this.#size,
 			font: this.#font,
 			bold: this.#bold,
-			italic: this.#italic
+			italic: this.#italic,
+			align: this.#align
 		});
 
 		// if (this.selected)
@@ -84,7 +90,7 @@ class Text extends Base {
 		super.drawSelection(ctx);
 	}
 
-	drawSVG(svg, canvas, group=false) {
+	drawSVG(svg, canvas) {
 		const fill = this.getFill()
 			, stroke = this.getStroke()
 			, shadow = this.getShadow()
@@ -94,17 +100,15 @@ class Text extends Base {
 				font: this.#font,
 				size: this.#size,
 				bold: this.#bold,
-				italic: this.#italic
+				italic: this.#italic,
+				align: this.#align
 			 }
 			;
-
-		if (group)
-			 box.angle = 0;
 
 		svg.text(box, text, fill, stroke, shadow);
 	}
 
-	#recalcBorder() {
+	calculateBorderSize() {
 		if (this.#text) {
 			const lines = this.#text.trim().split('\n');
 

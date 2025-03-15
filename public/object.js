@@ -158,14 +158,18 @@ export class Base {
 	}
 
 	set properties(obj) {
-		obj.assign(Object.fromInstance(this));
+		// note: save may ommit some properties
+		// const data = this.save();
+		const data = Object.fromInstance(this, Base);
+
+		obj.assign(data);
 	}
 
 	fillColor() {
 		return this.#fill + this.#alpha;
 	}
 
-	shadowColor() {
+	fillShadowColor() {
 		return this.#shadowColor + this.#alpha;
 	}
 	
@@ -263,7 +267,7 @@ export class Base {
 	}
 
 	save() {
-		return Object.fromInstance(this);
+		return Object.fromInstance(this, Base);
 	}
 
 	load(data) {
@@ -522,6 +526,68 @@ export class Base {
 		ctx.restore();
 	}
 
+	drawEllipse(ctx) {
+		
+		ctx.save();
+
+		const { w, h } = this.setGeometry(ctx);
+
+
+		// Calculate the center and radii
+		const centerX = 0; // Center x-coordinate
+		const centerY = 0; // Center y-coordinate
+		const radiusX = w; // Horizontal radius
+		const radiusY = h; // Vertical radius
+
+		if (this.#shadow) {
+			
+			ctx.save();
+
+			this.addShadow(ctx);
+
+			ctx.fillStyle = this.fillColor();
+			ctx.strokeStyle = this.#stroke;
+
+			ctx.beginPath();
+			ctx.ellipse(centerX, centerY, radiusX, radiusY, 0, 0, Math.PI * 2);
+
+			if (this.#shadow == 'fill')
+				ctx.fill();
+			else if (this.#shadow == 'stroke')
+				ctx.stroke();
+
+			ctx.restore();
+		}
+
+		if (this.#fill) {
+
+			ctx.save();
+
+			ctx.fillStyle = this.fillColor();
+			ctx.beginPath();
+			ctx.ellipse(centerX, centerY, radiusX, radiusY, 0, 0, Math.PI * 2);
+			ctx.fill();
+
+			ctx.restore();
+		}
+
+		if (this.#stroke && this.#strokeWidth > 0) {
+			ctx.save();
+
+			ctx.strokeStyle = this.#stroke;
+			ctx.lineWidth = this.#strokeWidth;
+
+			ctx.beginPath();
+			ctx.ellipse(centerX, centerY, radiusX, radiusY, 0, 0, Math.PI * 2);
+			ctx.stroke();
+
+			ctx.restore();
+		}
+
+
+		ctx.restore();
+	}
+
 	drawText(ctx, text, opt={ size: 30, font: 'Airal' }) {
 		text = text.split('\n').map(i => i.trim());
 
@@ -536,7 +602,7 @@ export class Base {
 			(opt.italic ? 'italic ' : '') + 
 			`${opt.size}px` + ' ' + opt.font;
 		
-		ctx.fillStyle = this.#fill;
+		ctx.fillStyle = this.fillColor();
 		ctx.strokeStyle = this.#stroke;
 		ctx.lineWidth = this.#strokeWidth;
 
@@ -546,12 +612,16 @@ export class Base {
 
 			if (this.#shadow && this.#shadowWidth > 0) {
 
+				ctx.save();
+
 				this.addShadow(ctx);
 
 				if (this.shadow == 'fill') 
 					ctx.fillText(t, x, y);
 				else if (this.shadow == 'stroke' && this.strokeWidth > 0)
 					ctx.strokeText(t, x, y);
+
+				ctx.restore();
 			}
 
 			// ctx.translate(x, y);
@@ -577,9 +647,13 @@ export class Base {
 		if (angle)
 			ctx.rotate(angle);
 
+		const w = this.#width / 2
+			, h = this.#height / 2;
+
 		return { 
-			x: -this.#width / 2,
-			y: -this.#height / 2
+			x: -w,
+			y: -h,
+			w, h
 		}
 	}
 

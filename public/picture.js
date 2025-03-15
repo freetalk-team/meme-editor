@@ -57,12 +57,13 @@ export class Picture extends Rect {
 	}
 
 	set file(f) { 
-		if (f instanceof File) { 
-			if (!this.#file) {
-				this.#file = f;
-				this.#img = this.load(f);
-			}
-		}
+		// if (f instanceof File) { 
+		// 	if (!this.#file) {
+		// 		this.#file = f;
+		// 		this.#img = this.load(f);
+		// 	}
+		// }
+		this.#file = f;
 	}
 
 	set selected(b) {
@@ -99,12 +100,23 @@ export class Picture extends Rect {
 		// let p = this.#imgHeight / (this.#imgWidth || 1);
 		let p = this.#cropHeight / (this.#cropWidth || 1);
 
-		console.debug('## P', p);
+		// console.debug('## P', p);
 
 		this.#imgWidth = n; 
 
-		if (this.#keepProportion)
+		if (this.#imgWidth >= this.width) {
+			this.#imgX = 0;
+			this.width = this.#imgWidth;
+		}
+
+		if (this.#keepProportion) {
 			this.#imgHeight = Math.round(this.#imgWidth * p);
+
+			if (this.#imgHeight >= this.height) {
+				this.#imgY = 0;
+				this.height = this.#imgHeight;
+			}
+		}
 	}
 
 	set imgHeight(n) { 
@@ -115,8 +127,21 @@ export class Picture extends Rect {
 
 		this.#imgHeight = n; 
 
-		if (this.#keepProportion)
+		if (this.#imgHeight >= this.height) {
+			this.#imgY = 0;
+			this.height = this.#imgHeight;
+		}
+
+		if (this.#keepProportion) {
 			this.#imgWidth = Math.round(this.#imgHeight * p);
+
+			if (this.#imgWidth >= this.width) {
+				this.#imgX = 0;
+				this.width = this.#imgWidth;
+			}
+		}
+
+		
 	}
 
 	set imgMirror(b) {
@@ -132,10 +157,6 @@ export class Picture extends Rect {
 		this.#imgWidth = Math.round(this.#img.width * n);
 		this.#imgHeight = Math.round(this.#img.height * n);
 
-		// // this.#maskPoints = this.#maskPoints.map(i => [i[0]*n, i[1]*n]);
-		// if (this.#maskPoints)
-		// 	this.#nodes = this.#maskPoints.map(i => [i[0]*n, i[1]*n]);
-
 		if (resize) {
 			this.width = this.#imgWidth;
 			this.height = this.#imgHeight;
@@ -148,22 +169,63 @@ export class Picture extends Rect {
 
 	set cropX(n) { 
 		if (typeof n == 'string') n = parseInt(n);
-		this.#cropX = n; 
+		const d = this.#cropX - n;
+		const s = this.imgScale;
+
+		this.#cropX = n;
+		this.#cropWidth += d;
+
+		// const p = this.#imgHeight / this.#imgWidth;
+
+		this.#imgWidth += Math.round(d / s);
+		// if (this.#keepProportion)
+		// 	this.#imgHeight = Math.round(this.#imgWidth * p);
 	}
 
 	set cropY(n) { 
 		if (typeof n == 'string') n = parseInt(n);
+
+		const d = this.#cropY - n;
+		const s = this.imgScale;
+
 		this.#cropY = n; 
+		// this.#cropHeight += d;
+
+		// const p = this.#imgWidth / this.#imgHeight;
+
+		this.#imgHeight += Math.round(d / s);
+		// if (this.#keepProportion)
+		// 	this.#imgWidth = Math.round(this.#imgHeight * p);
 	}
 
 	set cropWidth(n) { 
 		if (typeof n == 'string') n = parseInt(n);
-		this.#cropWidth = n; 
+
+		const d = this.#cropWidth - n;
+		const s = this.imgScale;
+
+		this.#cropWidth = n;
+
+		// const p = this.#imgHeight / this.#imgWidth;
+
+		this.#imgWidth -= Math.round(d / s);
+		// if (this.#keepProportion)
+		// 	this.#imgHeight = Math.round(this.#imgWidth * p);
 	}
 
 	set cropHeight(n) { 
 		if (typeof n == 'string') n = parseInt(n);
-		this.#cropHeight = n; 
+
+		const d = this.#cropHeight - n;
+		const s = this.imgScale;
+
+		this.#cropHeight = n;
+
+		// const p = this.#imgWidth / this.#imgHeight;
+
+		this.#imgHeight -= Math.round(d / s);
+		// if (this.#keepProportion)
+		// 	this.#imgWidth = Math.round(this.#imgHeight * p);
 	}
 
 	set cropMirror(b) {
@@ -329,7 +391,7 @@ export class Picture extends Rect {
 	get imgWidth() { return Math.round(this.#imgWidth); }
 	get imgHeight() { return Math.round(this.#imgHeight); }
 	get imgMirror() { return this.#mirror; }
-	get imgScale() { return this.#imgWidth / this.#img.width; }
+	get imgScale() { return this.#imgWidth / this.#cropWidth; }
 	get imgKeepProportion() { return this.#keepProportion; }
 	get cropX() { return this.#cropX; }
 	get cropY() { return this.#cropY; }
@@ -354,35 +416,57 @@ export class Picture extends Rect {
 	get filterSize() { return this.#filter?.size ?? 0; }
 
 
-	image() { return this.#img; }
-	setImage(id, img) {
-		this.#file = id;
+	image() { return this.#img || maskCanvas; }
+	setImage(img) {
 		this.#img = img;
-		this.#imgWidth = img.width;
-		this.#imgHeight = img.height;
-		this.#cropWidth = this.#imgWidth;
-		this.#cropHeight = this.#imgHeight;
-		this.width = this.#imgWidth;
-		this.height = this.#imgHeight;
+		this.#file = this.#file || img._file;
+		this.#imgWidth = this.#imgWidth || img.width;
+		this.#imgHeight = this.#imgHeight || img.height;
+		this.#cropWidth = this.#cropWidth || this.#imgWidth;
+		this.#cropHeight = this.#cropHeight || this.#imgHeight;
+		this.width = this.width || this.#imgWidth;
+		this.height = this.height || this.#imgHeight;
 
 		img._refs++;
+
+		if (this.#filter)
+			this.#filter.setBitmap();
 	}
 
 	glfx() { return glfx; }
-
 
 	setMask(path, offset=true) { 
 		this.#mask = path.name;
 		this.#maskPath = path;
 
-		if (offset) {
+		this.#cropX = path.x - this.x;
+		this.#cropY = path.y - this.y;
 
-			const [X, Y] = this.center();
-			const [x, y] = path.center();
+		this.#cropWidth = path.width;
+		this.#cropHeight = path.height;
 
-			this.#maskX = x - X;
-			this.#maskY = y - Y;
-		}
+		this.#imgWidth = this.#cropWidth;
+		this.#imgHeight = this.#cropHeight;
+
+		this.x = path.x;
+		this.y = path.y;
+
+		this.fitSize();
+
+		// if (offset) {
+
+		// 	// const [X, Y] = this.center();
+		// 	// const [x, y] = path.center();
+
+		// 	// this.#maskX = x - X;
+		// 	// this.#maskY = y - Y;
+
+		// 	this.#maskX = path.x - this.x;
+		// 	this.#maskY = path.y - this.y;
+
+		// 	// this.x = path.x;
+		// 	// this.y = path.y;
+		// }
 	}
 
 	clone() {
@@ -404,75 +488,72 @@ export class Picture extends Rect {
 			this.#bitmap.close();
 	}
 
-	draw(ctx) {
+	load(data) {
 
-		this.drawRectangle(ctx);
+		const { filter, ...rest } = data;
+
+		if (filter)
+			this.filter = filter;
+
+		super.load(rest);
+	}
+
+	save() {
+		const data = super.save();
+
+		delete data.imgScale;
+		delete data.imgKeepProportion;
+
+		return data;
+	}
+
+	draw(ctx) {
 
 		let width = Math.min(this.width, this.#imgWidth)
 			, height = Math.min(this.height, this.#imgHeight)
 			, img = this.#filter?.getBitmap() || this.#img
 			;
 
-		let x = this.x + this.#imgX
-			, y = this.y + this.#imgY
-			, scale = this.imgScale
-			;
-
-		if (this.#mask) {
-			maskCanvas.width = img.width;
-			maskCanvas.height = img.height;
-
-			maskCtx.save();
-
-			const X = this.#img.width / 2 + this.#maskX
-				, Y = this.#img.height / 2 + this.#maskY
-				, sX = this.#imgWidth / this.#img.width
-				, sY = this.#imgHeight / this.#img.height
-				;
-
-
-			maskCtx.translate(X, Y);
-			maskCtx.scale(sX, sY);
-			maskCtx.clip(this.#maskPath.getPath());
-			maskCtx.translate(-X, -Y);
-			maskCtx.drawImage(img, 0, 0, img.width, img.height);
-			maskCtx.restore();
-
-			img = maskCanvas;
-		}
+		if (!this.#mask) 
+			this.drawRectangle(ctx);
 
 		// console.debug('Draw image:', x, y, this.#imgWidth, this.#imgHeight);
 
 		ctx.save();
 
-		ctx.translate(x, y);
-		x = 0; y = 0;
+		let { x, y } = this.setGeometry(ctx);
 
-		// ctx.scale(scale, scale);
-
-		if (this.angle) {
-			x = this.width / 2;
-			y = this.height / 2;
-
-			ctx.translate(x, y);
-			ctx.rotate(this.angle);
-
-			x = -x;
-			y = -y;
-		}
+		x += this.#imgX;
+		y += this.#imgY;
 
 		// mirror
-		if (this.#mirror) {
+		if (this.#mirror) 
 			ctx.scale(-1, 1);
-			// ctx.drawImage(this.#img, 0, 0, -this.#imgWidth, this.#imgHeight);
-			ctx.drawImage(img, 
-				this.#cropX, this.#cropY, this.#cropWidth, this.#cropHeight,
-				x, y, -width, height);
+
+		let path;
+		
+		if (this.#mask) {
+			const X = x + this.#maskX
+				, Y = y + this.#maskY
+				, sx = this.#imgWidth / this.#cropWidth
+				, sy = this.#imgHeight / this.#cropHeight
+				;
+
+			path = this.#maskPath.getPath(X, Y, sx, sy);
+
+			this.#maskPath.fillPath(ctx, path, false, 0);
+
+			ctx.save();
+			ctx.clip(path);
 		}
-		else {
-			ctx.drawImage(img, 
-				this.#cropX, this.#cropY, this.#cropWidth, this.#cropHeight,
-				x, y, width, height);
+		
+		ctx.drawImage(img, 
+			this.#cropX, this.#cropY, this.#cropWidth, this.#cropHeight,
+			x, y, width, height);
+
+		if (path) {
+			ctx.restore();
+			this.#maskPath.strokePath(ctx, path, false, 0);
 		}
 
 		if (this.#clip) {
@@ -500,6 +581,36 @@ export class Picture extends Rect {
 
 		if (Math.abs(this.height - this.#imgHeight) < 4)
 			this.height = this.#imgHeight;
+	}
+
+	centerInBox() {
+		const W = this.width
+			, H = this.height
+			, w = this.#imgWidth
+			, h = this.#imgHeight
+			;
+
+		if (w < W)
+			this.#imgX = Math.round((W - w) / 2);
+		
+		if (h < H)
+			this.#imgY = Math.round((H - h) / 2);
+
+		return { imgX: this.#imgX, imgY: this.#imgY };
+	}
+
+	fitSize() {
+
+		// this.x += this.#cropX;
+		// this.y += this.#cropY;
+
+		this.width = this.#imgWidth;
+		this.height = this.imgHeight;
+
+		this.#imgX = 0;
+		this.#imgY = 0;
+
+		return { width: this.width, height: this.height, imgX: 0, imgY: 0 };
 	}
 
 	blurSlow(ctx, radius=this.#blur) {
@@ -552,51 +663,43 @@ export class Picture extends Rect {
 		ctx.putImageData(imageData, x, y);
 	}
 
-	async loadImage(file, maxWidth=1200, maxHeight=900) {
-		this.#file = file.name;
-		this.#img = await Picture.load(file);
-		this.#img._refs = 1;
+	async loadImage(file=this.#file, maxWidth=1200, maxHeight=900) {
+		this.#file = file;
 
-		console.debug('Image imported:', this.#img.width, this.#img.height);
+		let img = await Picture.load(file);
+		img._refs = 0;
 
-		const dw = maxWidth - this.#img.width;
-		const dh = maxHeight - this.#img.height;
+		console.debug('Image imported:', img.width, img.height);
+
+		const dw = maxWidth - img.width;
+		const dh = maxHeight - img.height;
 
 		if (dw < 0 || dh < 0) {
 
-			const r = (dw < dh) ? maxWidth / this.#img.width : maxHeight / this.#img.height
-				, width = this.#img.width * r
-				, height = this.#img.height * r
+			const r = (dw < dh) ? maxWidth / img.width : maxHeight / img.height
+				, width = img.width * r
+				, height = img.height * r
 				;
 
 			maskCanvas.width = width;
 			maskCanvas.height = height;
 
-			maskCtx.drawImage(this.#img, 0, 0, this.#img.width, this.#img.height, 0, 0, width, height);
+			maskCtx.drawImage(img, 0, 0, img.width, img.height, 0, 0, width, height);
 
-			URL.revokeObjectURL(this.#img.src);
+			URL.revokeObjectURL(img.src);
 
 			// todo relase
 			// this.#img = createImageBitmap(maskCanvas, 0, 0, width.height);
 
 			// renders but tf not accept it
 			// this.#img = maskCanvas.transferToImageBitmap();
-			this.#img = await canvasToImage(maskCanvas);
+			img = await canvasToImage(maskCanvas);
+			img._refs = 0;
 		}
 
-		this.width = this.width || this.#img.width;
-		this.height = this.height || this.#img.height;
+		this.setImage(img);
 
-		this.#imgWidth = this.#imgWidth || this.#img.width;
-		this.#imgHeight = this.#imgHeight || this.#img.height;
-
-		this.#cropX = 0;
-		this.#cropY = 0;
-
-		this.#cropWidth = this.#img.width;
-		this.#cropHeight = this.#img.height;
-
-		return this.#img;
+		return img;
 	}
 
 	async detectBodySelfie(threshold=0.7) {

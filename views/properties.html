@@ -1,9 +1,8 @@
 <div id="properties" class="column noverflow" tab="properties">
 	<div class="row ci">
 		<h2 class="wm8 inconsolata fit">Properties</h2>
-		<button name="center" class="icon fa fa-arrows-to-dot" title="Center image" display="image"></button>
-		<button name="export" class="icon fa fa-file-export" title="Export" display="rect image chart"></button>
-		<button name="remove" class="icon fa lg" title="Remove" display="all"></button>
+		<button name="export" class="icon fa fa-file-export" title="Export" display="rect image chart" onclick="app.exportObject()"></button>
+		<button name="remove" class="icon fa lg" title="Remove" display="all" onclick="app.remove()"></button>
 	</div>
 	
 	<div class="properties cc scroll">
@@ -64,7 +63,7 @@
 					<output style="text-align:right">0</output>
 				</span>
 			</span>
-			<span class="row" display="rect text path">
+			<span class="row" display="rect text path icon">
 				<b class="fit">fill</b>
 				<input for="object-fill" class="checkbox w3-margin-right" type="checkbox" checked onchange="this.nextElementSibling.disabled=!this.checked">
 				<input id="object-fill" type="color">
@@ -99,17 +98,25 @@
 				</div>
 			</div>
 			
-			<span class="row" display="bubble">
-				<b class="fit">beak</b>
-				<select id="object-beak">
-					<option value="left" selected>left</option>
-					<option value="right">right</option>
-				</select>
-			</span>
-			<span class="row" display="bubble">
-				<b class="fit">beak width</b>
-				<input class="fit" id="object-beakWidth" type="range" min="0.1" max="1" step="0.02">
-			</span>
+			<div class="cc" display="bubble">
+				<span class="row">
+					<b class="fit">beak</b>
+					<select id="object-beak">
+						<option value="left" selected>left</option>
+						<option value="right">right</option>
+						<option value="top">top</option>
+						<option value="bottom">bottom</option>
+					</select>
+				</span>
+				<span class="row">
+					<b class="fit">beak width</b>
+					<input class="fit" id="object-beakWidth" type="range" min="0.1" max="1" step="0.02">
+				</span>
+				<span class="row">
+					<b class="fit">beak position</b>
+					<input class="fit" id="object-beakPosition" type="range" min="0" max="1" step="0.02">
+				</span>
+			</div>
 
 			<span class="row" display="arrow">
 				<b class="fit">arrow</b>
@@ -145,7 +152,7 @@
 				</span>
 			</div>
 			
-			<span class="row" display="text emoji chart">
+			<span class="row" display="text emoji icon chart">
 				<b class="fit">size</b>
 				<input id="object-size" type="number">
 			</span>
@@ -167,6 +174,7 @@
 					<option value="Calibri">Calibri</option>
 					<option value="Optima">Optima</option>
 					<option value="Comic Sans MS">Comic</option>
+					<option value="DejaVu Sans Mono">DejaVu</option>
 					<!-- <option value="Verdana">Verdana</option>
 					<option value="Geneva">Geneva</option> -->
 					<option value="Ubuntu">Ubuntu</option>
@@ -178,6 +186,8 @@
 		<div class="cc" display="image">
 			<div class="cr ci noevents wm8 w3-padding-tiny w3-round w3-light-grey" onclick="this.classList.toggle('collapsed');this.nextElementSibling.classList.toggle('hidden')">
 				<b class="fit">Image</b>
+				<button name="fit" class="icon fa fa-fw xs expand display-hover" title="Fit size" onclick="event.stopPropagation();app.fitImageSize()"></button>
+				<button class="icon fa fa-fw xs fa-arrows-to-dot display-hover" title="Center" onclick="event.stopPropagation();app.centerImage()"></button>
 				<i class="fa xs collapse"></i>
 			</div>
 			<!-- <h3 class="wm8 inconsolata">Image</h3> -->
@@ -216,10 +226,10 @@
 					</div>
 				</div>
 				
-				<span class="cr ci m2">
+				<!-- <span class="cr ci m2">
 					<b class="fit">scale</b>
 					<input class="fit" id="object-imgScale" min="0.1" max="5" step="0.01" type="range" oninput="this.nextElementSibling.value=parseFloat(this.value).toFixed(1)"><output>1.0</output>
-				</span>
+				</span> -->
 				<span class="row">
 					<b class="fit">mirror</b>
 					<input id="object-imgMirror" type="checkbox" class="checkbox">
@@ -341,9 +351,9 @@
 		<div class="cc" display="label">
 			<div class="cr ci noevents wm8 w3-padding-tiny w3-round w3-light-grey" onclick="this.classList.toggle('collapsed');this.nextElementSibling.classList.toggle('hidden')">
 				<b class="fit">Text</b>
-				<i class="fa xs collapse"></i>
+				<button name="center-text" class="icon fa xs fa-arrows-left-right display-hover" title="Center" onclick="event.stopPropagation();app.centerText()"></button>
+				<i class="fa fa-fw xs collapse"></i>
 			</div>
-			<!-- <h3 class="wm8 inconsolata">Text</h3> -->
 			<div class="cc fade">
 				<span class="row" >
 					<b class="fit">offset X</b>
@@ -356,6 +366,14 @@
 				<span class="row">
 					<b class="fit">size</b>
 					<input id="object-textSize" type="number">
+				</span>
+				<span class="row">
+					<b class="fit">size</b>
+					<select id="object-textAlign" type="number">
+						<option value="left" selected>left</option>
+						<option value="right">right</option>
+						<option value="center">center</option>
+					</select>
 				</span>
 				<span class="row">
 					<b class="fit">bold</b>
@@ -375,6 +393,7 @@
 						<option value="Calibri">Calibri</option>
 						<option value="Optima">Optima</option>
 						<option value="Comic Sans MS">Comic</option>
+						<option value="DejaVu Sans Mono">DejaVu</option>
 						<option value="Ubuntu">Ubuntu</option>
 					</select>
 				</span>

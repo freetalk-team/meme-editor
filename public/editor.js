@@ -29,6 +29,8 @@ const defaultHandler = {
 	mode() {}
 };
 
+const bgFill = '#fafafa';
+
 export default class Editor extends Base {
 	#db;
 
@@ -215,6 +217,18 @@ export default class Editor extends Base {
 
 	reset() {
 
+		this.#selected = null;
+		this.#current = null;
+		this.#history = [];
+		this.#historyIndex = 0;
+		this.#path = null;
+		this.#mode = 'select';
+		this.#nodes = [];
+		this.#bg.fill = bgFill;
+		// this.#objects.splice(1, this.#objects.length - 1);
+
+		this.canvas.focus();
+
 		const objects = super.reset();
 		const charts = objects.filter(i => i.type == 'chart');
 
@@ -226,17 +240,6 @@ export default class Editor extends Base {
 			if (data.refs == 0)
 				this.#data.delete(i.file);
 		}
-
-		this.#selected = null;
-		this.#current = null;
-		this.#history = [];
-		this.#historyIndex = 0;
-		this.#path = null;
-		this.#mode = 'select';
-		this.#nodes = [];
-		// this.#objects.splice(1, this.#objects.length - 1);
-
-		this.canvas.focus();
 
 		this.#bg.properties = this.#dom.canvas;
 		this.#dom.reset();
@@ -262,30 +265,35 @@ export default class Editor extends Base {
 		super.draw(selection, this.#mode);
 	}
 
-	add(type='bubble', value='', parent=null) {
+	add(type, value='', parent=null) {
 
 		const o = super.create(type, parent);
 
-		switch (type) {
+		switch (o.type) {
 
 			case 'bubble':
-			o.width = 200;
+			o.width = 300;
 			o.height = 150;
 			break;
 
 			case 'rect':
-			case 'rectext':
+			case 'label':
+			o.width = 350;
+			o.height = 200;
+			break;
+
+			case 'circle':
 			o.width = 200;
 			o.height = 200;
 			break;
 
 			case 'text':
-			o.value = 'Text';
-			o.fill = o.stroke;
+			o.setText('Text');
 			break;
 
 			case 'emoji':
-			o.value = value;
+			case 'icon':
+			o.setText(value);
 			break;
 
 			case 'chart':
@@ -293,17 +301,16 @@ export default class Editor extends Base {
 			o.height = 300;
 			break;
 
-			case 'image': {
-				const id = value;
-				const image = this.#images.get(id);
-
-				if (image)
-					o.setImage(id, image);
-				else
-					o = null;
+			case 'image':
+			if (value) {
+				const image = this.#images.get(value);
+				if (!image) {
+					// todo: ???
+				}
+				
+				o.setImage(image);
 			}
 			break;
-
 		}
 
 		if (o) {
@@ -345,6 +352,8 @@ export default class Editor extends Base {
 			this.emit('select', null);
 			this.#dom.properties.mode();
 		}
+
+		this.#dom.objects.delete(id);
 	}
 
 	move(id, offset) {
@@ -356,6 +365,22 @@ export default class Editor extends Base {
 	}
 
 	applyMask(id) {
+
+		const g = this.findGroup(id);
+		const objects = g.objects;
+		const i = objects.findIndex(o => o.id == id);
+
+		const o = objects[i - 1];
+
+		if (o && o.type == 'image') {
+			o.setMask(objects[i]);
+
+			this.draw();
+		}
+
+
+		// if (i < 2) return;
+
 		// let i = this.#objects.findIndex(o => o.id == id);
 		// if (i < 2) return;
 
@@ -401,27 +426,34 @@ export default class Editor extends Base {
 
 		const o = this.#selected;
 
-		o.selected = false;
-		this.draw();
-
-		const e = document.createElement('canvas');
-		// const e = new OffscreenCanvas(o.width, o.height);
+		const e = new OffscreenCanvas(o.width, o.height);
 		const ctx = e.getContext('2d');
 
-		const m = o.strokeWidth / 2 + o.shadowWidth + 5;
-		const b = o.boundingBox(-m);
+		ctx.translate(-o.x, -o.y);
 
-		e.width = b.width;
-		e.height = b.height;
+		o.draw(ctx);
 
-		ctx.drawImage(this.canvas, b.x, b.y, b.width, b.height, 0, 0, b.width, b.height);
+		// o.selected = false;
+		// this.draw();
 
-		o.selected = true;
-		this.draw();
+		// const e = document.createElement('canvas');
+		// // const e = new OffscreenCanvas(o.width, o.height);
+		// const ctx = e.getContext('2d');
+
+		// const m = o.strokeWidth / 2 + o.shadowWidth + 5;
+		// const b = o.boundingBox(-m);
+
+		// e.width = b.width;
+		// e.height = b.height;
+
+		// ctx.drawImage(this.canvas, b.x, b.y, b.width, b.height, 0, 0, b.width, b.height);
+
+		// o.selected = true;
+		// this.draw();
 
 		// drawWatermark(ctx, kSite);
 
-		return this.#exportCanvas(e, o.name, 'png', b);
+		return this.#exportCanvas(e, o.name, 'png');
 	}
 
 	async import(files) {
@@ -502,17 +534,31 @@ export default class Editor extends Base {
 			
 			const objects = super.open(project.objects);
 			const images = objects.filter(i => i.type == 'image');
-			const paths = objects.filter(i => i.type == 'path');
+			const paths = Object.fromArray(objects.filter(i => i.type == 'path'));
 
 			this.#bg.load(project.canvas);
 			
 			// console.debug('Open projects', data);
 
-			await Promise.all(images.map(i => i.image()));
+			// await Promise.all(images.map(i => i.image()));
 
-			let mask;
+			let image, imageid, mask;
 
 			for (const i of images) {
+
+				imageid = i.file.name;
+				image = this.#images.get(imageid);
+
+				if (!image || image._refs == 0) {
+					image = await i.loadImage();
+					image._file = i.file;
+
+					this.#images.set(imageid, image);
+				}
+				else {
+					i.setImage(image);
+				}
+
 				mask = i.maskPath;
 				if (mask) {
 					mask = paths[mask];
@@ -599,29 +645,24 @@ export default class Editor extends Base {
 				
 			}
 
+			const before = o.save();
+
 			setter.call(o, value);
 
 			this.draw();
 
-			switch (prop) {
-				
-				case 'imgScale':
-				this.#dom.properties.assign({
-					width: o.width,
-					height: o.height,
-					imgWidth: o.imgWidth,
-					imgHeight: o.imgHeight,
-				});
-				break;
+			const after = o.save();
+			const update = {};
 
-				case 'imgWidth':
-				this.#dom.properties.assign({ imgHeight: o.imgHeight });
-				break;
+			delete after[prop];
 
-				case 'imgHeight':
-				this.#dom.properties.assign({ imgWidth: o.imgWidth });
-				break;
+			for (const [name, v] of Object.entries(after)) {
+				if (before[name] != v) 
+					update[name] = v;
 			}
+
+			this.#dom.properties.assign(update);
+			
 		}
 	}
 
@@ -750,23 +791,34 @@ export default class Editor extends Base {
 		this.draw();
 	}
 
-	centerImage() {
-		if (!this.#selected || this.#selected.type != 'image')
+	centerImage(o=this.#selected) {
+		if (!o || o.type != 'image')
 			return;
 
-		const o = this.#selected;
+		const data = o.centerInBox();
 
-		const W = o.width
-			, H = o.height
-			, w = o.imgWidth
-			, h = o.imgHeight
-			;
+		this.#dom.properties.assign(data);
 
-		if (w < W)
-			o.imgX = Math.round((W - w) / 2);
-		
-		if (h < H)
-			o.imgY = Math.round((H - h) / 2);
+		this.draw();
+	}
+
+	fitImageSize(o=this.#selected) {
+		if (!o || o.type != 'image')
+			return;
+
+		const data = o.fitSize();
+
+		this.#dom.properties.assign(data);
+
+		this.draw();
+	}
+
+	centerText(o=this.#selected) {
+		if (!o) return;
+
+		const data = o.centerText();
+
+		this.#dom.properties.assign(data);
 
 		this.draw();
 	}
@@ -810,7 +862,8 @@ export default class Editor extends Base {
 		this.wrapTools('tools');
 		this.wrapNotifications('notifications', 'item-notification');
 
-		const body = document.body;
+		// const body = document.body;
+		const body = this.canvas.parentElement;
 
 		let counter = 0;
 
@@ -1004,7 +1057,7 @@ export default class Editor extends Base {
 			o.selected = true;
 			o.properties = this.#dom.properties;
 
-			data = Object.fromInstance(o);
+			data = o.save();
 		}
 
 		const changed = this.#selected != o;
@@ -1512,6 +1565,8 @@ export default class Editor extends Base {
 
 		console.debug('Projects loaded', projects);
 
+		this.#dom.projects.clear();
+
 		for (const i of projects) {
 			this.#projects.push({ name: i.id, objects: i.objects.length });
 			this.#dom.projects.add(i);
@@ -1560,7 +1615,8 @@ export default class Editor extends Base {
 					content = super.toSVG(box);
 				}
 				else {
-					content = await new Promise(resolve => canvas.toBlob(resolve, mime));
+					// content = await new Promise(resolve => canvas.toBlob(resolve, mime));
+					content = await canvas.convertToBlob({ type: mime });
 				}
 		
 				await writable.write(content);
@@ -1633,10 +1689,6 @@ export default class Editor extends Base {
 	async #importImages(files) {
 		let img, image, id, link;
 
-		const maxWidth = this.#bg.width
-			, maxHeight = this.#bg.height
-			;
-		
 		for (const i of files) {
 
 			id = i.name;
@@ -1644,14 +1696,13 @@ export default class Editor extends Base {
 			// await this.db.put('file', { id, i, type: 'image' });
 
 			img = Editor.create('image');
+			img.file = i;
 
 			image = this.#images.get(id);
 
-			if (image && image._refs > 0) {
-				img.setImage(id, image);
-			}
-			else {
-				image = await img.loadImage(i, maxWidth, maxHeight);
+			if (!image || image._refs == 0) {
+				
+				image = await img.loadImage(i);
 
 				this.#images.set(id, image);
 
@@ -1659,14 +1710,11 @@ export default class Editor extends Base {
 
 				this.#dom.images.add({ id, link, type: i.type, size: i.size, width: image.width, height: image.height });
 			}
+			else {
+				img.setImage(image);
+			}
 
-			img.x = Math.round(Math.random() * (this.width - img.width));
-			img.y = Math.round(Math.random() * (this.height - img.height));
-
-			super.add(img);
-
-			this.#dom.objects.add(img);
-			
+			this.add(img);
 		}
 
 		if (files.length > 1) {

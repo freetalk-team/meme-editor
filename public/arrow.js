@@ -294,9 +294,9 @@ export class Arrow extends Base {
 		const rectTop = super.y;
 		const rectRight = rectLeft + this.width;
 		const rectBottom = rectTop + this.height;
-	
+
 		return (finalX >= rectLeft && finalX <= rectRight && 
-				finalY >= rectTop && finalY <= rectBottom);
+				finalY >= rectTop && finalY <= rectBottom) ? this : null;
 	}
 
 	#drawDot(ctx, x, y) {

@@ -1,9 +1,11 @@
 import { Base } from './object.js';
 import { Bubble, Rectangle } from './bubble.js';
+import { Circle } from './circle.js';
 import { Canvas } from './canvas.js';
 import { Picture } from './picture.js';
 import { Text } from './text.js';
 import { Emoji } from './emoji.js';
+import { Icon } from './fa.js';
 import { Path } from './path.js';
 import { Arrow } from './arrow.js';
 import { Chart } from './chart.js';
@@ -13,10 +15,12 @@ import { SVG } from './svg.js';
 
 const ObjectType = {
 	rect: Rectangle,
+	circle: Circle,
 	label: Rectangle,
 	bubble: Bubble,
 	text: Text,
 	emoji: Emoji,
+	icon: Icon,
 	image: Picture,
 	path: Path,
 	arrow: Arrow,

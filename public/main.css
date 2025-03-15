@@ -27,9 +27,9 @@ body {
 		padding: 2px 0;
 	}
 
-	:is(button) {
+	/* :is(button) {
 		display: none;
-	}
+	} */
 
 	&:not([mode]) .properties {
 		display: none;
@@ -127,7 +127,7 @@ canvas:focus {
 	position: relative;
 }
 
-.dnd .dnd-area:before {
+.dnd.dnd-area:before {
 	font-family: "Font Awesome 5 Free";
 	font-weight: 900;
 	content: '\f382';
@@ -186,6 +186,10 @@ button.tab.selected:after {
 	content: '\f0c8';
 }
 
+.fa[type="circle"]::before {
+	content: '\f111';
+}
+
 .fa[type="image"]::before {
 	content: '\f03e';
 }
@@ -196,6 +200,10 @@ button.tab.selected:after {
 
 .fa[type="emoji"]::before {
 	content: '\f118';
+}
+
+.fa[type="icon"]::before {
+	content: '\f005';
 }
 
 .fa[type="path"]::before {
@@ -248,7 +256,8 @@ button.tab.selected:after {
 [mode="text"] [display*="text"],
 [mode="arrow"] [display*="arrow"],
 [mode="chart"] [display*="chart"],
-[mode="emoji"] [display*="emoji"] { 
+[mode="emoji"] [display*="emoji"],
+[mode="icon"] [display*="icon"]{ 
 	display: inherit!important; 
 }
 
@@ -280,7 +289,7 @@ button.tab.selected:after {
 	transform: scale(1.2);
 }
 
-#icon-picker {
+.icon-picker {
 	position: relative;
 	display: inline-block;
 }
@@ -342,7 +351,7 @@ button.tab.selected:after {
 	background: #f0f0f0;
 	border-radius: 4px;
 }
-.emoji-grid {
+.icon-grid {
 	display: grid;
 	grid-template-columns: repeat(auto-fill, minmax(40px, 1fr));
 	gap: 10px;
@@ -350,16 +359,23 @@ button.tab.selected:after {
 	text-align: center;
 	cursor: pointer;
 }
-.emoji-item {
+
+.icon-item {
 	padding: 10px;
 	transition: background 0.3s;
 	/* font-family: var(--emoji-font); */
+	font-family: 'Fontawesome';
+}
+
+.icon-item.emoji {
 	font-family: emoji, "Noto Color Emoji";
 }
-.emoji-item:hover {
+
+.icon-item:hover {
 	background: #f0f0f0;
 	border-radius: 4px;
 }
+
 #toggle-popup {
 	/* background: #007BFF;
 	color: white;
@@ -617,13 +633,32 @@ output {
 	float: left;
 }
 
-button[name="agroup"] {
+button[name="agroup"],
+button[name="apply"] {
 	display: none;
 }
 
-.item:has(+ .item[type="group"]) button[name="agroup"] {
+/* .item[type="circle"]:has(~ .item[type="image"]) button[name="apply"] {
+	display: unset;
+} */
+
+.item[type="circle"]:has(+ .item[type="image"]) button[name="apply"],
+.item[type="label"]:has(+ .item[type="image"]) button[name="apply"] {
 	display: unset;
 }
+
+/* .item[type="circle"] button[name="apply"] ~ .item[type="image"] {
+	display: unset;
+} */
+
+/* .item[type="image"]:has(+ .item[type="circle"]) button[name="apply"] {
+	display: unset;
+} */
+
+/* .item:has(+ .item[type="group"]) button[name="agroup"],
+.item:has(+ .item[type="image"]) button[name="apply"] {
+	display: unset;
+} */
 
 .noevents .list > .item {
 	pointer-events: all;

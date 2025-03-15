@@ -11,8 +11,8 @@
 
 			<%- include('sidebar') %>
 			
-			<div class="column noverflow fit dnd-area" style="height:100%;">
-				<div class="canvas">
+			<div class="column noverflow fit" style="height:100%;">
+				<div class="canvas dnd-area">
 					<canvas id="canvas" class="" tabindex="1" width="1200" height="900">Create meme with canvas</canvas>
 				</div>
 
@@ -44,55 +44,65 @@ const editor = new MemeEditor(canvas);
 editor.wrap();
 editor.init();
 
+wrapIconPopup('emoji');
+wrapIconPopup('icon');
 
-const toggleButton = document.getElementById('toggle-popup');
-const popup = document.getElementById('icon-popup');
-const tabs = popup.querySelectorAll('.tab');
-const tabContents = document.querySelectorAll('.tab-content');
 
-// Toggle popup visibility
-toggleButton.addEventListener('click', (e) => {
-	popup.style.display = popup.style.display === 'block' ? 'none' : 'block';
-	e.stopPropagation();
-});
+function wrapIconPopup(id) {
 
-// Handle tab switching
-tabs.forEach(tab => {
-	tab.addEventListener('click', () => {
-		// Remove active class from all tabs and tab contents
-		tabs.forEach(t => t.classList.remove('active'));
-		tabContents.forEach(content => content.classList.remove('active'));
+	const toggleButton = document.getElementById(id + '-button-popup');
+	const popup = document.getElementById(id + '-popup');
+	const tabs = popup.querySelectorAll('.tab');
+	const tabContents = popup.querySelectorAll('.tab-content');
 
-		// Add active class to the selected tab and corresponding content
-		tab.classList.add('active');
-		document.getElementById(tab.getAttribute('data-tab')).classList.add('active');
+	// Toggle popup visibility
+	toggleButton.addEventListener('click', (e) => {
+		popup.style.display = popup.style.display === 'block' ? 'none' : 'block';
+		e.stopPropagation();
 	});
-});
 
-// Close the popup when clicking outside
-document.addEventListener('click', (event) => {
-	if (!popup.contains(event.target) && event.target !== toggleButton) {
-		popup.style.display = 'none';
-	}
-});
+	// Handle tab switching
+	tabs.forEach(tab => {
+		tab.addEventListener('click', () => {
+			// Remove active class from all tabs and tab contents
+			tabs.forEach(t => t.classList.remove('active'));
+			tabContents.forEach(content => content.classList.remove('active'));
 
-// Example: Handle icon selection
-const icons = document.querySelectorAll('.icon-item');
-icons.forEach(icon => {
-	icon.addEventListener('click', () => {
-	//alert(`You selected: ${icon.innerHTML}`);
-	popup.style.display = 'none';
+			// Add active class to the selected tab and corresponding content
+			tab.classList.add('active');
+			document.getElementById(tab.getAttribute('data-tab')).classList.add('active');
+		});
 	});
-});
 
-// Example: Handle emoji selection
-const emojis = document.querySelectorAll('.emoji-item');
-emojis.forEach(emoji => {
-	emoji.addEventListener('click', () => {
-	// alert(`You selected: ${emoji.textContent}`);
-		editor.add('emoji', emoji.textContent);
-		popup.style.display = 'none';
+	// Close the popup when clicking outside
+	document.addEventListener('click', (event) => {
+		if (!popup.contains(event.target) && event.target !== toggleButton) {
+			popup.style.display = 'none';
+		}
 	});
-});
 	
+
+	// Example: Handle icon selection
+	const icons = popup.querySelectorAll('.icon-item');
+	icons.forEach(icon => {
+		icon.addEventListener('click', () => {
+
+			let value = icon.textContent;
+
+			if (id == 'icon') {
+				const e = icon.firstElementChild;
+				const v = window.getComputedStyle(e, '::before')
+					.getPropertyValue('content')
+					.replace(/['"]/g, ""); // Remove quotes from the value
+
+				value = v.charAt(0);
+			}
+
+			editor.add(id, value);
+
+			popup.style.display = 'none';
+		});
+	});
+}
+
 </script>

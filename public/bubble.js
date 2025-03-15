@@ -4,6 +4,7 @@ class Bubble extends Rectangle {
 
 	#beak = 'left';
 	#beakWidth = 0.2;
+	#beakPosition = 0;
 
 	#pX;
 	#pY;
@@ -40,7 +41,21 @@ class Bubble extends Rectangle {
 	set beak(v) {
 		if (this.#beak == v) return;
 
-		this.#pX = -this.#pX + this.width;
+		// let h = this.#beak == 'top' || this.#beak == 'bottom';
+
+		switch (v) {
+			case 'left':
+			case 'right':
+			this.#pX = -this.#pX + this.width;
+			break;
+
+			case 'top':
+			case 'bottom':
+			this.#pY = -this.#pY + this.height;
+			break;
+		}
+
+		// this.#pX = -this.#pX + this.width;
 		this.#beak = v;
 
 		this.updatePath();
@@ -50,6 +65,14 @@ class Bubble extends Rectangle {
 	set beakWidth(n) {
 		if (typeof n == 'string') n = parseFloat(n);
 		this.#beakWidth = n;
+
+		this.updatePath();
+	}
+
+	get beakPosition() { return this.#beakPosition; }
+	set beakPosition(n) {
+		if (typeof n == 'string') n = parseFloat(n);
+		this.#beakPosition = n;
 
 		this.updatePath();
 	}
@@ -66,6 +89,14 @@ class Bubble extends Rectangle {
 
 	draw(ctx) {
 		this.drawPath(ctx, this.#path);
+
+		ctx.save();
+
+		ctx.translate(this.x, this.y);
+
+		this.drawText(ctx);
+
+		ctx.restore();
 	}
 	
 	handleClick(x, y) {
@@ -107,8 +138,11 @@ class Bubble extends Rectangle {
 
 		let radius = this.radius;
 
-		const maxw =  height - 2*radius
-			, w = maxw * this.#beakWidth;
+		const len = this.#beak == 'top' || this.#beak == 'bottom' ? width : height;
+		const maxw =  len - 2*radius
+			, w = maxw * this.#beakWidth
+			, d = (maxw - w) * this.#beakPosition
+			;
 
 		radius = {
 			tl: radius,
@@ -120,22 +154,35 @@ class Bubble extends Rectangle {
 		const path = new Path2D;
 
 		path.moveTo(x + radius.tl, y);
+		if (this.#beak == 'top') {
+			path.lineTo(x + radius.tl + d, y);
+			path.lineTo(px, py);
+			path.lineTo(x + radius.tl + d + w, y);
+		}
 		path.lineTo(x + width - radius.tr, y);
 		path.quadraticCurveTo(x + width, y, x + width, y + radius.tr);
 		if (this.#beak == 'right') {
-			path.lineTo(x + width, y + radius.tl);
+			path.lineTo(x + width, y + radius.tl + d);
 			path.lineTo(px, py);
-			path.lineTo(x + width, y + radius.tl + w);
+			path.lineTo(x + width, y + radius.tl + w + d);
 		}
 		path.lineTo(x + width, y + height - radius.br);
 	
 		path.quadraticCurveTo(x + width, y + height, x + width - radius.br, y + height);
+
+		if (this.#beak == 'bottom') {
+			path.lineTo(x + radius.tl + d + w, y + height);
+			path.lineTo(px, py);
+			path.lineTo(x + radius.tl + d, y + height);
+		}
+
 		path.lineTo(x + radius.bl, y + height);
 		path.quadraticCurveTo(x, y + height, x, y + height - radius.bl);
 
 		if (this.#beak == 'left') {
-			path.lineTo(x, y + radius.tl + w);
+			path.lineTo(x, y + radius.tl + w + d);
 			path.lineTo(px, py);
+			path.lineTo(x, y + radius.tl + d);
 		}
 		
 		path.lineTo(x, y + radius.tl);

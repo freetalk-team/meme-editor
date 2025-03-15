@@ -13,7 +13,10 @@ class Filter {
 	image() { return this.#img.image(); }
 
 	getBitmap() { return this.#bitmap; }
-	setBitmap(v) { this.#bitmap = v; }
+	setBitmap(v=this.apply()) {
+		this.release();
+		this.#bitmap = v; 
+	}
 
 	release() {
 		if (this.#bitmap) {
@@ -33,12 +36,9 @@ class RadiusFilter extends Filter {
 	get radius() { return this.#radius; }
 
 	set radius(n) {
-		this.release();
-
 		this.#radius = n;
-
 		if (n > 0) 
-		 	this.setBitmap(this.apply());
+		 	this.setBitmap();
 	}
 
 }
@@ -50,12 +50,10 @@ class AmountFilter extends Filter {
 	get amount() { return this.#amount; }
 
 	set amount(n) {
-		this.release();
-
 		this.#amount = n;
 
 		if (n > 0) 
-		 	this.setBitmap(this.apply());
+		 	this.setBitmap();
 
 	}
 }
@@ -86,12 +84,10 @@ export class StrengthFilter extends Filter {
 	get strength() { return this.#strength; }
 
 	set strength(n) {
-		this.release();
-
 		this.#strength = n;
 
 		if (n > 0) 
-		 	this.setBitmap(this.apply());
+		 	this.setBitmap();
 
 	}
 }
@@ -103,12 +99,10 @@ class RadiusStrengthFilter extends RadiusFilter {
 	get strength() { return this.#strength; }
 
 	set strength(n) {
-		this.release();
-
 		this.#strength = n;
 
 		if (n > 0) 
-		 	this.setBitmap(this.apply());
+		 	this.setBitmap();
 	}
 }
 
@@ -131,21 +125,17 @@ export class LensBlur extends RadiusFilter {
 	get angle() { return this.#angle; }
 
 	set brightness(n) {
-		this.release();
-
 		this.#brightness = n;
 
 		if (n > 0) 
-			this.setBitmap(this.apply());
+			this.setBitmap();
 	}
 
 	set angle(n) {
-		this.release();
-
 		this.#angle = n;
 
 		if (n > 0) 
-			this.setBitmap(this.apply());
+			this.setBitmap();
 	}
 
 	apply() {
@@ -176,14 +166,12 @@ export class BrightnessContrast extends Filter {
 	#brightness = 0;
 	#contrast = 0;
 
-	get name() { return 'brightnessContrast'; }
+	get name() { return 'contrast'; }
 	get brightness() { return this.#brightness; }
 	get contrast() { return this.#contrast; }
 
 
 	set brightness(n) {
-		this.release();
-
 		if (n > 0) 
 		 	this.setBitmap(this.glfx().brightnessContrast(this.image(), n, this.#contrast));
 
@@ -191,8 +179,6 @@ export class BrightnessContrast extends Filter {
 	}
 
 	set contrast(n) {
-		this.release();
-
 		if (n > 0) 
 		 	this.setBitmap(this.glfx().brightnessContrast(this.image(), this.#brightness, n));
 
@@ -211,8 +197,6 @@ export class HueSaturation extends Filter {
 
 
 	set hue(n) {
-		this.release();
-
 		if (n > 0) 
 		 	this.setBitmap(this.glfx().hueSaturation(this.image(), n, this.#saturation));
 
@@ -220,8 +204,6 @@ export class HueSaturation extends Filter {
 	}
 
 	set saturation(n) {
-		this.release();
-
 		if (n > 0) 
 		 	this.setBitmap(this.glfx().hueSaturation(this.image(), this.#hue, n));
 
@@ -237,12 +219,10 @@ export class Swirl extends RadiusPosFilter {
 	get angle() { return this.#angle; }
 
 	set angle(n) {
-		this.release();
-
 		this.#angle = n;
 
 		if (n > 0) 
-		 	this.setBitmap(this.apply());
+		 	this.setBitmap();
 	}
 
 	apply() {
@@ -258,12 +238,10 @@ export class BulgePinch extends RadiusPosFilter {
 	get strength() { return this.#strength; }
 
 	set strength(n) {
-		this.release();
-
 		this.#strength = n;
 
 		if (n > 0) 
-		 	this.setBitmap(this.apply());
+		 	this.setBitmap();
 	}
 
 	apply() {
@@ -280,8 +258,6 @@ export class Denoise extends Filter {
 	get exponent() { return this.#exponent; }
 
 	set exponent(n) {
-		this.release();
-
 		this.#exponent = n;
 
 		this.setBitmap(this.glfx().denoise(this.image(), this.#exponent));
@@ -321,9 +297,7 @@ export class Vignette extends AmountFilter {
 
 	set size(n) {
 		this.#size = n;
-
-		this.release();
-		this.setBitmap(this.apply());
+		this.setBitmap();
 	}
 
 	apply() {

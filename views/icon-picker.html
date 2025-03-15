@@ -1,148 +1,80 @@
-<div id="icon-picker">
-	<button id="toggle-popup" name="emoji" class="icon fa fa-face-smile w3-text-amber" title="Emoji"></button>
+<div id="icon-picker" class="icon-picker">
+	<button id="icon-button-popup" name="icon" class="icon fa fa-star w3-text-blue" title="Icon"></button>
 	<div class="icon-popup" id="icon-popup">
-
-		<!-- Tabs -->
-		<div class="tabs" id="tabs">
-			<div class="tab active" data-tab="smileys">Smileys</div>
-			<div class="tab" data-tab="animals">Animals</div>
-			<div class="tab" data-tab="food">Food</div>
-			<div class="tab" data-tab="flags">Flags</div>
-			<div class="tab" data-tab="others">Others</div>
+	  <!-- Tabs -->
+	  <div class="tabs" id="tabs">
+		<div class="tab active" data-tab="popular">Popular</div>
+		<div class="tab" data-tab="basic">Basic</div>
+		<div class="tab" data-tab="social">Social</div>
+		<div class="tab" data-tab="object">Objects</div>
+	  </div>
+	  <!-- Tab Content -->
+	  <div class="tab-content active" id="popular">
+		<div class="icon-grid">
+		  <!-- Add 100 popular icons -->
+		  <div class="icon-item"><i class="fas fa-home"></i></div>
+		  <div class="icon-item"><i class="fas fa-user"></i></div>
+		  <div class="icon-item"><i class="fas fa-cog"></i></div>
+		  <div class="icon-item"><i class="fas fa-heart"></i></div>
+		  <div class="icon-item"><i class="fas fa-star"></i></div>
+		  <div class="icon-item"><i class="fas fa-car"></i></div>
+		  <div class="icon-item"><i class="fas fa-camera"></i></div>
+		  <div class="icon-item"><i class="fas fa-bell"></i></div>
+		  <div class="icon-item"><i class="fas fa-envelope"></i></div>
+		  <div class="icon-item"><i class="fas fa-lightbulb"></i></div>
+		  <div class="icon-item"><i class="fas fa-check"></i></div>
+		  <div class="icon-item"><i class="fas fa-search"></i></div>
+		  <div class="icon-item"><i class="fas fa-trash"></i></div>
+		  <div class="icon-item"><i class="fas fa-cloud"></i></div>
+		  <div class="icon-item"><i class="fas fa-lock"></i></div>
+		  <div class="icon-item"><i class="fas fa-key"></i></div>
+		  <div class="icon-item"><i class="fas fa-comments"></i></div>
+		  <div class="icon-item"><i class="fas fa-map-marker-alt"></i></div>
+		  <div class="icon-item"><i class="fas fa-music"></i></div>
+		  <div class="icon-item"><i class="fas fa-eye"></i></div>
+		  <div class="icon-item"><i class="fas fa-shopping-cart"></i></div>
+		  <!-- Add more popular icons as needed -->
 		</div>
-		<!-- Tab Content -->
-		<div class="tab-content active" id="smileys">
-			<div class="emoji-grid">
-				<!-- Smileys Emoji -->
-				<div class="emoji-item">😀</div>
-				<div class="emoji-item">😁</div>
-				<div class="emoji-item">😂</div>
-				<div class="emoji-item">🤣</div>
-				<div class="emoji-item">😃</div>
-				<div class="emoji-item">😄</div>
-				<div class="emoji-item">😅</div>
-				<div class="emoji-item">😆</div>
-				<div class="emoji-item">😉</div>
-				<div class="emoji-item">😊</div>
-				<div class="emoji-item">😋</div>
-				<div class="emoji-item">🤠</div>
-				<div class="emoji-item">😎</div>
-				<div class="emoji-item">😴</div>
-				<div class="emoji-item">🤔</div>
-				<div class="emoji-item">🫣</div>
-				<div class="emoji-item">😜</div>
-				<div class="emoji-item">🤩</div>
-				<div class="emoji-item">😍</div>
-				<div class="emoji-item">😮</div>
-				<div class="emoji-item">😯</div>
-				<div class="emoji-item">😲</div>
-				<div class="emoji-item">😧</div>
-				<div class="emoji-item">😩</div>
-			</div>
+	  </div>
+	  <div class="tab-content" id="basic">
+		<div class="icon-grid">
+		  <div class="icon-item"><i class="fas fa-home"></i></div>
+		  <div class="icon-item"><i class="fas fa-user"></i></div>
+		  <div class="icon-item"><i class="fas fa-cog"></i></div>
+		  <div class="icon-item"><i class="fas fa-heart"></i></div>
+		  <div class="icon-item"><i class="fas fa-star"></i></div>
+		  <div class="icon-item"><i class="fas fa-thumbs-up"></i></div>
 		</div>
-		<div class="tab-content" id="animals">
-			<div class="emoji-grid">
-				<!-- Animals Emoji -->
-				<div class="emoji-item">🐶</div>
-				<div class="emoji-item">🐱</div>
-				<div class="emoji-item">🐭</div>
-				<div class="emoji-item">🐹</div>
-				<div class="emoji-item">🐰</div>
-				<div class="emoji-item">🦊</div>
-				<div class="emoji-item">🐻</div>
-				<div class="emoji-item">🐼</div>
-				<div class="emoji-item">🐨</div>
-				<div class="emoji-item">🐯</div>
-			</div>
+	  </div>
+	  <div class="tab-content" id="social">
+		<div class="icon-grid">
+		  <div class="icon-item"><i class="fab fa-facebook"></i></div>
+		  <div class="icon-item"><i class="fab fa-twitter"></i></div>
+		  <div class="icon-item"><i class="fab fa-instagram"></i></div>
+		  <div class="icon-item"><i class="fab fa-linkedin"></i></div>
+		  <div class="icon-item"><i class="fab fa-youtube"></i></div>
+		  <div class="icon-item"><i class="fab fa-google"></i></div>
+		  <div class="icon-item"><i class="fab fa-microsoft"></i></div>
+		  <div class="icon-item"><i class="fab fa-apple"></i></div>
+		  <div class="icon-item"><i class="fab fa-linux"></i></div>
+		  <div class="icon-item"><i class="fab fa-ubuntu"></i></div>
+		  <div class="icon-item"><i class="fab fa-suse"></i></div>
+		  <div class="icon-item"><i class="fab fa-redhat"></i></div>
+		  <div class="icon-item"><i class="fab fa-fedora"></i></div>
+		  <div class="icon-item"><i class="fab fa-centos"></i></div>
 		</div>
-		<div class="tab-content" id="food">
-			<div class="emoji-grid">
-				<!-- Food Emoji -->
-				<div class="emoji-item">🍎</div>
-				<div class="emoji-item">🍊</div>
-				<div class="emoji-item">🍌</div>
-				<div class="emoji-item">🍉</div>
-				<div class="emoji-item">🍇</div>
-				<div class="emoji-item">🍓</div>
-				<div class="emoji-item">🍒</div>
-				<div class="emoji-item">🍑</div>
-				<div class="emoji-item">🥝</div>
-				<div class="emoji-item">🍍</div>
-				<div class="emoji-item">🍔</div>
-				<div class="emoji-item">🍖</div>
-				<div class="emoji-item">🍟</div>
-				<div class="emoji-item">🌭</div>
-				<div class="emoji-item">🥪</div>
-				<div class="emoji-item">🌮</div>
-				<div class="emoji-item">🌯</div>
-				<div class="emoji-item">🍿</div>
-			</div>
+	  </div>
+	  <div class="tab-content" id="object">
+		<div class="icon-grid">
+		  <div class="icon-item"><i class="fas fa-car"></i></div>
+		  <div class="icon-item"><i class="fas fa-plane"></i></div>
+		  <div class="icon-item"><i class="fas fa-camera"></i></div>
+		  <div class="icon-item"><i class="fas fa-bell"></i></div>
+		  <div class="icon-item"><i class="fas fa-envelope"></i></div>
+		  <div class="icon-item"><i class="fas fa-lightbulb"></i></div>
+		  <div class="icon-item"><i class="fas fa-database"></i></div>
+		  <div class="icon-item"><i class="fas fa-file"></i></div>
 		</div>
-		<div class="tab-content" id="flags">
-			<div class="emoji-grid">
-			  <!-- Country Flags -->
-			  <div class="emoji-item">🇧🇬</div>
-			  <div class="emoji-item">🇷🇴</div>
-			  <div class="emoji-item">🇩🇪</div> <!-- Germany -->
-			  <div class="emoji-item">🇫🇷</div> <!-- France -->
-			  <div class="emoji-item">🇪🇸</div> <!-- Spain -->
-			  <div class="emoji-item">🇮🇹</div> <!-- Italy -->
-			  <div class="emoji-item">🇪🇺</div>
-			  <div class="emoji-item">🇬🇧</div> <!-- United Kingdom -->
-			  <div class="emoji-item">🇺🇸</div> <!-- United States -->
-			  <div class="emoji-item">🇨🇦</div> <!-- Canada -->
-			  <div class="emoji-item">🇦🇺</div> <!-- Australia -->
-			  <div class="emoji-item">🇮🇳</div> <!-- India -->
-			  <div class="emoji-item">🇨🇳</div> <!-- China -->
-			  <div class="emoji-item">🇯🇵</div> <!-- Japan -->
-			  <div class="emoji-item">🇧🇷</div> <!-- Brazil -->
-			  <div class="emoji-item">🇰🇷</div> <!-- South Korea -->
-			  <div class="emoji-item">🇷🇺</div> <!-- Russia -->
-			  <div class="emoji-item">🇿🇦</div> <!-- South Africa -->
-			  <div class="emoji-item">🇳🇬</div> <!-- Nigeria -->
-			  <div class="emoji-item">🇪🇬</div> <!-- Egypt -->
-			  <div class="emoji-item">🇸🇦</div> <!-- Saudi Arabia -->
-			  <div class="emoji-item">🇦🇪</div> <!-- UAE -->
-			  <div class="emoji-item">🇲🇽</div> <!-- Mexico -->
-			</div>
-		</div>
-		<div class="tab-content" id="others">
-			<div class="emoji-grid">
-				<div class="emoji-item">🍺</div>
-				<div class="emoji-item">🍷</div>
-				<div class="emoji-item">🍾</div>
-				<div class="emoji-item">☕</div>
-				<div class="emoji-item">🍻</div>
-				<div class="emoji-item">🥃</div>
-				<div class="emoji-item">🍹</div>
-				<div class="emoji-item">💯</div>
-				<div class="emoji-item">💣</div>
-				<div class="emoji-item">🩸</div>
-				<div class="emoji-item">🚬</div>
-				<div class="emoji-item">💶</div>
-				<div class="emoji-item">🚾</div>
-				<div class="emoji-item">☢</div>
-				<div class="emoji-item">♀</div>
-				<div class="emoji-item">♂</div>
-				<div class="emoji-item">⚧</div>
-				<div class="emoji-item">💥</div>
-				<div class="emoji-item">💋</div>
-				<div class="emoji-item">❤</div>
-				<div class="emoji-item">💔</div>
-				<div class="emoji-item">❓</div>
-				<div class="emoji-item">❗</div>
-				<div class="emoji-item">⁉</div>
-				<div class="emoji-item">‼</div>
-				<div class="emoji-item">✴</div>
-				<div class="emoji-item">❇</div>
-				<div class="emoji-item">©</div>
-				<div class="emoji-item">®</div>
-				<div class="emoji-item">™</div>
-				<div class="emoji-item">🚫</div>
-				<div class="emoji-item">⛔</div>
-				<div class="emoji-item">🔆</div>
-				<div class="emoji-item">💊</div>
-			</div>
-		</div>
+	  </div>
 	</div>
-</div>
+  </div>

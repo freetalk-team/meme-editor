@@ -3,11 +3,11 @@
 	<input type="number" name="width" value="1200" title="Canvas width">
 	<b>Height:</b>
 	<input type="number" name="height" value="630" title="Canvas height">
-	<button name="reset" class="ux" title="Reset">Reset</button>
+	<button name="reset" class="ux" title="Reset" onclick="app.reset()">Reset</button>
 
 	<div class="row">
-		<button name="undo" class="icon fa lg fa-undo" title="Undo"></button>
-		<button name="redo" class="icon fa lg fa-repeat" title="Redo"></button>
+		<button name="undo" class="icon fa lg fa-undo" title="Undo" onclick="app.undo()"></button>
+		<button name="redo" class="icon fa lg fa-repeat" title="Redo" onclick="app.redo()"></button>
 	</div>
 
 	<i class="hs"></i>
@@ -39,19 +39,19 @@
 			<option value="150"></option>
 		</datalist> -->
 	</div>
-	<button name="center" class="icon fa fa-arrows-to-eye" title="Center view"></button>
+	<button name="center" class="icon fa fa-arrows-to-eye" title="Center view" onclick="app.centerView()"></button>
 
 	<div class="cr ci smaller" display="edit" style="height: 100%;">
 		<i class="hs"></i>
-		<button name="node" class="icon fa fa-u relative" title="Add smooth node" >
+		<button name="node" class="icon fa fa-u relative" title="Add smooth node" onclick="app.insertNode()">
 			<i class="fa fa-circle absolute" style="font-size:6px;bottom:1px;left:calc(50% - 3px);"></i>
 			<i class="fa fa-circle-plus action w3-text-green"></i>
 		</button>
-		<button name="line" class="icon fa fa-v relative" title="Add sharp node" >
+		<button name="line" class="icon fa fa-v relative" title="Add sharp node">
 			<i class="fa fa-circle absolute" style="font-size:6px;bottom:1px;left:calc(50% - 2px);"></i>
 			<i class="fa fa-circle-plus action w3-text-green"></i>
 		</button>
-		<button name="rmnode" class="icon fa fa-o relative" title="Remove node" >
+		<button name="rmnode" class="icon fa fa-o relative" title="Remove node" onclick="app.removeNode()">
 			<i class="fa fa-circle-minus action w3-text-red"></i>
 		</button>
 	</div>
@@ -60,8 +60,8 @@
 
 		<input value="meme1">
 		<button name="save" class="ux" title="Save">Save</button>
-		<button name="export" class="icon fa fa-fw lg fa-file-export w3-text-blue" title="Export image"></button>
-		<button name="import" class="icon fa fa-fw lg fa-folder w3-text-blue relative" title="Import images"><i class="fa fa-circle-plus action w3-text-green"></i></button>
+		<button name="export" class="icon fa fa-fw lg fa-file-export w3-text-blue" title="Export image" onclick="app.export()"></button>
+		<button name="import" class="icon fa fa-fw lg fa-folder w3-text-blue relative" title="Import images"  onclick="app.import()"><i class="fa fa-circle-plus action w3-text-green"></i></button>
 
 	</div>
 	<!-- <select id="object">

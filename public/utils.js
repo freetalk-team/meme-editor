@@ -1,6 +1,6 @@
 Object.isClass = function(obj) {
 	// Check if obj has a constructor and prototype
-	return obj && typeof obj === 'object' && obj.constructor !== Object;
+	return obj && typeof obj === 'object' && !Array.isArray(obj) && obj.constructor !== Object;
 }
 
 Object.clone = function(o) {
@@ -22,7 +22,7 @@ Object.clone = function(o) {
 	return newObj;
 }
 
-Object.getGetters = function(i) {
+Object.getGetters = function(i, Base) {
 
 	let getters = {};
 	let proto = Object.getPrototypeOf(i);
@@ -35,6 +35,8 @@ Object.getGetters = function(i) {
 				getters[key] = descriptor.get; // Store the getter function
 			}
 		}
+
+		// if (proto == Base) break;
 		
 		proto = Object.getPrototypeOf(proto); // Move up the prototype chain
 	}
@@ -64,24 +66,30 @@ Object.getSetters = function(i) {
 
 Object.getProperties = function(i) {
 
-	let setters = {};
-	let getters = {};
+	const setters = {}, getters = {};
+
 	let proto = Object.getPrototypeOf(i);
 
 	while (proto && proto !== Object.prototype) {
-		const descriptors = Object.getOwnPropertyDescriptors(proto);
-
-		for (const [key, descriptor] of Object.entries(descriptors)) {
-			if (typeof descriptor.get === 'function' && !(key in getters)) {
-				getters[key] = descriptor.get; // Store the getter function
-			}
-
-			if (typeof descriptor.set === 'function' && !(key in setters)) {
-				setters[key] = descriptor.set; // Store the getter function
-			}
-		}
-		
+		Object.getOwnProperties(proto, setters, getters);
 		proto = Object.getPrototypeOf(proto); // Move up the prototype chain
+	}
+
+	return { setters, getters };
+}
+
+Object.getOwnProperties = function(proto, setters={}, getters={}) {
+
+	const descriptors = Object.getOwnPropertyDescriptors(proto);
+
+	for (const [key, descriptor] of Object.entries(descriptors)) {
+		if (typeof descriptor.get === 'function' && !(key in getters)) {
+			getters[key] = descriptor.get; // Store the getter function
+		}
+
+		if (typeof descriptor.set === 'function' && !(key in setters)) {
+			setters[key] = descriptor.set; // Store the getter function
+		}
 	}
 
 	return { setters, getters };
@@ -102,21 +110,21 @@ Object.getProperty = function(i, name) {
 	return { setter: setters[name], getter: getters[name] };
 }
 
-Object.fromInstance = function(i, o={}, ...ignore) {
+Object.fromInstance = function(i, Base, o={}) {
 
-	const getters = Object.getGetters(i);
+	const getters = Object.getGetters(i, Base);
 
 	let v, a;
 
 	for (const [name, get] of Object.entries(getters)) {
-		if (ignore.includes(name))
-			continue;
+		// if (ignore.includes(name))
+		// 	continue;
 
 		v = get.call(i);
 
 		if (Array.isArray(v)) 
 			v = v.map(i => Object.isClass(i) ? Object.fromInstance(i) : i);
-		else if (Object.isClass(v)) 
+		else if (v instanceof Base) 
 			v = Object.fromInstance(v);
 
 		o[name] = v;

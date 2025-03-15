@@ -37,6 +37,18 @@ export class Rect extends Base {
 
 		svg.rect(box, this.#radius, fill, stroke, shadow);
 	}
+
+	getPath(x=this.x, y=this.y, sx=1, sy=1) {
+		const p = new Path2D;
+
+		const w = this.width * sx
+			, h = this.height * sy
+			, r = this.#radius * Math.min(sx, sy);
+
+		p.roundRect(x, y, w, h, r);
+
+		return p;
+	}
 }
 
 export class Rectangle extends Rect {
@@ -72,6 +84,7 @@ export class Rectangle extends Rect {
 	get textStroke() { return this.#text.stroke; }
 	get textStrokeWidth() { return this.#text.strokeWidth; }
 	get textFont() { return this.#text.font; }
+	get textAlign() { return this.#text.align; }
 	get textShadow() { return this.#text.shadow; }
 	get textShadowWidth() { return this.#text.shadowWidth; }
 	get textShadowColor() { return this.#text.shadowColor; }
@@ -108,6 +121,10 @@ export class Rectangle extends Rect {
 
 	set textBold(b) {
 		this.#text.bold = b;
+	}
+
+	set textAlign(v) {
+		this.#text.align = v;
 	}
 
 	set textItalic(b) {
@@ -148,6 +165,20 @@ export class Rectangle extends Rect {
 		this.#text.value = s;
 	}
 
+	getText() {
+		return this.#text;
+	}
+
+	centerText() {
+		const textOffsetX = Math.floor(this.width / 2)
+			, textAlign = 'center';
+
+		this.textOffsetX = textOffsetX;
+		this.textAlign = textAlign;
+
+		return { textOffsetX, textAlign };
+	}
+
 	draw(ctx) {
 
 		super.draw(ctx);
@@ -178,8 +209,9 @@ export class Rectangle extends Rect {
 
 		super.drawSVG(svg, canvas, true);
 
-		this.#text.drawSVG(svg, { x, y }, true);
+		this.#text.drawSVG(svg, { x, y });
 
 		svg.groupEnd();
 	}
+	
 }

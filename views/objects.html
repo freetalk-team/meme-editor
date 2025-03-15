@@ -1,9 +1,9 @@
 <div class="column noverflow hidden" tab="objects" id="objects">
 	<div class="cr ci">
 		<h2 class="wm8 inconsolata fit">Objects</h2>
-		<button name="group" class="icon fa fa-object-group" title="Group Objects" disabled></button>
+		<button name="group" class="icon fa fa-object-group" title="Group Objects" disabled onclick="app.group()"></button>
 	</div>
-	<div class="cc m2 reverse show-empty list list2 scroll"></div>
+	<div class="cc m2 show-empty list list2 scroll"></div>
 </div>
 
 <template id="item-object" class="cc m2 item noevents fade" data-id="{{this.id}}" type="{{this.type}}">
@@ -20,12 +20,12 @@
 			</span>
 		</div>
 		<div class="row ci display-hover smaller justify-end">
-			<button name="apply" class="icon fa fa-regular fa-circle-up" title="Apply mask"></button>
+			<button name="apply" class="icon fa fa-regular fa-circle-down" title="Apply mask" onclick="app.applyMask(dom.id(this))"></button>
 			<button name="agroup" class="icon fa fa-square-caret-up" title="Add to group"></button>
-			<button name="down" class="icon fa fa-angle-up" title="Move up"></button>
-			<button name="up" class="icon fa fa-angle-down" title="Move down"></button>
-			<button name="duplicate" class="icon fa fa-copy" title="Duplicate"></button>
-			<button name="rm" class="icon fa" title="Remove"></button>
+			<button name="up" class="icon fa fa-angle-up" title="Move up" onclick="app.move(dom.id(this), 1)"></button>
+			<button name="down" class="icon fa fa-angle-down" title="Move down" onclick="app.move(dom.id(this), -1)"></button>
+			<button name="duplicate" class="icon fa fa-copy" title="Duplicate" onclick="app.copy(dom.id(this))"></button>
+			<button name="rm" class="icon fa" title="Remove" onclick="app.remove(dom.id(this))"></button>
 		</div>
 	</div>
 	@if{{this.type=='group'}}

@@ -8,6 +8,10 @@ const path = require('node:path')
 const prod = process.env.NODE_ENV == 'production';
 const root = app.isPackaged ? path.join('resources', 'app.asar') : '';
 
+process.env['ELECTRON_DISABLE_SECURITY_WARNINGS'] = 'true';
+
+app.setName('Meme Editor');
+
 // this should be placed at top of main.js to handle setup events quickly
 if (handleSquirrelEvent()) {
 	// squirrel event handled and app will exit in 1000ms, so don't do anything else

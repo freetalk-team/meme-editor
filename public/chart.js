@@ -113,7 +113,7 @@ export class Chart extends Base {
 			, stroke = this.stroke
 			, strokeWidth = this.strokeWidth
 			, shadow = !!this.shadow
-			, shadowColor = this.shadowColor()
+			, shadowColor = this.fillShadowColor()
 			, shadowWidth = this.shadowWidth
 			, alpha = this.alphaHex()
 			, size = this.#size
@@ -487,8 +487,6 @@ export class Chart extends Base {
 
 		if (this.#axis)
 			drawAxis(box);
-
-		if (this.#labels)
 
 		switch (this.#type) {
 
