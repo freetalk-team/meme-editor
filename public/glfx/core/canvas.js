@@ -23,6 +23,9 @@ import { ink } from '../filters/fun/ink.js';
 import { vignette } from '../filters/adjust/vignette.js';
 import { vibrance } from '../filters/adjust/vibrance.js';
 import { sepia } from '../filters/adjust/sepia.js';
+import { detectMask } from '../filters/mask.js';
+import { detectEdge } from '../filters/edge.js';
+import { detectPath } from '../filters/path2.js';
 
 var gl;
 
@@ -58,15 +61,15 @@ function initialize(width, height) {
 	// filter look a lot better. Note that on Windows, ANGLE does not let you
 	// render to a floating-point texture when linear filtering is enabled.
 	// See https://crbug.com/172278 for more information.
-	if (gl.getExtension('OES_texture_float') && gl.getExtension('OES_texture_float_linear')) {
-		var testTexture = new Texture(gl, 100, 100, gl.RGBA, gl.FLOAT);
-		try {
-			// Only use gl.FLOAT if we can render to it
-			testTexture.drawTo(function() { type = gl.FLOAT; });
-		} catch (e) {
-		}
-		testTexture.destroy();
-	}
+	// if (gl.getExtension('OES_texture_float') && gl.getExtension('OES_texture_float_linear')) {
+	// 	var testTexture = new Texture(gl, 100, 100, gl.RGBA, gl.FLOAT);
+	// 	try {
+	// 		// Only use gl.FLOAT if we can render to it
+	// 		testTexture.drawTo(function() { type = gl.FLOAT; });
+	// 	} catch (e) {
+	// 	}
+	// 	testTexture.destroy();
+	// }
 
 	if (this._.texture) this._.texture.destroy();
 	if (this._.spareTexture) this._.spareTexture.destroy();
@@ -145,6 +148,16 @@ function getPixelArray() {
 	var array = new Uint8Array(w * h * 4);
 	this._.texture.drawTo(function() {
 		gl.readPixels(0, 0, w, h, gl.RGBA, gl.UNSIGNED_BYTE, array);
+	});
+	return array;
+}
+
+function getPixelArrayFloat() {
+	var w = this._.texture.width;
+	var h = this._.texture.height;
+	var array = new Float32Array(w * h);
+	this._.texture.drawTo(function() {
+		gl.readPixels(0, 0, w, h, gl.RGBA, gl.UNSIGNED_FLOAT, array);
 	});
 	return array;
 }
@@ -243,6 +256,7 @@ export function canvas() {
 	canvas.replace = replace.bind(canvas);
 	canvas.contents = contents.bind(canvas);
 	canvas.getPixelArray = getPixelArray.bind(canvas);
+	canvas.getPixelArrayFloat = getPixelArrayFloat.bind(canvas);
 
 	canvas.simpleShader = simpleShader.bind(canvas);
 	
@@ -270,6 +284,9 @@ export function canvas() {
 	canvas.vignette = wrap.bind(canvas)(vignette);
 	canvas.vibrance = wrap.bind(canvas)(vibrance);
 	canvas.sepia = wrap.bind(canvas)(sepia);
+	canvas.detectMask = wrap.bind(canvas)(detectMask);
+	canvas.detectEdge = wrap.bind(canvas)(detectEdge);
+	canvas.detectPath = wrap.bind(canvas)(detectPath);
 
 	return canvas;
 };

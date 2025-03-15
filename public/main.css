@@ -523,11 +523,6 @@ button.tab.selected:after {
 	/* cursor: not-allowed; */
 }
 
-
-
-button[name="apply"] { display: none; }
-[type="path"] button[name="apply"] { display: unset!important;}
-
 output {
 	min-width: 30px;
 }
@@ -631,7 +626,7 @@ output {
 .app-logo {
 	--size: 48px;
 
-	background-image: url(ui/svg/app-icon.svg);
+	background-image: url(ui/svg/site-icon.svg);
 	background-position: 50%;
 	background-repeat: no-repeat;
 	flex-shrink: 0;
@@ -652,6 +647,7 @@ button[name="apply"] {
 } */
 
 .item[type="circle"]:has(+ .item[type="image"]) button[name="apply"],
+.item[type="path"]:has(+ .item[type="image"]) button[name="apply"],
 .item[type="label"]:has(+ .item[type="image"]) button[name="apply"] {
 	display: unset;
 }

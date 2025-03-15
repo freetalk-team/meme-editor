@@ -143,8 +143,7 @@ export class Arrow extends Base {
 
 		let x1 = x
 			, x2 = this.x + this.width
-			, r = this.strokeWidth * 0.7
-			;
+			, r = this.strokeWidth * 0.7;
 
 		if (r < 2) r = 2;
 

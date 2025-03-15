@@ -182,15 +182,76 @@ export class Gradient extends Base {
 	}
 
 	#createGardient(ctx, fill=this.fillColor()) {
-		const [x0, y0, x1, y1] = this.#vector.getCoordinates(true);
+
+		const gradient = this.#gradient + this.alphaHex();
+
+		let [x0, y0, x1, y1] = this.#vector.getCoordinates(true);
+
+		// const x = this.x, y = this.y;
+
+		// x0 += x, y0 += y, x1 += x, y1+= y;
 		
-		const gradient = ctx.createLinearGradient(x0, y0, x1, y1);
+		const g = ctx.createLinearGradient(x0, y0, x1, y1);
+		// let gradient;
+
+		
+
+		// // Clip vector to fit within the rectangle
+		// const clippedVector = clipLineToRect(x0, y0, x1, y1, this);
+
+
+		// if (clippedVector) {
+		//   // Create the gradient using the clipped vector
+		//   gradient = ctx.createLinearGradient(
+		// 	clippedVector.x0, clippedVector.y0,
+		// 	clippedVector.x1, clippedVector.y1
+		//   );
+		// }
+		// else {
+
+		// 	gradient = ctx.createLinearGradient(x0, y0, x1, y1);
+		// }
+	  
 
 		// console.log('Gradirnt fill:', x0, x1);
 
-		gradient.addColorStop(0, fill);
-		gradient.addColorStop(1, this.#gradient);
+		g.addColorStop(0, fill);
+		g.addColorStop(1, gradient);
 
-		return gradient;
+		return g;
 	}
 } 
+
+/**
+   * Function to compute intersection of a line (vector) with a rectangle
+   */
+function clipLineToRect(x0, y0, x1, y1, rect) {
+    let t0 = 0, t1 = 1; // Parameters for line segment
+    const dx = x1 - x0, dy = y1 - y0;
+
+    function clip(p, q) {
+      if (p === 0) return q < 0;
+      const r = q / p;
+      if (p < 0) {
+        if (r > t1) return false;
+        if (r > t0) t0 = r;
+      } else {
+        if (r < t0) return false;
+        if (r < t1) t1 = r;
+      }
+      return true;
+    }
+
+    if (
+      clip(-dx, x0 - rect.x) && clip(dx, rect.x + rect.width - x0) &&
+      clip(-dy, y0 - rect.y) && clip(dy, rect.y + rect.height - y0)
+    ) {
+      return {
+        x0: x0 + t0 * dx,
+        y0: y0 + t0 * dy,
+        x1: x0 + t1 * dx,
+        y1: y0 + t1 * dy,
+      };
+    }
+    return null; // No intersection
+  }

@@ -1,4 +1,5 @@
 import { Shader } from '../../core/shader.js';
+import { randomShaderFunc } from '../common.js';
 
 /**
  * @filter               Tilt Shift

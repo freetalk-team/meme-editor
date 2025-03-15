@@ -25,6 +25,15 @@ export class Canvas extends Base {
 		this.y += (h - this.height) / 2;
 	}
 
+	get width() { return super.width; }
+	set width(n) {
+		const w = this.width;
+
+		super.width = n;
+
+		this.x += (w - this.width) / 2;
+	}
+
 	handleClick() {}
 	handleSelect() {}
 

@@ -204,3 +204,6 @@ dom.nextToggleHide = function(e, show) {
 dom.nextAngle = function(e) {
 	e.nextElementSibling.value = Math.round(parseFloat(e.value) * 180/Math.PI);
 }
+
+dom.prev = function(e) { return e.previousElementSibling; }
+dom.next = function(e) { return e.nextElementSibling; }

@@ -235,8 +235,12 @@ export class SVG {
 		this.#body += '</g>';
 	}
 
-	toString() {
-		let xml = `<svg width="${this.#width}" height="${this.#height}" xmlns="http://www.w3.org/2000/svg">`;
+	toString(x=0, y=0) {
+
+		const w = this.#width
+			, h = this.#height;
+
+		let xml = `<svg width="${w}" height="${h}" viewBox="${x} ${y} ${w} ${h}" xmlns="http://www.w3.org/2000/svg">`;
 
 		if (this.#defs)
 			xml += `<defs>${this.#defs}</defs>`;
@@ -265,9 +269,9 @@ function center(box) {
 }
 
 function shadowFilter(id, shadow) {
-	const dx = shadow.width
-		, color = shadow.color
-		;
+	const color = shadow.color
+		, dx = shadow.x
+		, dy = shadow.y;
 
-	return `<filter id="${id}" x="-50%" y="-50%" width="200%" height="200%"><feFlood flood-color="${color}" result="flood"/><feComposite in2="SourceAlpha" operator="in" result="shadow"/><feGaussianBlur in="shadow" stdDeviation="3"/><feOffset dx="${dx}" dy="${dx}" result="offsetblur"/><feMerge><feMergeNode in="offsetblur"/><feMergeNode in="SourceGraphic"/></feMerge></filter>`;
+	return `<filter id="${id}" x="-50%" y="-50%" width="200%" height="200%"><feFlood flood-color="${color}" result="flood"/><feComposite in2="SourceAlpha" operator="in" result="shadow"/><feGaussianBlur in="shadow" stdDeviation="3"/><feOffset dx="${dx}" dy="${dy}" result="offsetblur"/><feMerge><feMergeNode in="offsetblur"/><feMergeNode in="SourceGraphic"/></feMerge></filter>`;
 }

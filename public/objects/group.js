@@ -106,7 +106,7 @@ export class Group extends Base {
 
 			if (node = i.handleClick(ox, oy))
 				return {
-					move(x, y) {
+					move(x, y, vkeys) {
 
 						x -= X;
 						y -= Y;
@@ -122,7 +122,7 @@ export class Group extends Base {
 							y = ry;
 						}
 
-						node.move(x + w, y + h);
+						node.move(x + w, y + h, vkeys);
 					}
 				}; 
 		}

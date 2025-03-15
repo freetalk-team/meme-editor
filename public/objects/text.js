@@ -90,11 +90,11 @@ class Text extends Base {
 		super.drawSelection(ctx);
 	}
 
-	drawSVG(svg, canvas) {
+	drawSVG(svg) {
 		const fill = this.getFill()
 			, stroke = this.getStroke()
 			, shadow = this.getShadow()
-			, box = this.box(0, canvas)
+			, box = this.box()
 			, text = { 
 				value: this.#text,
 				font: this.#font,

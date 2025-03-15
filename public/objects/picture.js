@@ -26,6 +26,7 @@ export class Picture extends Base {
 
 	#imgWidth = 0;
 	#imgHeight = 0;
+	#imgAlpha = 1;
 
 	#keepProportion = true;
 	#mirror = false;
@@ -204,6 +205,11 @@ export class Picture extends Base {
 
 	set imgKeepProportion(b) {
 		this.#keepProportion = b;
+	}
+
+	set imgAlpha(n) {
+		if (typeof n == 'string') n = parseFloat(n);
+		this.#imgAlpha = n;
 	}
 
 	set cropX(n) { 
@@ -428,6 +434,7 @@ export class Picture extends Base {
 	get imgHeight() { return Math.round(this.#imgHeight); }
 	get imgMirror() { return this.#mirror; }
 	get imgScale() { return this.#imgWidth / this.#cropWidth; }
+	get imgAlpha() { return this.#imgAlpha; }
 	// get imgKeepProportion() { return this.#keepProportion; }
 	get cropX() { return this.#cropX; }
 	get cropY() { return this.#cropY; }
@@ -584,6 +591,7 @@ export class Picture extends Base {
 			H = this.#cropHeight;
 		}
 		
+		ctx.globalAlpha = this.#imgAlpha;
 		ctx.drawImage(img, X, Y, W, H, x, y, width, height);
 
 		if (path) {

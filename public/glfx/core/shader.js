@@ -110,20 +110,55 @@ export const Shader = (function() {
 			this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.gl.texCoordBuffer);
 			this.gl.bufferData(this.gl.ARRAY_BUFFER, new Float32Array([ 0, 0, 0, 1, 1, 0, 1, 1 ]), this.gl.STATIC_DRAW);
 		}
+		if (this.gl.positionBuffer == null) {
+			// const positions = new Float32Array([
+			// 	-1, -1,  1, -1, -1,  1,
+			// 	-1,  1,  1, -1,  1,  1
+			// ]);
+
+			const positions = new Float32Array([
+				-1, 1,  1, 1, -1, -1,
+				-1, -1,  1, 1, 1, -1
+			]);
+
+			this.gl.positionBuffer = this.gl.createBuffer();
+			this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.gl.positionBuffer);
+			this.gl.bufferData(this.gl.ARRAY_BUFFER, positions, this.gl.STATIC_DRAW);
+		}
 		if (this.vertexAttribute == null) {
 			this.vertexAttribute = this.gl.getAttribLocation(this.program, 'vertex');
-			this.gl.enableVertexAttribArray(this.vertexAttribute);
+			if (this.vertexAttribute != -1)
+				this.gl.enableVertexAttribArray(this.vertexAttribute);
 		}
 		if (this.texCoordAttribute == null) {
 			this.texCoordAttribute = this.gl.getAttribLocation(this.program, '_texCoord');
-			this.gl.enableVertexAttribArray(this.texCoordAttribute);
+			if (this.texCoordAttribute != -1) 
+				this.gl.enableVertexAttribArray(this.texCoordAttribute);
 		}
+		if (this.positionAttribute == null) {
+			this.positionAttribute = this.gl.getAttribLocation(this.program, 'position');
+			if (this.positionAttribute != -1) 
+				this.gl.enableVertexAttribArray(this.positionAttribute);
+		}
+
 		this.gl.useProgram(this.program);
-		this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.gl.vertexBuffer);
-		this.gl.vertexAttribPointer(this.vertexAttribute, 2, this.gl.FLOAT, false, 0, 0);
-		this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.gl.texCoordBuffer);
-		this.gl.vertexAttribPointer(this.texCoordAttribute, 2, this.gl.FLOAT, false, 0, 0);
-		this.gl.drawArrays(this.gl.TRIANGLE_STRIP, 0, 4);
+
+		if (this.vertexAttribute != -1) {
+			this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.gl.vertexBuffer);
+			this.gl.vertexAttribPointer(this.vertexAttribute, 2, this.gl.FLOAT, false, 0, 0);
+		}
+
+		if (this.texCoordAttribute != -1) {
+			this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.gl.texCoordBuffer);
+			this.gl.vertexAttribPointer(this.texCoordAttribute, 2, this.gl.FLOAT, false, 0, 0);
+		}
+
+		if (this.positionAttribute != -1) {
+			this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.gl.positionBuffer);
+			this.gl.vertexAttribPointer(this.positionAttribute, 2, this.gl.FLOAT, false, 0, 0);
+		}
+		
+		this.gl.drawArrays(this.gl.TRIANGLE_STRIP, 0, 6);
 	};
 
 	Shader.getDefaultShader = function(gl) {

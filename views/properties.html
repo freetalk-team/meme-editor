@@ -9,196 +9,215 @@
 	
 	<div class="properties cc scroll">
 
-		<div class="cr ci noevents wm8 w3-padding-tiny w3-round w3-light-grey" onclick="this.classList.toggle('collapsed');this.nextElementSibling.classList.toggle('hidden')">
-			<b class="fit">Geometry</b>
-			<i class="fa xs collapse"></i>
-		</div>
-		
-		<div class="cc fade">
-			<span class="row">
-				<b class="fit">x</b>
-				<!-- <input id="object-x" type="number" pattern="[\d]+" step="1"> -->
-				<input id="object-x" type="number" oninput="dom.toInteger(this)" onchange="dom.toInteger(this)">
-			</span>
-			<span class="row">
-				<b class="fit">y</b>
-				<input id="object-y" type="number" oninput="dom.toInteger(this)" onchange="dom.toInteger(this)">
-			</span>
-			<span class="row" nodisplay="arrow">
-				<b class="fit">width</b>
-				<input id="object-width" type="number" oninput="dom.toInteger(this)" onchange="dom.toInteger(this)">
-			</span>
-			<span class="row" nodisplay="arrow">
-				<b class="fit">height</b>
-				<input id="object-height" type="number" oninput="dom.toInteger(this)" onchange="dom.toInteger(this)">
-			</span>
-			<span class="row" display="all">
-				<b class="fit">angle</b>
-				<span class="cr ci fit">
-					<input id="object-angle" type="range" min="0" max="6.28" step="0.02" style="width:100%;" oninput="dom.nextAngle(this)" onchange="dom.nextAngle(this)">
-					<output style="text-align:right">0</output>
-				</span>
-			</span>
-		</div>
-
-		<div class="cr ci noevents wm8 w3-padding-tiny w3-round w3-light-grey" onclick="this.classList.toggle('collapsed');this.nextElementSibling.classList.toggle('hidden')">
-			<b class="fit">Object</b>
-			<i class="fa xs collapse"></i>
-		</div>
-		
-		<div class="cc fade">
+		<div class="cc">
+			<div class="cr ci noevents wm8 w3-padding-tiny w3-round w3-light-grey" onclick="this.classList.toggle('collapsed');dom.nextToggleHide(this)">
+				<b class="fit">Geometry</b>
+				<i class="fa fa-fw xs collapse"></i>
+			</div>
 			
-			<span class="row" display="rect">
-				<b class="fit">radius</b>
-				<span class="cr ci fit">
-					<input id="object-radius" type="range" style="width:100%;" oninput="dom.nextInt(this)" onchange="dom.nextInt(this)">
-					<output style="text-align:right">0</output>
-				</span>
-			</span>
-			<span class="row" nodisplay="emoji group">
-				<b class="fit">stroke</b>
-				<input id="object-stroke" type="color">
-			</span>
-			<span class="row" nodisplay="emoji group">
-				<b class="fit ellipsis">stroke width</b>
-				<span class="cr ci fit">
-					<input id="object-strokeWidth" type="range" style="width:100%;" oninput="dom.nextInt(this)" onchange="dom.nextInt(this)">
-					<output style="text-align:right">0</output>
-				</span>
-			</span>
-			<div class="cc" nodisplay="emoji arrow">
-
+			<div class="cc fade">
 				<span class="row">
-					<b class="fit">fill</b>
-					<input for="object-fill" class="checkbox w3-margin-right" type="checkbox" checked onchange="dom.nextDisabled(this,!this.checked);dom.nextToggleHide(this.parentElement,this.checked)">
-					<input id="object-fill" type="color">
+					<b class="fit">x</b>
+					<!-- <input id="object-x" type="number" pattern="[\d]+" step="1"> -->
+					<input id="object-x" type="number" oninput="dom.toInteger(this)" onchange="dom.toInteger(this)">
 				</span>
-				<div class="cc fade">
+				<span class="row">
+					<b class="fit">y</b>
+					<input id="object-y" type="number" oninput="dom.toInteger(this)" onchange="dom.toInteger(this)">
+				</span>
+				<span class="row" nodisplay="arrow">
+					<b class="fit">width</b>
+					<input id="object-width" type="number" oninput="dom.toInteger(this)" onchange="dom.toInteger(this)">
+				</span>
+				<span class="row" nodisplay="arrow">
+					<b class="fit">height</b>
+					<input id="object-height" type="number" oninput="dom.toInteger(this)" onchange="dom.toInteger(this)">
+				</span>
+				<span class="row" display="all">
+					<b class="fit">angle</b>
+					<span class="cr ci fit">
+						<input id="object-angle" type="range" min="0" max="6.28" step="0.02" style="width:100%;" oninput="dom.nextAngle(this)" onchange="dom.nextAngle(this)">
+						<output style="text-align:right">0</output>
+					</span>
+				</span>
+			</div>
+		</div>
+
+		<div class="cc" nodisplay="group">
+
+			<div class="cr ci noevents wm8 w3-padding-tiny w3-round w3-light-grey" onclick="this.classList.toggle('collapsed');dom.nextToggleHide(this)">
+				<b class="fit">Object</b>
+				<i class="fa fa-fw xs collapse"></i>
+			</div>
+			
+			<div class="cc fade">
+				
+				<span class="row" display="rect">
+					<b class="fit">radius</b>
+					<span class="cr ci fit">
+						<input id="object-radius" type="range" style="width:100%;" oninput="dom.nextInt(this)" onchange="dom.nextInt(this)">
+						<output style="text-align:right">0</output>
+					</span>
+				</span>
+				<span class="row" nodisplay="emoji group">
+					<b class="fit">stroke</b>
+					<input id="object-stroke" type="color">
+				</span>
+				<span class="row" nodisplay="emoji group">
+					<b class="fit ellipsis">stroke width</b>
+					<span class="cr ci fit">
+						<input id="object-strokeWidth" type="range" style="width:100%;" oninput="dom.nextInt(this)" onchange="dom.nextInt(this)">
+						<output style="text-align:right">0</output>
+					</span>
+				</span>
+				<div class="cc" nodisplay="emoji arrow">
+
 					<span class="row">
-						<b class="fit">fill alpha</b>
-						<span class="cr ci fit">
-							<input id="object-alpha" type="range" min="0" max="1" step="0.01" style="width:100%;" oninput="dom.nextFloat(this)" onchange="dom.nextFloat(this)">
+						<b class="fit">fill</b>
+						<input for="object-fill" class="checkbox w3-margin-right" type="checkbox" checked onchange="dom.nextDisabled(this,!this.checked);dom.nextToggleHide(this.parentElement,this.checked)">
+						<input id="object-fill" type="color">
+					</span>
+					<div class="cc fade">
+						<span class="row">
+							<b class="fit">fill alpha</b>
+							<span class="cr ci fit">
+								<input id="object-alpha" type="range" min="0" max="1" step="0.01" style="width:100%;" oninput="dom.nextFloat(this)" onchange="dom.nextFloat(this)">
+								<output style="text-align:right">0</output>
+							</span>
+						</span>
+						<span class="row">
+							<b class="fit">gradient</b>
+							<input id="object-fillGradientVector" type="checkbox" class="checkbox fa invert sm fa-arrow-right-long fa-rotate-by w3-text-indigo" style="--fa-rotate-angle: -45deg;margin-right:5px;"  title="Show/hide vector" disabled>
+							<input for="object-fillGradient" class="checkbox w3-margin-right" type="checkbox" onchange="dom.nextDisabled(this,!this.checked);dom.prevDisabled(this,!this.checked)">
+							<input id="object-fillGradient" type="color">
+						</span>
+					</div>
+				</div>
+				<div class="cc" nodisplay="group">
+					<span class="row">
+						<b class="fit">shadow</b>
+						<input for="object-shadow" class="checkbox w3-margin-right" type="checkbox" onchange="dom.nextDisabled(this,!this.checked);dom.nextToggleHide(this.parentElement)">
+						<select id="object-shadow" disabled>
+							<option value="fill" selected>fill</option>
+							<option value="stroke">stroke</option>
+						</select>
+					</span>
+
+					<div class="cc fade hidden">
+						<span class="row">
+							<b class="fit">shadow color</b>
+							<input id="object-shadowColor" type="color">
+						</span>
+						<span class="row">
+							<b class="fit">shadow X</b>
+							<input class="fit" id="object-shadowX" type="range" min="-50" max="50" oninput="dom.nextInt(this)" onchange="dom.nextInt(this)">
 							<output style="text-align:right">0</output>
 						</span>
+						<span class="row">
+							<b class="fit">shadow Y</b>
+							<input class="fit" id="object-shadowY" type="range" min="-50" max="50" oninput="dom.nextInt(this)" onchange="dom.nextInt(this)">
+							<output style="text-align:right">0</output>
+						</span>
+						<span class="row">
+							<b class="fit">shadow blur</b>
+							<span class="cr ci fit">
+								<input id="object-shadowBlurLevel" type="range" style="width:100%;" oninput="dom.nextInt(this)" onchange="dom.nextInt(this)">
+								<output style="text-align:right">0</output>
+							</span>
+						</span>
+						
+					</div>
+				</div>
+				
+				<div class="cc" display="bubble">
+					<span class="row">
+						<b class="fit">beak</b>
+						<select id="object-beak">
+							<option value="left" selected>left</option>
+							<option value="right">right</option>
+							<option value="top">top</option>
+							<option value="bottom">bottom</option>
+						</select>
 					</span>
 					<span class="row">
-						<b class="fit">gradient</b>
-						<input id="object-fillGradientVector" type="checkbox" class="checkbox fa invert sm fa-arrow-right-long fa-rotate-by w3-text-indigo" style="--fa-rotate-angle: -45deg;margin-right:5px;"  title="Show/hide vector" disabled>
-						<input for="object-fillGradient" class="checkbox w3-margin-right" type="checkbox" onchange="dom.nextDisabled(this,!this.checked);dom.prevDisabled(this,!this.checked)">
-						<input id="object-fillGradient" type="color">
+						<b class="fit">beak width</b>
+						<input class="fit" id="object-beakWidth" type="range" min="0.1" max="1" step="0.02">
+					</span>
+					<span class="row">
+						<b class="fit">beak position</b>
+						<input class="fit" id="object-beakPosition" type="range" min="0" max="1" step="0.02">
 					</span>
 				</div>
-			</div>
-			<div class="cc" nodisplay="group">
-				<span class="row">
-					<b class="fit">shadow</b>
-					<input for="object-shadow" class="checkbox w3-margin-right" type="checkbox" onchange="dom.nextDisabled(this,!this.checked);dom.nextToggleHide(this.parentElement)">
-					<select id="object-shadow" disabled>
-						<option value="fill" selected>fill</option>
-						<option value="stroke">stroke</option>
+
+				<span class="row" display="arrow">
+					<b class="fit">arrow</b>
+					<select id="object-arrow">
+						<option value="end" selected>end</option>
+						<option value="begin">begin</option>
+						<option value="both">both</option>
+						<option value="none">none</option>
 					</select>
 				</span>
 
-				<div class="cc fade hidden">
+				<div class="cc" display="chart">
 					<span class="row">
-						<b class="fit">shadow color</b>
-						<input id="object-shadowColor" type="color">
+						<b class="fit">type</b>
+						<select id="object-kind">
+							<option value="bar" selected>bar</option>
+							<option value="line">line</option>
+							<option value="spline">spline</option>
+							<option value="scatter">scatter</option>
+						</select>
 					</span>
 					<span class="row">
-						<b class="fit">shadow offset</b>
-						<input class="fit" id="object-shadowWidth" type="range">
+						<b class="fit">labels</b>
+						<input type="checkbox" class="checkbox" id="object-labels">
 					</span>
-					
+					<span class="row">
+						<b class="fit">legend</b>
+						<input type="checkbox" class="checkbox" id="object-legend">
+					</span>
+					<span class="row">
+						<b class="fit">axis</b>
+						<input type="checkbox" class="checkbox" id="object-axis">
+					</span>
 				</div>
-			</div>
-			
-			<div class="cc" display="bubble">
-				<span class="row">
-					<b class="fit">beak</b>
-					<select id="object-beak">
-						<option value="left" selected>left</option>
-						<option value="right">right</option>
-						<option value="top">top</option>
-						<option value="bottom">bottom</option>
+				
+				<span class="row" display="text emoji icon chart">
+					<b class="fit">size</b>
+					<input id="object-size" type="number" onchange="dom.toInteger(this)">
+				</span>
+				<span class="row" display="text">
+					<b class="fit">bold</b>
+					<input id="object-bold" type="checkbox" class="checkbox">
+				</span>
+				<span class="row" display="text">
+					<b class="fit">italic</b>
+					<input id="object-italic" type="checkbox" class="checkbox">
+				</span>
+				<span class="row" display="text chart">
+					<b class="fit">font</b>
+					<select id="object-font">
+						<option value="Arial" style="font-family:Arial;" selected><b>Arial</b></option>
+						<option value="Serif" style="font-family:serif"><b>Serif</b></option>
+						<option value="sans-serif" style="font-family:sans-serif"><b>Sans</b></option>
+						<option value="Times New Roman" style="font-family:Times New Roman;"><b>Roman</b></option>
+						<option value="Monospace" style="font-family:monospace;"><b>Monospace</b></option>
+						<option value="Roboto" style="font-family:roboto;"><b>Roboto</b></option>
+						<option value="Helvetica" style="font-family:Helvetica;"><b>Helvetica</b></option>
+						<option value="Calibri" style="font-family:Calibri;"><b>Calibri</b></option>
+						<option value="Optima" style="font-family:Optima;"><b>Optima</b></option>
+						<option value="Comic Sans MS" style="font-family:Comic Sans MS;"><b>Comic</b></option>
+						<option value="DejaVu Sans Mono" style="font-family:DejaVu Sans Mono;"><b>DejaVu</b></option>
+						<!-- <option value="Verdana">Verdana</option>
+						<option value="Geneva">Geneva</option> -->
+						<option value="Ubuntu" style="font-family:ubuntu;"><b>Ubuntu</b></option>
+						<option value="Segoe UI" style="font-family:Segoe UI;"><b>Segoe UI</b></option>
 					</select>
 				</span>
-				<span class="row">
-					<b class="fit">beak width</b>
-					<input class="fit" id="object-beakWidth" type="range" min="0.1" max="1" step="0.02">
-				</span>
-				<span class="row">
-					<b class="fit">beak position</b>
-					<input class="fit" id="object-beakPosition" type="range" min="0" max="1" step="0.02">
-				</span>
+				<textarea id="object-value" rows="5" display="text" placeholder="Some text" spellcheck="false"></textarea>
 			</div>
 
-			<span class="row" display="arrow">
-				<b class="fit">arrow</b>
-				<select id="object-arrow">
-					<option value="end" selected>end</option>
-					<option value="begin">begin</option>
-					<option value="both">both</option>
-					<option value="none">none</option>
-				</select>
-			</span>
-
-			<div class="cc" display="chart">
-				<span class="row">
-					<b class="fit">type</b>
-					<select id="object-kind">
-						<option value="bar" selected>bar</option>
-						<option value="line">line</option>
-						<option value="spline">spline</option>
-						<option value="scatter">scatter</option>
-					</select>
-				</span>
-				<span class="row">
-					<b class="fit">labels</b>
-					<input type="checkbox" class="checkbox" id="object-labels">
-				</span>
-				<span class="row">
-					<b class="fit">legend</b>
-					<input type="checkbox" class="checkbox" id="object-legend">
-				</span>
-				<span class="row">
-					<b class="fit">axis</b>
-					<input type="checkbox" class="checkbox" id="object-axis">
-				</span>
-			</div>
-			
-			<span class="row" display="text emoji icon chart">
-				<b class="fit">size</b>
-				<input id="object-size" type="number" onchange="dom.toInteger(this)">
-			</span>
-			<span class="row" display="text">
-				<b class="fit">bold</b>
-				<input id="object-bold" type="checkbox" class="checkbox">
-			</span>
-			<span class="row" display="text">
-				<b class="fit">italic</b>
-				<input id="object-italic" type="checkbox" class="checkbox">
-			</span>
-			<span class="row" display="text chart">
-				<b class="fit">font</b>
-				<select id="object-font">
-					<option value="Arial" style="font-family:Arial;" selected><b>Arial</b></option>
-					<option value="Serif" style="font-family:serif"><b>Serif</b></option>
-					<option value="sans-serif" style="font-family:sans-serif"><b>Sans</b></option>
-					<option value="Times New Roman" style="font-family:Times New Roman;"><b>Roman</b></option>
-					<option value="Monospace" style="font-family:monospace;"><b>Monospace</b></option>
-					<option value="Roboto" style="font-family:roboto;"><b>Roboto</b></option>
-					<option value="Helvetica" style="font-family:Helvetica;"><b>Helvetica</b></option>
-					<option value="Calibri" style="font-family:Calibri;"><b>Calibri</b></option>
-					<option value="Optima" style="font-family:Optima;"><b>Optima</b></option>
-					<option value="Comic Sans MS" style="font-family:Comic Sans MS;"><b>Comic</b></option>
-					<option value="DejaVu Sans Mono" style="font-family:DejaVu Sans Mono;"><b>DejaVu</b></option>
-					<!-- <option value="Verdana">Verdana</option>
-					<option value="Geneva">Geneva</option> -->
-					<option value="Ubuntu" style="font-family:ubuntu;"><b>Ubuntu</b></option>
-					<option value="Segoe UI" style="font-family:Segoe UI;"><b>Segoe UI</b></option>
-				</select>
-			</span>
-			<textarea id="object-value" rows="5" display="text" placeholder="Some text" spellcheck="false"></textarea>
 		</div>
 		
 		<div class="cc" display="image">
@@ -206,7 +225,7 @@
 				<b class="fit">Image</b>
 				<button name="fit" class="icon fa fa-fw xs expand display-hover" title="Fit size" onclick="event.stopPropagation();app.fitImageSize()"></button>
 				<button class="icon fa fa-fw xs fa-arrows-to-dot display-hover" title="Center" onclick="event.stopPropagation();app.centerImage()"></button>
-				<i class="fa xs collapse"></i>
+				<i class="fa fa-fw xs collapse"></i>
 			</div>
 			<!-- <h3 class="wm8 inconsolata">Image</h3> -->
 			<div class="cc fade">
@@ -243,6 +262,14 @@
 						<input id="object-imgHeight" type="number" oninput="dom.toInteger(this)"onchange="dom.toInteger(this)">
 					</div>
 				</div>
+
+				<span class="row">
+					<b class="fit">alpha</b>
+					<span class="cr ci fit">
+						<input id="object-imgAlpha" type="range" min="0" max="1" step="0.01" style="width:100%;" oninput="dom.nextFloat(this)" onchange="dom.nextFloat(this)">
+						<output style="text-align:right">0</output>
+					</span>
+				</span>
 				
 				<!-- <span class="cr ci m2">
 					<b class="fit">scale</b>
@@ -352,12 +379,12 @@
 
 					<input min="0.1" max="1" step="0.05" value="0.7" type="range" oninput="this.nextElementSibling.value=parseFloat(this.value).toFixed(2)">
 					<output class="small">0.70</output>
-					<button class="ux" name="detect" display="image">Detect</button>
+					<button class="ux" name="detect" display="image" onclick="dom.disable(this,app.detectBody(parseFloat(dom.prev(this).value)))">Detect</button>
 				</span>
 			</div>
 		</div>
 		<div class="cc" display="label">
-			<div class="cr ci noevents wm8 w3-padding-tiny w3-round w3-light-grey" onclick="this.classList.toggle('collapsed');this.nextElementSibling.classList.toggle('hidden')">
+			<div class="cr ci noevents wm8 w3-padding-tiny w3-round w3-light-grey" onclick="this.classList.toggle('collapsed');dom.nextToggleHide(this)">
 				<b class="fit">Text</b>
 				<button name="center-text" class="icon fa xs fa-arrows-left-right display-hover" title="Center" onclick="event.stopPropagation();app.centerText()"></button>
 				<i class="fa fa-fw xs collapse"></i>
@@ -438,15 +465,27 @@
 						<b class="fit">shadow color</b>
 						<input id="object-textShadowColor" type="color">
 					</span>
-					<span class="row">
-						<b class="fit">shadow offset</b>
-						<input id="object-textShadowWidth" type="range">
-					</span>
 					
+					<span class="row">
+						<b class="fit">shadow X</b>
+						<input class="fit" id="object-textShadowX" type="range" min="-50" max="50">
+					</span>
+					<span class="row">
+						<b class="fit">shadow Y</b>
+						<input class="fit" id="object-textShadowY" type="range" min="-50" max="50">
+					</span>
 				</div>
 
 				<textarea id="object-text" rows="5" placeholder="Some text" spellcheck="false"></textarea>
 			</div>
 		</div>
+
+		<!-- <span class="cr ci" display="icon">
+			<b class="fit">path</b>
+
+			<input min="0.1" max="1" step="0.05" value="0.1" type="range" oninput="dom.nextFloat(this)" onchange="dom.nextFloat(this)">
+			<output class="small">0.70</output>
+			<button class="ux" name="detect-path" onclick="dom.disable(this,app.detectPath())">Detect</button>
+		</span> -->
 	</div>
 </div>

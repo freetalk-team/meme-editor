@@ -5,10 +5,9 @@ export class Emoji extends Text {
 
 	get type() { return 'emoji'; }
 
-	constructor(value) {
+	constructor() {
 		super();
 
-		this.value = value;
 		this.font = window.navigator.platform == 'Win32' ? 'Noto Color Emoji' : 'emoji';
 		this.size = 50;
 	}

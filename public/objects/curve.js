@@ -29,8 +29,15 @@ export class Point {
 	}
 
 	set(x, y) {
-		this.x = x;
-		this.y = y;
+
+		if (x instanceof Point) {
+			this.x = x.x;
+			this.y = x.y;
+		}
+		else {
+			this.x = x;
+			this.y = y;
+		}
 	}
 
 	invert(x, y) {
@@ -64,6 +71,8 @@ export class Point {
 		Point.scale(this, sx, sy, X, Y);
 		return this;
 	} 
+
+	sharp() {}
 
 	static create(x, y) {
 		const p = new Point;
@@ -330,6 +339,16 @@ export class Curve3 extends Curve2 {
 
 		return this;
 	} 
+
+	sharp(end) {
+
+		if (end) 
+			this.cp.set(this.cp2);
+		
+		delete this.cp2;
+
+		Object.setPrototypeOf(this, Curve2.prototype);
+	}
 }
 
 function midpoint(p1, p2, t) {

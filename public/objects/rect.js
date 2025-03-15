@@ -1,5 +1,6 @@
 
 import { Gradient as Base } from "./gradient.js";
+import { Path } from './path.js';
 
 export class Rect extends Base {
 	#radius = 0;
@@ -26,12 +27,12 @@ export class Rect extends Base {
 
 	
 
-	drawSVG(svg, canvas={ x: 0, y: 0 }, group=false) {
+	drawSVG(svg, group=false) {
 
 		const fill = this.getFill()
 			, stroke = this.getStroke()
 			, shadow = this.getShadow()
-			, box = this.box(0, canvas);
+			, box = this.box();
 
 		if (group) 
 			box.angle = 0;
@@ -50,4 +51,24 @@ export class Rect extends Base {
 
 		return p;
 	}
+	
+	// toPath() {
+
+	// 	const w = this.width
+	// 		, h = this.height
+	// 		, x = this.x
+	// 		, y = this.y
+	// 		, segments = [
+	// 			[x, y],
+	// 			[x + w, y],
+	// 			[x + w, y + h]
+	// 		];
+
+	// 	// Change its prototype to Path
+	// 	Object.setPrototypeOf(this, Path.prototype);
+
+	// 	this.segments = segments;
+	// 	this.close();
+
+	// }
 }

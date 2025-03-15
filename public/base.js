@@ -324,10 +324,10 @@ export class EditorCanvas extends EditorBase {
 		for (const i of this.objects) {
 			if (!i.visible) continue;
 
-			i.drawSVG(svg, canvas);
+			i.drawSVG(svg);
 		}
 
-		return svg.toString();
+		return svg.toString(canvas.x, canvas.y);
 	}
 
 	getCordinates(x, y) {

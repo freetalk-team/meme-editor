@@ -1,4 +1,5 @@
 const kNodeRadius = 5;
+const kNodeStrokeColor = '#0000ff';
 
 export class Base {
 
@@ -20,12 +21,16 @@ export class Base {
 	
 	#shadow;
 	#shadowColor = '#444444';
-	#shadowWidth = 2;
+	#shadowX = 2;
+	#shadowY = 2;
+	#shadowBlurLevel = 5;
 
 	#selected = false;
 	#visible = true;
 
 	constructor(id) {
+		if (new.target === Base) 
+			throw new Error("Cannot instantiate abstract class Base");
 
 		if (id) {
 			if (typeof id == 'object')
@@ -52,8 +57,10 @@ export class Base {
 	get fill() { return this.#fill; }
 	get alpha() { return parseInt(this.#alpha, 16) / 255; }
 	get shadow() { return this.#shadow; }
-	get shadowWidth() { return this.#shadowWidth; }
+	get shadowX() { return this.#shadowX; }
+	get shadowY() { return this.#shadowY; }
 	get shadowColor() { return this.#shadowColor; }
+	get shadowBlurLevel() { return this.#shadowBlurLevel; }
 	get visible() { return this.#visible; }
 
 	set id(v) {
@@ -122,13 +129,30 @@ export class Base {
 		this.#shadow = v;
 	}
 
+	set shadowX(n) {
+		if (typeof n == 'string') n = parseInt(n);
+		this.#shadowX = n;
+	}
+
+	set shadowY(n) {
+		if (typeof n == 'string') n = parseInt(n);
+		this.#shadowY = n;
+	}
+
+	// backward comp
 	set shadowWidth(n) {
 		if (typeof n == 'string') n = parseInt(n);
-		this.#shadowWidth = n;
+		this.#shadowX = n;
+		this.#shadowY = n;
 	}
 
 	set shadowColor(v) {
 		this.#shadowColor = v;
+	}
+
+	set shadowBlurLevel(n) {
+		if (typeof n == 'string') n = parseInt(n);
+		this.#shadowBlurLevel = n;
 	}
 
 	set selected(b) {
@@ -239,13 +263,14 @@ export class Base {
 	getShadow() {
 		return this.#shadow ? {
 			color: this.#shadowColor,
-			width: this.#shadowWidth
+			x: this.#shadowX,
+			y: this.#shadowY
 		} : null;
 	}
 
 	boundingBox(margin=0) {
 
-		const box = this.box();
+		const box = this.box(-margin);
 
 		if (this.#angle == 0) 
 			return box;
@@ -263,10 +288,10 @@ export class Base {
 			, maxY = Math.max(p[0][1], p[1][1], p[2][1], p[3][1])
 			;
 
-		box.x = minX + margin;
-		box.y = minY + margin;
-		box.width = maxX - minX - 2*margin;
-		box.height = maxY - minY -2* margin;
+		box.x = minX - margin;
+		box.y = minY - margin;
+		box.width = maxX - minX + 2*margin;
+		box.height = maxY - minY + 2* margin;
 
 		return box;
 	}
@@ -308,7 +333,7 @@ export class Base {
 
 		ctx.lineWidth = 1;
 
-		this.drawNode(ctx, 0, 0);
+		this.drawNode(ctx, 0, 0, kNodeStrokeColor, kNodeStrokeColor + '88');
 		this.drawNode(ctx, -x, -y);
 		
 		ctx.restore();
@@ -317,7 +342,7 @@ export class Base {
 	drawLine(ctx, x, y, X=this.#x, Y=this.#y, shadow=this.#shadow) {
 		
 
-		if (shadow && this.#shadowWidth > 0) {
+		if (shadow) {
 			
 			ctx.save();
 
@@ -365,7 +390,7 @@ export class Base {
 
 		ctx.fillStyle = fill;
 
-		if (this.#shadowWidth > 0) {
+		if (this.#shadow) {
 			
 			ctx.save();
 
@@ -408,7 +433,7 @@ export class Base {
 
 		ctx.fillStyle = this.fillColor();
 
-		if (this.#shadow && this.#shadowWidth > 0) {
+		if (this.#shadow) {
 			
 			ctx.save();
 
@@ -639,7 +664,7 @@ export class Base {
 		
 		for (const t of text) {
 
-			if (this.#shadow && this.#shadowWidth > 0) {
+			if (this.#shadow) {
 
 				ctx.save();
 
@@ -721,9 +746,9 @@ export class Base {
 
 	addShadow(ctx) {
 		ctx.shadowColor = this.#shadowColor + this.#alpha; // color
-		ctx.shadowBlur = 5; // blur level
-		ctx.shadowOffsetX = this.#shadowWidth; // horizontal offset
-		ctx.shadowOffsetY = this.#shadowWidth; // vertical offset
+		ctx.shadowBlur = this.#shadowBlurLevel; // blur level
+		ctx.shadowOffsetX = this.#shadowX; // horizontal offset
+		ctx.shadowOffsetY = this.#shadowY; // vertical offset
 	}
 
 	drawBorder(ctx, strokeWidth=1, color='#000', margin=0, dashed=false) {

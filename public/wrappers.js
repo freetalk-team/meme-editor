@@ -242,15 +242,6 @@ export function wrapProperties(container, handler) {
 
 		switch (target.name) {
 			
-			case 'detect': {
-				const e = target.previousElementSibling;
-				const threshold = parseFloat(e.value);
-
-				target.disabled = true;
-				await delayResolve(handler.detectBody(threshold), 2000);
-				target.disabled = false;
-			}
-			break;
 		}
 	}
 

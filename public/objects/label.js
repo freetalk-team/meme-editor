@@ -36,7 +36,8 @@ export class Rectangle extends Base {
 	get textFont() { return this.#text.font; }
 	get textAlign() { return this.#text.align; }
 	get textShadow() { return this.#text.shadow; }
-	get textShadowWidth() { return this.#text.shadowWidth; }
+	get textShadowX() { return this.#text.shadowX; }
+	get textShadowY() { return this.#text.shadowY; }
 	get textShadowColor() { return this.#text.shadowColor; }
 
 
@@ -102,9 +103,21 @@ export class Rectangle extends Base {
 		this.#text.shadow = v;
 	}
 
+	set textShadowX(n) {
+		if (typeof n == 'string') n = parseInt(n);
+		this.#text.shadowX = n;
+	}
+
+	set textShadowY(n) {
+		if (typeof n == 'string') n = parseInt(n);
+		this.#text.shadowY = n;
+	}
+
+	// backward comp
 	set textShadowWidth(n) {
 		if (typeof n == 'string') n = parseInt(n);
-		this.#text.shadowWidth = n;
+		this.#text.shadowX = n;
+		this.#text.shadowY = n;
 	}
 
 	set textShadowColor(v) {
@@ -148,16 +161,16 @@ export class Rectangle extends Base {
 		this.#text.draw(ctx);
 	}
 
-	drawSVG(svg, canvas) {
+	drawSVG(svg) {
 
-		const box = this.box(0, canvas)
-			, x = -(this.x - canvas.x)
-			, y = -(this.y - canvas.y)
+		const box = this.box()
+			, x = -(this.x)
+			, y = -(this.y)
 			;
 
 		svg.group(null, box);
 
-		super.drawSVG(svg, canvas, true);
+		super.drawSVG(svg, true);
 
 		this.#text.drawSVG(svg, { x, y });
 

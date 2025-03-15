@@ -71,6 +71,7 @@ export default class Editor extends Base {
 	#data = new Map;
 	#file;
 	#blobs = new Map;
+	#bitmap;
 
 	#history = [];
 	#historyIndex = 0;
@@ -151,6 +152,10 @@ export default class Editor extends Base {
 	set strokeWidth(n) {
 		if (typeof n == 'string') n = parseInt(n);
 		this.#strokeWidth = n;
+	}
+
+	set bitmap(img) {
+		this.#bitmap = img;
 	}
 
 	set mode(v) {
@@ -275,6 +280,11 @@ export default class Editor extends Base {
 		this.#bg.fill = bgFill;
 		this.#file = null;
 		this.#blobs.clear();
+		
+		if (this.#bitmap) {
+			this.#bitmap.close();
+			this.#bitmap = null;
+		}
 		// this.#objects.splice(1, this.#objects.length - 1);
 
 		this.canvas.focus();
@@ -297,6 +307,10 @@ export default class Editor extends Base {
 
 	drawBefore(ctx) {
 		this.#bg.draw(ctx);
+
+		if (this.#bitmap)
+			this.context.drawImage(this.#bitmap, 0, 0);
+
 	}
 
 	drawAfter(ctx) {
@@ -467,22 +481,27 @@ export default class Editor extends Base {
 	exportObject() {
 		if (!this.#selected) return;
 
-		const o = this.#selected;
+		const ctx = offctx
+			, e = ctx.canvas
+			, o = this.#selected;
 
-		const e = offctx.canvas;
-		const ctx = offctx;
+		const m = Math.max(Math.ceil(o.strokeWidth / 2), (o.shadow ? o.shadowWidth + 5 : 0));
+		const box = o.boundingBox(m);
 
-		e.width = o.width;
-		e.height = o.height;
+		e.width = box.width;
+		e.height = box.height;
 
 		ctx.save();
-		ctx.translate(-o.x, -o.y);
+
+		ctx.clearRect(0, 0, box.width, box.height);
+		// ctx.translate(-o.x, -o.y);
+		ctx.translate(-box.x, -box.y);
 
 		o.draw(ctx);
 
 		ctx.restore();
 
-		return this.#exportCanvas(e, o.name, 'png');
+		return this.#exportCanvas(e, o.name, 'png', o);
 	}
 
 	async attach(id) {
@@ -536,6 +555,10 @@ export default class Editor extends Base {
 					{
 						description: "CSV",
 						accept: { 'text/csv': ['.csv'] }
+					},
+					{
+						description: "Project file",
+						accept: { "application/memed": ['.memed'] }
 					}
 				],
 				excludeAcceptAllOption: true,
@@ -792,11 +815,11 @@ export default class Editor extends Base {
 		}
 	}
 
-	insertNode() {
+	insertNode(sharp) {
 		let node = this.#selectedNodes[0]
 		if (node == null) return;
 
-		node = this.#selected.split(node);
+		node = this.#selected.split(node, sharp);
 
 		this.#nodes.push(node);
 
@@ -1011,6 +1034,29 @@ export default class Editor extends Base {
 		}
 
 		this.#toggleLoading();
+	}
+
+	async detectPath(threshold=0.1) {
+
+		if (!this.#selected || this.#selected.type != 'icon') return;
+
+		this.#toggleLoading();
+
+		try {
+			const icon = this.#selected;
+			const mask = await icon.detectMask(threshold);
+
+			const path = Path.detect(mask, icon.x, icon.y);
+
+			this.create(path);
+
+			this.#dom.objects.add(path);
+
+			this.select(path);
+		}
+		finally {
+			this.#toggleLoading();
+		}
 	}
 
 	wrap() {
