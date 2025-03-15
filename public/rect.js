@@ -45,7 +45,7 @@ export class Rect extends Base {
 			, h = this.height * sy
 			, r = this.#radius * Math.min(sx, sy);
 
-		p.roundRect(x, y, w, h, r);
+		p.roundRect(x - w / 2, y - h / 2, w, h, r);
 
 		return p;
 	}

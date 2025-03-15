@@ -31,6 +31,18 @@ const defaultHandler = {
 
 const bgFill = '#fafafa';
 
+
+
+const Type = {
+	STRING: 1,
+	JSON: 2,
+	BLOB: 3,
+	JPG: 4,
+	PNG: 5,
+	WEBP: 6,
+	SVG: 7
+};
+
 export default class Editor extends Base {
 	#db;
 
@@ -55,6 +67,8 @@ export default class Editor extends Base {
 	#selectedNodes = [];
 	#images = new Map;
 	#data = new Map;
+	#file;
+	#blobs = new Map;
 
 	#history = [];
 	#historyIndex = 0;
@@ -77,8 +91,9 @@ export default class Editor extends Base {
 			this.projects.clearSelection();
 			this.objects.clear();
 			this.tools.mode('select');
+			this.actions.mode('select');
+			this.actions.set('attach', false);
 		}
-		
 	};
 
 	get db() { return this.#db; }
@@ -164,6 +179,7 @@ export default class Editor extends Base {
 		this.draw();
 
 		this.#dom.tools.mode(this.#mode);
+		this.#dom.status.set('mode', this.#mode.toUpperCase());
 	}
 
 	constructor(canvas) {
@@ -225,6 +241,8 @@ export default class Editor extends Base {
 		this.#mode = 'select';
 		this.#nodes = [];
 		this.#bg.fill = bgFill;
+		this.#file = null;
+		this.#blobs.clear();
 		// this.#objects.splice(1, this.#objects.length - 1);
 
 		this.canvas.focus();
@@ -401,13 +419,14 @@ export default class Editor extends Base {
 
 	export(name='meme', type='jpeg') {
 
-		const e = document.createElement('canvas');
-		const ctx = e.getContext('2d');
-
 		const canvas = this.#bg;
 
-		e.width = canvas.width;
-		e.height = canvas.height;
+		const e = new OffscreenCanvas(canvas.width, canvas.height);
+		const ctx = e.getContext('2d');
+
+
+		// e.width = canvas.width;
+		// e.height = canvas.height;
 
 		/* todo: Slection must be removed
 			1. Translate to canvas origin ctx.translate(-canvas.x, - canvas.y)  
@@ -456,18 +475,58 @@ export default class Editor extends Base {
 		return this.#exportCanvas(e, o.name, 'png');
 	}
 
+	async attach(id) {
+
+		if (!showSaveFilePicker) {
+			this.#dom.notify.add('Browser not supported!', 'error');
+			return;
+		}
+	
+		const opts = {
+			id: 'project',
+			suggestedName: 'MyProject.memed',
+			startIn: 'documents',
+			types: [
+				{
+					description: "Project file",
+					accept: { "application/memed": ['.memed'] }
+				}
+			]
+		};
+
+		
+		try {
+		
+			const file = await showSaveFilePicker(opts);
+
+			// this.#file = await file.getFile();
+			this.#file = file;
+			
+			await this.#saveProject(id);
+
+			this.#dom.notify.add('Attached !', 'success');
+		}
+		catch (e) {
+			console.error('Failed to export project', e);
+			
+			this.#dom.notify.add('Failed export !', 'error');
+		}
+	}
+
 	async import(files) {
 
 		if (!files) {
 			const pickerOpts = {
+				id: 'import',
 				types: [
 					{
-						description: "Images & CSV",
-						accept: {
-							"image/*": [".png", ".webp", ".jpeg", ".jpg"],
-							'text/csv': ['.csv']
-						},
+						description: "Images",
+						accept: { "image/*": [".png", ".webp", ".jpeg", ".jpg"] }
 					},
+					{
+						description: "CSV",
+						accept: { 'text/csv': ['.csv'] }
+					}
 				],
 				excludeAcceptAllOption: true,
 				multiple: true,
@@ -478,34 +537,47 @@ export default class Editor extends Base {
 			files = await Promise.all(handles.map(i => i.getFile()));
 		}
 
-		if (files.length == 1 && files[0].type == 'text/csv') {
-			this.#importCSV(files[0]);
+		if (files.length == 1) {
+
+			const mime = files[0].type;
+
+			if (mime == 'text/csv') 
+				return this.#importCSV(files[0]);
+			else if (mime == '')
+				return this.#openProject(files[0]);
 		}
-		else {
-			this.#importImages(files);
-		}
-		
+	
+		return this.#importImages(files);
 	}
 
 	async save(id) {
-
 
 		try {
 
 			const objects = super.save();
 			const canvas = this.#bg.save();
 
-			await this.#db.put('meme', { id, canvas, objects, ts: Date.now() });
+			await this.#db.put('meme', { 
+				id, 
+				canvas, 
+				objects, 
+				ts: Date.now(), 
+				file: this.#file,
+				// blobs: Array.from(this.#blobs.values())
+				blobs: this.#blobs
+			});
 
 
 			if (this.#dom.projects) {
 				const projects = this.#dom.projects.getElementIds();
 
 				if (!projects.includes(id))
-					this.#dom.projects.add({ id, objects: this.objects }, true);
+					this.#dom.projects.add({ id, objects: this.objects });
 
 				this.#dom.projects.selectItem(id);
 			}
+
+			this.#saveProject(id);
 
 			this.emit('save', id);
 
@@ -537,23 +609,25 @@ export default class Editor extends Base {
 			const paths = Object.fromArray(objects.filter(i => i.type == 'path'));
 
 			this.#bg.load(project.canvas);
+			this.#blobs = project.blobs;
+			this.#file = project.file;
 			
 			// console.debug('Open projects', data);
 
 			// await Promise.all(images.map(i => i.image()));
 
-			let image, imageid, mask;
+			let image, filename, mask, file;
 
 			for (const i of images) {
 
-				imageid = i.file.name;
-				image = this.#images.get(imageid);
+				filename = i.file;
+				image = this.#images.get(filename);
 
 				if (!image || image._refs == 0) {
-					image = await i.loadImage();
-					image._file = i.file;
+					file = this.#blobs.get(filename);
+					image = await i.loadImage(file);
 
-					this.#images.set(imageid, image);
+					this.#images.set(filename, image);
 				}
 				else {
 					i.setImage(image);
@@ -581,7 +655,8 @@ export default class Editor extends Base {
 			this.#bg.properties = this.#dom.canvas;
 			this.#dom.actions.assign({
 				width: this.#bg.width,
-				height: this.#bg.height
+				height: this.#bg.height,
+				attach: !!this.#file
 			});
 
 		}
@@ -843,6 +918,7 @@ export default class Editor extends Base {
 			this.draw();
 
 			this.#dom.properties.set('mask', path.name, path.id);
+			this.#dom.objects.select(path.id);
 		}
 		else {
 			this.#dom.notify.add('Failed to detect human !', 'error');
@@ -1322,9 +1398,15 @@ export default class Editor extends Base {
 			if (this.#vkeys.Shift) {
 				const dx = Math.abs(x - this.#x)
 					, dy = Math.abs(y - this.#y)
+					, d = Math.abs(dx - dy)
+					, t = Math.max(3, 3 * dx / 10);
 					;
 
-				if (dx < dy) 
+				// console.debug('MOVE:', dx, dy, t);
+
+				if (d < t)
+					y = y < this.#y ? this.#y - dx : this.#y + dx;
+				else if (dx < dy) 
 					x = this.#x;
 				else 
 					y = this.#y;
@@ -1567,7 +1649,7 @@ export default class Editor extends Base {
 
 		this.#dom.projects.clear();
 
-		for (const i of projects) {
+		for (const i of projects.reverse()) {
 			this.#projects.push({ name: i.id, objects: i.objects.length });
 			this.#dom.projects.add(i);
 		}
@@ -1588,15 +1670,15 @@ export default class Editor extends Base {
 	
 			const opts = {
 				types: [
-				{
-					description: "Image file",
-					accept: {
-						"image/*": [".png", ".jpeg", ".jpg", '.svg'],
-					},
-					suggestedName: 'meme.jpeg',
-					startIn: 'pictures'
-				},
-				],
+					{
+						description: "Image file",
+						accept: {
+							"image/*": [".png", ".jpeg", ".jpg", '.svg'],
+						},
+						suggestedName: 'meme.jpeg',
+						startIn: 'pictures'
+					}
+				]
 			};
 
 			try {
@@ -1715,6 +1797,7 @@ export default class Editor extends Base {
 			}
 
 			this.add(img);
+			this.#blobs.set(id, i);
 		}
 
 		if (files.length > 1) {
@@ -1724,7 +1807,178 @@ export default class Editor extends Base {
 			this.draw();
 		}
 	}
+
+	async #saveProject(id) {
+		if (!this.#file) return;
+
+		const Type = {
+			PROJECT: 3,
+			IMAGE: 20,
+			CSV: 30
+		};
+
+		const writable = await this.#file.createWritable();
+
+		const objects = super.save();
+		const canvas = this.#bg.save();
+
+		// objects.filter(i => i.type == 'image').map(i => i.file = i.file.name);
+
+		await appendToStream(writable, Type.PROJECT, { 
+			id,
+			canvas,
+			objects
+		});
+
+		for (const [id, i] of this.#blobs.entries()) {
+			await appendToStream(writable, Type.IMAGE, id);
+			await appendToStream(writable, Type.IMAGE, i.type);
+			await appendToStream(writable, Type.IMAGE, i);
+		}
+	
+		await writable.close();
+	}
+
+	async #openProject(file) {
+		const arrayBuffer = await file.arrayBuffer(); // Read the entire file into an ArrayBuffer
+		const dataView = new DataView(arrayBuffer); // Use DataView for binary parsing
+
+		let a, offset = 0
+			, len;
+
+		function read() {
+			offset += 2;
+
+			//[ id, type ] = a;
+
+			len = dataView.getUint32(offset);
+			offset += 4;
+
+			a = new Uint8Array(arrayBuffer, offset, len);
+			offset += len;
+		}
+
+		read();
+
+		const json = unzip(a);
+		const project = JSON.parse(json);
+
+		const decoder = new TextDecoder;
+
+		for (let id, type, blob, img; offset < dataView.byteLength;) {
+			
+
+			read();
+			id = decoder.decode(a);
+
+			read();
+			type = decoder.decode(a);
+
+			read();
+			blob = new Blob([a], { type });
+			blob.name = id;
+
+			img = await Picture.load(blob);
+			img._file = blob;
+			img._ref = 0;
+
+			this.#images.set(id, img);
+			this.#blobs.set(id, blob);
+		}
+
+
+		const objects = super.open(project.objects);
+		const images = objects.filter(i => i.type == 'image');
+
+		this.#bg.load(project.canvas);
+		
+		let img;
+
+		for (const i of images) {
+		
+			img = this.#images.get(i.file);
+
+			i.setImage(img);
+		}
+
+		this.draw();
+	}
 }
+
+async function appendToStream(writer, id, v) {
+
+	let content, type;
+
+	if (typeof v == 'string') {
+		type = Type.STRING;
+		content = v.toArrayBuffer();
+	}
+	else if (v instanceof Blob) {
+		type = fromMime(v.type);
+		content = new Uint8Array(await v.arrayBuffer());
+	}
+	else  {
+		type = Type.JSON;
+		content = zip(JSON.stringify(v));
+	}
+
+	return writeStream(writer, id, type, content);
+
+	function fromMime(mime) {
+
+		switch (mime) {
+
+			case 'image/jpg':
+			return Type.JPG;
+
+			case 'image/png':
+			return Type.PNG;
+
+			case 'image/webp':
+			return Type.WEBP;
+		}
+
+	}
+}
+
+function writeStream(stream, id, type, content) {
+
+	const buf = new Uint8Array(2 + 4 + content.byteLength);
+	const buffer = buf.buffer;
+	const view = new DataView(buffer);
+
+	view.setUint32(2, content.byteLength);
+	buf.set(content, 6);
+
+	return stream.write(buf);
+
+
+	// const typeBuffer = new Uint8Array([id, type]); // Assuming type is 1 byte
+	// const contentLength = content.byteLength || content.length;
+	// const lengthBuffer = new Uint32Array([contentLength]);
+		
+	// const tlvBuffer = new Uint8Array(typeBuffer.byteLength + lengthBuffer.byteLength + contentLength);
+	
+	// tlvBuffer.set(typeBuffer, 0);
+	// tlvBuffer.set(lengthBuffer, typeBuffer.byteLength);
+	// tlvBuffer.set(content, typeBuffer.byteLength + lengthBuffer.byteLength);
+
+	// return stream.write(tlvBuffer);
+}
+
+
+function readFile(file) {
+	return new Promise((resolve, reject) => {
+		const reader = new FileReader();
+
+		reader.onload = (e) => resolve(e.target.result);
+		reader.onerror = reject;
+ 
+		reader.readAsArrayBuffer(file);
+	});
+}
+
+
 
 class Database extends IndexDB {
 

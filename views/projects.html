@@ -3,8 +3,8 @@
 	<div class="cc show-empty list list2 scroll"></div>
 </div>
 
-<template id="item-project" class="w3-padding-tiny cr ci noevents fade" data-id="{{this.id}}">
+<template id="item-project" class="w3-padding-tiny cr ci noevents fade" data-id="{{this.id}}" onclick="UX.List.isItem(event.target)&&app.open(this.dataset.id)">
 	<b class="fit ellipsis">{{this.id.toUpperCase()}}</b>
 	<i class="smaller">{{this.objects.length}}</i>
-	<button name="rm" class="icon fa display-hover" title="Remove"></button>
+	<button name="rm" class="icon fa display-hover" title="Remove" onclick="app.delete(dom.id(this))"></button>
 </template>

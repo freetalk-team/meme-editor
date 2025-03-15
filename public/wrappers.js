@@ -101,6 +101,62 @@ function wrap(container, props={}) {
 	return props;
 }
 
+function wrapList(container, template) {
+	const e = container.querySelector('.list');
+	const list = UX.List.createMixin(e);
+
+	list.add = function(o, after) {
+
+		const id = o.id;
+
+		let e;
+
+		if (template) {
+			e = list.addItemTemplate(template, o, true);
+
+			if (after) {
+
+				if (typeof after == 'string')
+					after = list.getElement(after);
+
+				dom.insertAfter(e, after);
+
+			}
+		}
+		else {
+			e = document.createElement('span');
+			e.innerText = id;
+			e.dataset.id = id;
+			e.classList.add('item');
+
+			container.appendChild(e);
+		}
+
+		return e;
+	}
+
+	list.select = function(id, add) {
+		this.selectItem(id, add);
+	}
+
+	list.enable = function(name, b) {
+		const button = container.querySelector(`button[name="${name}"]`);
+		if (button)
+			button.disabled = !b;
+	}
+
+	list.swap = function(a, b) {
+
+		const e1 = this.getElement(a)
+			, e2 = this.getElement(b)
+			;
+
+		dom.swap(e1, e2);
+	}
+
+	return list;
+}
+
 export function wrapProperties(container, handler) {
 
 	if (typeof container == 'string')
@@ -194,9 +250,6 @@ export function wrapObjects(container, handler, template) {
 	if (typeof container == 'string')
 		container = document.getElementById(container);
 
-	const e = container.querySelector('.list');
-	const list = UX.List.createMixin(e);
-
 	container.onclick = (e) => {
 
 		const target = e.target;
@@ -225,57 +278,7 @@ export function wrapObjects(container, handler, template) {
 		
 	}
 
-	list.add = function(o, after) {
-
-		const id = o.id;
-
-		let e;
-
-		if (template) {
-			e = list.addItemTemplate(template, o, true);
-
-			if (after) {
-
-				if (typeof after == 'string')
-					after = list.getElement(after);
-
-				dom.insertAfter(e, after);
-
-			}
-		}
-		else {
-			e = document.createElement('span');
-			e.innerText = id;
-			e.dataset.id = id;
-			e.classList.add('item');
-
-			container.appendChild(e);
-		}
-
-		return e;
-	}
-
-	list.select = function(id, add) {
-		this.selectItem(id, add);
-	}
-
-	list.enable = function(name, b) {
-		const button = container.querySelector(`button[name="${name}"]`);
-		if (button)
-			button.disabled = !b;
-	}
-
-	list.swap = function(a, b) {
-
-		const e1 = this.getElement(a)
-			, e2 = this.getElement(b)
-			;
-
-		dom.swap(e1, e2);
-	}
-
-
-	return list;
+	return wrapList(container, template);
 }
 
 export function wrapProjects(container, handler, template) {
@@ -283,85 +286,13 @@ export function wrapProjects(container, handler, template) {
 	if (typeof container == 'string')
 		container = document.getElementById(container);
 
-	const e = container.querySelector('.list');
-	const list = UX.List.createMixin(e);
-
-	container.onclick = (e) => {
-
-		const target = e.target;
-
-		if (target.tagName == 'BUTTON') {
-
-			switch (target.name) {
-
-				case 'rm': {
-
-					const e = target.closest('[data-id]');
-					
-					if (e) {
-						const id = e.dataset.id;
-
-						handler.delete(id);
-					}
-				}
-				break;
-
-				case 'align':
-				handler.alignImages();
-				break;
-			}
-
-
-			return;
-		}
-
-		if (UX.List.isItem(target)) {
-
-			const id = target.dataset.id;
-			list.selectItem(id);
-
-			handler.open(id);
-		}
-
-	}
-
-	list.add = function(o, top=false) {
-
-		const id = o.id;
-
-		let e;
-
-		if (template) {
-			e = list.addItemTemplate(template, o, top);
-		}
-		else {
-			e = document.createElement('span');
-			e.innerText = id;
-			e.dataset.id = id;
-			e.classList.add('item');
-
-			container.appendChild(e);
-		}
-
-		return e;
-	}
-
-	list.select = function(id) {
-		this.selectItem(id);
-	}
-
-	
-
-	return list;
+	return wrapList(container, template);
 }
 
 export function wrapImages(container, handler, template) {
 	
 	if (typeof container == 'string')
 		container = document.getElementById(container);
-
-	const e = container.querySelector('.list');
-	const list = UX.List.createMixin(e);
 
 	container.onclick = (e) => {
 
@@ -374,32 +305,7 @@ export function wrapImages(container, handler, template) {
 		}
 	}
 
-	list.add = function(o, after) {
-
-		const id = o.id;
-
-		let e;
-
-		if (template) {
-			e = list.addItemTemplate(template, o);
-		}
-		else {
-			e = document.createElement('span');
-			e.innerText = id;
-			e.dataset.id = id;
-			e.classList.add('item');
-
-			container.appendChild(e);
-		}
-
-		return e;
-	}
-
-	list.select = function(id, add) {
-		this.selectItem(id, add);
-	}
-
-	return list;
+	return wrapList(container, template);
 }
 
 export function wrapTools(container, handler) {
@@ -609,36 +515,6 @@ export function wrapActions(container, editor) {
 			}
 		}
 	};
-
-	container.onclick = async e => {
-		const target = e.target;
-
-		switch (target.tagName) {
-
-			case 'BUTTON':
-			switch (target.name) {
-
-				case 'save': {
-					const name = target.previousElementSibling.value || 'test';
-					target.disabled = true;
-					await delayResolve(editor.save(name), 2000);
-					target.disabled = false;
-				}
-				break;
-
-			}
-			break;
-
-			// case 'INPUT':
-			// switch (target.name) {
-
-			// 	case 'zoom':
-
-			// 	break;
-			// }
-			// break;
-		}
-	}
 
 	container.onchange = e => {
 

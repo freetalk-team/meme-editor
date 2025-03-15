@@ -58,8 +58,9 @@
 
 	<div class="cr ci fit justify-end">
 
-		<input value="meme1">
-		<button name="save" class="ux" title="Save">Save</button>
+		<input value="meme1" spellcheck="false">
+		<button name="save" class="ux" title="Save" onclick="dom.disable(this, app.save(this.previousElementSibling.value))">Save</button>
+		<button name="attach" class="icon fa fa-fw lg fa-floppy-disk" title="Attach File" value=false onclick="dom.disable(this, app.attach(this.previousElementSibling.previousElementSibling.value))"></button>
 		<button name="export" class="icon fa fa-fw lg fa-file-export w3-text-blue" title="Export image" onclick="app.export()"></button>
 		<button name="import" class="icon fa fa-fw lg fa-folder w3-text-blue relative" title="Import images"  onclick="app.import()"><i class="fa fa-circle-plus action w3-text-green"></i></button>
 

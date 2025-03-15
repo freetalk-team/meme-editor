@@ -56,6 +56,39 @@ export class Picture extends Rect {
 		
 	}
 
+	get width() { return super.width; }
+	get height() { return super.height; }
+
+	set width(n) {
+		super.width = n;
+		this.#updateMaskPos();
+	}
+
+	set height(n) {
+		super.height = n;
+		this.#updateMaskPos();
+	}
+
+	// get strokeWidth() { return super.strokeWidth; }
+	// set strokeWidth(n) {
+
+	// 	const w = super.strokeWidth;
+
+	// 	super.strokeWidth = n;
+
+	// 	const d = Math.round((super.strokeWidth - w) / 2);
+
+	// 	console.debug('Stroke: ', d);
+
+	// 	this.x -= d;
+	// 	this.#imgX += d;
+	// 	this.width += 2*d;
+
+	// 	this.y -= d;
+	// 	this.#imgY += d;
+	// 	this.height += 2*d;
+	// }
+
 	set file(f) { 
 		// if (f instanceof File) { 
 		// 	if (!this.#file) {
@@ -117,6 +150,8 @@ export class Picture extends Rect {
 				this.height = this.#imgHeight;
 			}
 		}
+
+		this.#updateMaskPos();
 	}
 
 	set imgHeight(n) { 
@@ -141,7 +176,7 @@ export class Picture extends Rect {
 			}
 		}
 
-		
+		this.#updateMaskPos();
 	}
 
 	set imgMirror(b) {
@@ -439,34 +474,30 @@ export class Picture extends Rect {
 		this.#mask = path.name;
 		this.#maskPath = path;
 
+		const [X, Y] = this.center()
+			, [pX, pY] = path.center();
+	
+
+		this.#maskX = pX - X;
+		this.#maskY = pY - Y;
+
+
+		const sx = this.#imgWidth / this.#cropWidth
+			, sy = this.#imgHeight / this.#cropHeight;
+
 		this.#cropX = path.x - this.x;
 		this.#cropY = path.y - this.y;
 
 		this.#cropWidth = path.width;
 		this.#cropHeight = path.height;
 
-		this.#imgWidth = this.#cropWidth;
-		this.#imgHeight = this.#cropHeight;
+		this.#imgX = this.#cropX * sx;
+		this.#imgY = this.#cropY * sy;
 
-		this.x = path.x;
-		this.y = path.y;
+		this.#imgWidth = this.#cropWidth * sx;
+		this.#imgHeight = this.#cropHeight * sy;
 
 		this.fitSize();
-
-		// if (offset) {
-
-		// 	// const [X, Y] = this.center();
-		// 	// const [x, y] = path.center();
-
-		// 	// this.#maskX = x - X;
-		// 	// this.#maskY = y - Y;
-
-		// 	this.#maskX = path.x - this.x;
-		// 	this.#maskY = path.y - this.y;
-
-		// 	// this.x = path.x;
-		// 	// this.y = path.y;
-		// }
 	}
 
 	clone() {
@@ -509,13 +540,15 @@ export class Picture extends Rect {
 
 	draw(ctx) {
 
-		let width = Math.min(this.width, this.#imgWidth)
+		super.draw(ctx);
+
+		const width = Math.min(this.width, this.#imgWidth)
 			, height = Math.min(this.height, this.#imgHeight)
 			, img = this.#filter?.getBitmap() || this.#img
 			;
 
-		if (!this.#mask) 
-			this.drawRectangle(ctx);
+		// if (!this.#mask) 
+		// 	this.drawRectangle(ctx);
 
 		// console.debug('Draw image:', x, y, this.#imgWidth, this.#imgHeight);
 
@@ -533,13 +566,10 @@ export class Picture extends Rect {
 		let path;
 		
 		if (this.#mask) {
-			const X = x + this.#maskX
-				, Y = y + this.#maskY
-				, sx = this.#imgWidth / this.#cropWidth
-				, sy = this.#imgHeight / this.#cropHeight
-				;
+				const sx = this.#imgWidth / this.#cropWidth
+					, sy = this.#imgHeight / this.#cropHeight;
 
-			path = this.#maskPath.getPath(X, Y, sx, sy);
+			path = this.#maskPath.getPath(this.#maskX, this.#maskY, sx, sy);
 
 			this.#maskPath.fillPath(ctx, path, false, 0);
 
@@ -563,7 +593,7 @@ export class Picture extends Rect {
 
 		ctx.restore();
 
-		this.strokeBorder(ctx);
+		// this.strokeBorder(ctx);
 	}
 
 	drawSelection(ctx) {
@@ -596,6 +626,9 @@ export class Picture extends Rect {
 		if (h < H)
 			this.#imgY = Math.round((H - h) / 2);
 
+		this.#maskX = 0;
+		this.#maskY = 0;
+
 		return { imgX: this.#imgX, imgY: this.#imgY };
 	}
 
@@ -609,6 +642,9 @@ export class Picture extends Rect {
 
 		this.#imgX = 0;
 		this.#imgY = 0;
+
+		this.#maskX = 0;
+		this.#maskY = 0;
 
 		return { width: this.width, height: this.height, imgX: 0, imgY: 0 };
 	}
@@ -664,7 +700,7 @@ export class Picture extends Rect {
 	}
 
 	async loadImage(file=this.#file, maxWidth=1200, maxHeight=900) {
-		this.#file = file;
+		this.#file = file.name;
 
 		let img = await Picture.load(file);
 		img._refs = 0;
@@ -723,6 +759,21 @@ export class Picture extends Rect {
 		const coloredPartImage = await bodySegmentation.toBinaryMask(segmentation);
 
 		this.#mask = createBinaryMaskPath(coloredPartImage);
+	}
+
+	#updateMaskPos() {
+
+		const sx = this.#imgWidth / this.#cropWidth
+			, sy = this.#imgHeight / this.#cropHeight;
+
+
+		this.#maskX = this.width > this.#imgWidth
+			? -(this.width - this.#imgWidth) / (2*sx) + this.#imgX
+			: 0;
+
+		this.#maskY = this.height > this.#imgHeight
+			? -(this.height - this.#imgHeight) / (2*sy) + this.#imgY
+			: 0;
 	}
 
 	static load = loadImage;

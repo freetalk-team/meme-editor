@@ -122,10 +122,12 @@ Object.fromInstance = function(i, Base, o={}) {
 
 		v = get.call(i);
 
-		if (Array.isArray(v)) 
-			v = v.map(i => Object.isClass(i) ? Object.fromInstance(i) : i);
-		else if (v instanceof Base) 
-			v = Object.fromInstance(v);
+		if (v != null) {
+			if (Array.isArray(v)) 
+				v = v.map(i => Object.isClass(i) ? Object.fromInstance(i) : i);
+			else if (typeof v == 'object' && v instanceof Base) 
+				v = Object.fromInstance(v);
+		}
 
 		o[name] = v;
 	}
@@ -159,4 +161,16 @@ Array.prototype.last = function() {
 
 String.prototype.capitalizeFirstLetter = function() {
 	return this.charAt(0).toUpperCase() + this.slice(1);
+}
+
+String.prototype.toArrayBuffer = function() {
+	const encoder = new TextEncoder(); // Creates a new TextEncoder instance
+	return encoder.encode(this); // Encodes the string and extracts the ArrayBuffer
+}
+
+dom.disable = function(e, r) {
+	e.disabled = true;
+
+	if (isPromise(r)) 
+		r.finally(() => e.disabled = false);
 }

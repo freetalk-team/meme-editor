@@ -796,12 +796,12 @@ export class Base {
 		const [X, Y] = this.center();
 
 		const x1 = this.#x + this.#width
-			, y1 = this.#y + this.#height
-			;
-
+			, y1 = this.#y + this.#height;
 
 		const points = [
 			[X, Y],
+			[X, y],
+			[x, Y],
 			[ this.#x, this.#y ],
 			[ this.#x, Y ],
 			[ this.#x, y1 ],

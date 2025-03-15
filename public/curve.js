@@ -19,8 +19,8 @@ export class Point {
 		return new Point(this.x, this.y);
 	}
 
-	draw(path) {
-		path.lineTo(this.x, this.y);
+	draw(path, x=0, y=0, sx=1, sy=1) {
+		path.lineTo(this.x * sx + x*sx, this.y * sy + y*sy);
 	}
 
 	move(dx, dy) {
@@ -60,6 +60,11 @@ export class Point {
 	toArray() { return [this.x, this.y ]; }
 	toSVG(X=0, Y=0) { return `L${this.x + X},${this.y + Y}`; }
 
+	scale(sx, sy, X=0, Y=0) {
+		Point.scale(this, sx, sy, X, Y);
+		return this;
+	} 
+
 	static create(x, y) {
 		const p = new Point;
 		
@@ -67,6 +72,13 @@ export class Point {
 		p.y = y;
 
 		return p;
+	}
+
+	static scale(p, sx, sy, X=0, Y=0) {
+		const x = (p.x - X) * sx
+			, y = (p.y - Y) * sy;
+
+		p.set(x, y);
 	}
 }
 
@@ -110,8 +122,13 @@ export class Curve2 extends Point {
 
 	
 
-	draw(path) {
-		path.quadraticCurveTo(this.cp.x, this.cp.y, this.x, this.y);
+	draw(path, x=0, y=0, sx=1, sy=1) {
+		x *= sx;
+		y *= sy;
+
+		path.quadraticCurveTo(
+			this.cp.x * sx + x, this.cp.y * sy + y, 
+			this.x * sx + x, this.y * sy + y);
 	}
 
 	move(dx, dy) {
@@ -147,8 +164,44 @@ export class Curve2 extends Point {
 		// this.cp.set(x, y);
 	}
 
-	static draw(ctx, curve) {
+	extrema(p0) {
+		const p1 = this.cp
+			, p2 = this;
+
+		// Find extrema t values for a quadratic Bézier curve
+		function solveLinear(a, b) {
+			if (a === 0) return []; // No solution or constant
+			return [-b / a].filter(t => t >= 0 && t <= 1); // Valid t values in range
+		}
+	
+		const extrema = [];
+		for (const [i0, i1, i2] of [[p0.x, p1.x, p2.x], [p0.y, p1.y, p2.y]]) {
+			const a = i0 - 2 * i1 + i2;
+			const b = -2 * (i0 - i1);
+			extrema.push(...solveLinear(a, b));
+		}
+		return extrema;
 	}
+
+	evaluate(p0, t) {
+		const p1 = this.cp
+			, p2 = this;
+
+		const u = 1 - t;
+		return new Point(
+			u ** 2 * p0.x + 2 * u * t * p1.x + t ** 2 * p2.x,
+		  	u ** 2 * p0.y + 2 * u * t * p1.y + t ** 2 * p2.y
+		);
+	}
+
+	scale(sx, sy, X=0, Y=0) {
+		super.scale(sx, sy, X, Y);
+		this.cp.scale(sx, sy, X, Y);
+
+		return this;
+	} 
+
+	
 }
 
 export class Curve3 extends Curve2 {
@@ -174,8 +227,14 @@ export class Curve3 extends Curve2 {
 		return this;
 	}
 
-	draw(path) {
-		path.bezierCurveTo(this.cp.x, this.cp.y, this.cp2.x, this.cp2.y, this.x, this.y);
+	draw(path, x=0, y=0, sx=1, sy=1) {
+		x *= sx;
+		y *= sy;
+
+		path.bezierCurveTo(
+			this.cp.x * sx + x, this.cp.y * sy + y, 
+			this.cp2.x * sx + x, this.cp2.y * sy + y, 
+			this.x * sx + x, this.y * sy + y);
 	}
 
 	tangent(x, y) {
@@ -226,6 +285,51 @@ export class Curve3 extends Curve2 {
 
 		return c;
 	}
+
+	extrema(p0) {
+
+		const p1 = this.cp
+			, p2 = this.cp2
+			, p3 = this;
+
+		// Find the t values where the derivative is 0 for each dimension
+		function solveQuadratic(a, b, c) {
+			const discriminant = b * b - 4 * a * c;
+			if (discriminant < 0) return []; // No real roots
+			if (discriminant === 0) return [-b / (2 * a)];
+			const sqrtD = Math.sqrt(discriminant);
+			return [(-b + sqrtD) / (2 * a), (-b - sqrtD) / (2 * a)];
+		}
+		
+		const extrema = [];
+		for (const [i0, i1, i2, i3] of [[p0.x, p1.x, p2.x, p3.x], [p0.y, p1.y, p2.y, p3.y]]) {
+			const a = -3 * i0 + 9 * i1 - 9 * i2 + 3 * i3;
+			const b = 6 * i0 - 12 * i1 + 6 * i2;
+			const c = -3 * i0 + 3 * i1;
+			extrema.push(...solveQuadratic(a, b, c).filter(t => t >= 0 && t <= 1));
+		}
+		return extrema;
+	}
+
+	evaluate(p0, t) {
+
+		const p1 = this.cp
+			, p2 = this.cp2
+			, p3 = this;
+
+		const u = 1 - t;
+		return new Point(
+			u ** 3 * p0.x + 3 * u ** 2 * t * p1.x + 3 * u * t ** 2 * p2.x + t ** 3 * p3.x,
+			u ** 3 * p0.y + 3 * u ** 2 * t * p1.y + 3 * u * t ** 2 * p2.y + t ** 3 * p3.y
+		);
+	}
+
+	scale(sx, sy, X=0, Y=0) {
+		super.scale(sx, sy, X, Y);
+		this.cp2.scale(sx, sy, X, Y);
+
+		return this;
+	} 
 }
 
 function midpoint(p1, p2, t) {

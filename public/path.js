@@ -8,7 +8,7 @@ export class Path extends Base {
 	get type() { return 'path'; }
 
 	#segments = [];
-	
+
 	#tangent = false;
 	#closed = false;
 
@@ -22,7 +22,7 @@ export class Path extends Base {
 	set closed(b) { this.#closed = !!b; }
 
 	get segments() { return this.#segments.map(i => i.toArray()); }
-	set segments(a) { 
+	set segments(a) {
 
 		let p, segments = [];
 
@@ -150,7 +150,7 @@ export class Path extends Base {
 	drawSelection(ctx, mode) {
 
 		if (mode == 'edit') {
-			
+
 		}
 		else {
 			this.drawBorder(ctx, 1, '#888', -2, true);
@@ -222,7 +222,7 @@ export class Path extends Base {
 
 	mouseDown(x, y, vkeys) {
 
-		console.debug('PATH down:', x, y);
+		// console.debug('PATH down:', x, y);
 
 		if (!this.#cursor)
 			this.#cursor = new Point(x, y);
@@ -236,7 +236,7 @@ export class Path extends Base {
 	}
 
 	mouseUp(x, y, vkeys) {
-		console.debug('PATH up:', x, y, this.#click);
+		// console.debug('PATH up:', x, y, this.#click);
 
 		if (this.#tangent) {
 
@@ -263,14 +263,16 @@ export class Path extends Base {
 		this.#click = null;
 
 		// else {
-			
+
 		// }
 
 	}
 
+	getPath(x, y, sx=1, sy=1) {
+
+		let segments = this.#segments;
 	
-	getPath(closed=this.#closed) {
-		return Path.getPath(this.#segments, closed);
+		return Path.getPath(segments, this.#closed, x, y, sx, sy);
 	}
 
 	updatePath() {
@@ -284,7 +286,7 @@ export class Path extends Base {
 		// todo: remove first point
 		// start point should be the last point
 
-		console.debug('PATH close:', this.#segments[0]);
+		// console.debug('PATH close:', this.#segments[0]);
 
 		let first = this.#segments[0];
 		let last = this.#segments.last();
@@ -293,11 +295,11 @@ export class Path extends Base {
 			this.#segments.shift();
 			first = this.#segments[0];
 		}
-		
+
 		if (!last.isLine() && !first.isLine()) {
 
-			console.debug('First:', first);
-			console.debug('Last:', last);
+			// console.debug('First:', first);
+			// console.debug('Last:', last);
 
 			first = first.toCurve(last.x, last.y);
 			last = last.toCurve(last.x, last.y);
@@ -309,15 +311,15 @@ export class Path extends Base {
 			// // last.cp2.set(first.cp.x, first.cp.y);
 			// // last.cp2.invert(first.x, first.y);
 
-			console.debug('First:', first);
-			console.debug('Last:', last);
+			// console.debug('First:', first);
+			// console.debug('Last:', last);
 
 			this.#segments[0] = first;
 			this.#segments[this.#segments.length - 1] = last;
 
 		}
 
-		console.debug('PATH close reduce:', this.#segments);
+		// console.debug('PATH close reduce:', this.#segments);
 
 		this.#closed = true;
 		this.end(updateSize);
@@ -325,7 +327,7 @@ export class Path extends Base {
 
 	end(updateSize=true) {
 
-		if (updateSize) 
+		if (updateSize)
 			this.#updateSize();
 
 		this.#cursor = null;
@@ -334,7 +336,7 @@ export class Path extends Base {
 
 	remove(i) {
 
-		if (this.#segments.length < 3) 
+		if (this.#segments.length < 3)
 			return false;
 
 		let segment;
@@ -374,10 +376,10 @@ export class Path extends Base {
 
 					const x = prev.x + lambda * (prev.x - prev.cp2.x)
 						, y = prev.y + lambda * (prev.y - prev.cp2.y)
-	
+
 					next.cp.set(x, y);
 					next.cp2.set(segment.cp2.x, segment.cp2.y);
-					
+
 					prev.tangent(x, y);
 				}
 
@@ -419,7 +421,7 @@ export class Path extends Base {
 			n.prev = node;
 
 			node.next = n;
-			
+
 		}
 
 		return n;
@@ -442,8 +444,10 @@ export class Path extends Base {
 
 		this.#path = this.getPath();
 	}
-	
 
+	scale(sx, sy) {
+
+	}
 	// #last() {
 	// 	return this.#segments[this.#last ?? 0];
 	// }
@@ -456,7 +460,7 @@ export class Path extends Base {
 		const start = this.#segments[this.#segments.length - 2];
 		const last = this.#segments.last().toCurve(start.x, start.y);
 
-		console.log(last);
+		// console.log(last);
 
 		this.#segments[this.#segments.length - 1] = last;
 
@@ -485,7 +489,7 @@ export class Path extends Base {
 
 				this.#cursor.set(start.x, start.y);
 
-				// if (!this.#cursor.isLine()) 
+				// if (!this.#cursor.isLine())
 					this.#segments.push(this.#cursor);
 
 				this.close();
@@ -493,9 +497,9 @@ export class Path extends Base {
 				return;
 			}
 
-		} 
+		}
 
-		console.debug('# Adding point', this.#cursor, this.#segments);
+		// console.debug('# Adding point', this.#cursor, this.#segments);
 
 		this.#segments.push(this.#cursor);
 		this.#cursor = new Point(this.#cursor.x, this.#cursor.y);
@@ -505,33 +509,42 @@ export class Path extends Base {
 
 
 	#updateSize(X = 0, Y = 0) {
-		const start = this.#segments[0];
+		// const start = this.#segments[0];
 
-		let minX = start.x
-			, maxX = minX
-			, minY = start.y 
-			, maxY = minY
-			;
+		// let minX = start.x
+		// 	, maxX = minX
+		// 	, minY = start.y
+		// 	, maxY = minY
+		// 	;
 
-		for (const i of this.#segments) {
+		// for (const i of this.#segments) {
 
-			if (i.x < minX) minX = i.x;
-			else if (i.x > maxX) maxX = i.x;
-			
-			if (i.y < minY) minY = i.y;
-			else if (i.y > maxY) maxY = i.y;
+		// 	if (i.x < minX) minX = i.x;
+		// 	else if (i.x > maxX) maxX = i.x;
 
-		}
+		// 	if (i.y < minY) minY = i.y;
+		// 	else if (i.y > maxY) maxY = i.y;
 
-		minX = Math.round(minX);
-		minY = Math.round(minY);
-		maxX = Math.round(maxX);
-		maxY = Math.round(maxY);
+		// }
 
-		this.x = minX;
-		this.y = minY;
-		this.width = Math.abs(maxX - minX);
-		this.height = Math.abs(maxY - minY);
+		// minX = Math.round(minX);
+		// minY = Math.round(minY);
+		// maxX = Math.round(maxX);
+		// maxY = Math.round(maxY);
+
+		// this.x = minX;
+		// this.y = minY;
+		// this.width = Math.abs(maxX - minX);
+		// this.height = Math.abs(maxY - minY);
+
+		const b = calculateBoundingBox(this.#segments);
+
+		// console.log('Calculated box:', b);
+
+		this.x = b.x;
+		this.y = b.y;
+		this.width = b.width;
+		this.height = b.height;
 	}
 }
 
@@ -565,16 +578,23 @@ Path.detectBody = async function(image, threshold=0.7) {
 
 	const path = new Path;
 
-	path.x = 0;
-	path.y = 0;
-	path.width = image.width;
-	path.height = image.height;
+	const x = image.x
+		, y = image.y;
 
-	path.addPoint(points[0][0], points[0][1]);
+	path.x = x;
+	path.y = y;
+	path.width = img.width;
+	path.height = img.height;
+
+	path.addPoint(points[0][0] + x, points[0][1] + y);
 
 	for (let i = 1; i < points.length - 2; i += 3) {
 
-		path.addCurve3(points[i + 2][0], points[i + 2][1], points[i][0], points[i][1], points[i + 2][0], points[i + 2][1]);
+		path.addCurve3(
+			points[i + 2][0] + x, points[i + 2][1] + y, 
+			points[i][0] + x, points[i][1] + y, 
+			points[i + 2][0] + x, points[i + 2][1] + y
+		);
 	}
 
 	// for (let i = 1; i < points.length - 1; i += 2) {
@@ -583,11 +603,11 @@ Path.detectBody = async function(image, threshold=0.7) {
 	// 	// }
 	// }
 
-	path.close(false);
+	path.close();
 	// path.move(0, 0);
 
-	path.x = image.x;
-	path.y = image.y;
+	// path.x = image.x;
+	// path.y = image.y;
 	path.alpha = 0.5;
 
 	image.setMask(path);
@@ -601,7 +621,7 @@ Path.toSpline = function(points, tension=0.5) {
 	//let path = `M${points[0].x},${points[0].y}`;  // Move to first point
 
 	const path = [points[0].clone()];
-	
+
 	const n = points.length;
 
 	for (let i = 0; i < n - 1; i++) {
@@ -616,7 +636,7 @@ Path.toSpline = function(points, tension=0.5) {
 		c.cp2.set(p2.x - (p3.x - p1.x) * tension / 6, p2.y - (p3.y - p1.y) * tension / 6);
 
 		path.push(c);
-		
+
 		// // Calculate control points
 		// const cp1x = p1.x + (p2.x - p0.x) * tension / 6;
 		// const cp1y = p1.y + (p2.y - p0.y) * tension / 6;
@@ -624,20 +644,20 @@ Path.toSpline = function(points, tension=0.5) {
 		// const cp2y = p2.y - (p3.y - p1.y) * tension / 6;
 
 
-		
+
 		// Cubic Bézier curve
 		//path += ` C${cp1x},${cp1y} ${cp2x},${cp2y} ${p2[0]},${p2[1]}`;
 	}
-	
+
 	return path;
 }
 
-Path.getPath = function(segments, closed) {
+Path.getPath = function(segments, closed, x=0, y=0, sx=1, sy=1) {
 
 		// console.debug('Generating path', this.#segments);
 
 	const path = new Path2D;
-	
+
 	let start;
 
 	if (closed) {
@@ -647,11 +667,11 @@ Path.getPath = function(segments, closed) {
 		start = segments[0];
 		segments = segments.slice(1);
 	}
-	
-	path.moveTo(start.x, start.y);
+
+	path.moveTo(start.x*sx + x*sx, start.y*sy + y*sy);
 
 	for (const i of segments)
-		i.draw(path);
+		i.draw(path, x, y, sx, sy);
 
 	if (closed)
 		path.closePath();
@@ -692,7 +712,7 @@ class Node {
 
 		if (this.#node)
 			this.#node.add(node.segment);
-		
+
 		this.#next = node;
 	}
 
@@ -728,7 +748,7 @@ class Node {
 		if (this.#selected) {
 
 			const n = this.#node?.handleSelect(x, y);
-			if (n) 
+			if (n)
 				return n;
 		}
 
@@ -787,7 +807,7 @@ class TangentNode {
 		ctx.restore();
 	}
 
-	
+
 
 	handleSelect(x, y) {
 
@@ -819,12 +839,12 @@ class TangentNode {
 				this.path.updatePath();
 			}
 		}
-		
+
 
 		if (Path.inNode(x, y, this.#p0.x, this.#p0.y))
 			return new P(this.#p, this.#p0, this.#p1, this.#o, this.#path);
 
-		
+
 		if (this.#p1.isLine() && Path.inNode(x, y, this.#p1.x, this.#p1.y))
 			return new P(this.#p, this.#p1, this.#p0, this.#o, this.#path);
 	}
@@ -832,6 +852,38 @@ class TangentNode {
 	#drawNode(ctx, p) {
 		Path.drawNode(ctx, p.x, p.y, '#f44336', '#f44336');
 	}
+}
+
+function calculateBoundingBox(path) {
+	let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+
+	let p0 = path.last(), p;
+
+	for (let i = 0; i < path.length; i++, p0 = p) {
+
+		p = path[i];
+
+		if (path[i].isLine()) {
+		  // Point: [x, y]
+			//const p = path[i];
+			minX = Math.min(minX, p.x);
+			minY = Math.min(minY, p.y);
+			maxX = Math.max(maxX, p.x);
+			maxY = Math.max(maxY, p.y);
+		} else {
+			const extremaT = [0, 1, ...p.extrema(p0)];
+			extremaT.forEach(t => {
+				const point = p.evaluate(p0, t);
+
+				minX = Math.min(minX, point.x);
+				minY = Math.min(minY, point.y);
+				maxX = Math.max(maxX, point.x);
+				maxY = Math.max(maxY, point.y);
+			});
+		}
+	}
+
+	return { x: minX, y: minY, width: maxX - minX, height: maxY - minY };
 }
 
 let net;
@@ -881,7 +933,7 @@ function createMaskPath(mask) {
 		if (points.length === 0) return [];
 
 		const sorted = [points.shift()];
-		
+
 		while (points.length > 0) {
 			const lastPoint = sorted[sorted.length - 1];
 			let closestIndex = 0;
@@ -962,7 +1014,7 @@ function reducePoints(points, targetCount) {
 	// Step 3: Resample points at regular intervals
 	const resampledPoints = [points[0]]; // Start with the first point
 	let currentDistance = interval;
-	
+
 	for (let i = 1; i < distances.length; i++) {
 		while (currentDistance <= distances[i]) {
 			// Linear interpolation between points[i - 1] and points[i]

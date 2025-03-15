@@ -16,8 +16,8 @@ export class Circle extends Base {
 			, h = (this.height / 2) * sy;
 
 		// Calculate the center and radii
-		const centerX = x + w; // Center x-coordinate
-		const centerY = y + h; // Center y-coordinate
+		const centerX = x; // Center x-coordinate
+		const centerY = y; // Center y-coordinate
 		const radiusX = w; // Horizontal radius
 		const radiusY = h; // Vertical radius
 

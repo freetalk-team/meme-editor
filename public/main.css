@@ -36,6 +36,13 @@ body {
 	}
 }
 
+#actions {
+	:is(button[name="attach"]) {
+		&[value="false"] { color: #f44336; }
+		&[value="true"] { color: #4CAF50; }
+	}
+}
+
 input[type="number"] {
 	text-align: right;
 	max-width: 70px;
@@ -515,6 +522,8 @@ button.tab.selected:after {
 	opacity: 0.6;
 	/* cursor: not-allowed; */
 }
+
+
 
 button[name="apply"] { display: none; }
 [type="path"] button[name="apply"] { display: unset!important;}

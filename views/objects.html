@@ -13,7 +13,7 @@
 		@else
 			<i class="fa fa-fw smaller wm8" type="{{this.type}}"></i>
 		@endif
-		<button name="visible" class="icon wm6 fa xs eye" title="Show/Hide" onclick="this.classList.toggle('hide')"></button>
+		<button name="visible" class="icon wm6 fa xs eye" title="Show/Hide" onclick="this.classList.toggle('hide');app.update('visible','toggle',dom.id(this))"></button>
 		<div class="fit noverflow">
 			<span class="fit noverflow">
 				<span contenteditable spellcheck=false>{{this.name}}</span>
@@ -29,8 +29,8 @@
 		</div>
 	</div>
 	@if{{this.type=='group'}}
-	<div class="col reverse list list2 hide-empty w3-border-left" style="margin:2px 0 2px 5px;">
-		@foreach{{this.objects}}
+	<div class="col list list2 hide-empty w3-border-left" style="margin:2px 0 2px 5px;">
+		@foreach{{[...this.objects].reverse()}}
 			[[item-object]]
 		@endforeach
 	</div>
