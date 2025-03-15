@@ -1,5 +1,5 @@
 
-import { Base } from './object.js';
+import { Gradient as Base } from './gradient.js';
 
 
 export class Circle extends Base {
@@ -8,6 +8,8 @@ export class Circle extends Base {
 
 	draw(ctx) {
 		this.drawEllipse(ctx);
+
+		super.draw(ctx);
 	}
 	
 	getPath(x=this.x, y=this.y, sx=1, sy=1) {

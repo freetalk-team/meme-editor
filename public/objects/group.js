@@ -1,5 +1,5 @@
 
-import { Base } from "./object.js";
+import { Base } from "./base.js";
 
 export class Group extends Base {
 

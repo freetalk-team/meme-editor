@@ -97,8 +97,6 @@ the package will be generated in **out** directory
 ## Next
 
 * Stroke **tapered ends**
-* Circle/ellipse object
-* Fill gradient
 * SVG import
 * Better handling of curve's node manipulation
 * Undo/Redo functionality 

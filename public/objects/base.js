@@ -17,6 +17,7 @@ export class Base {
 	#strokeWidth = 1;
 	#fill = '#eeeeee';
 	#alpha = 'ff';
+	
 	#shadow;
 	#shadowColor = '#444444';
 	#shadowWidth = 2;
@@ -31,7 +32,7 @@ export class Base {
 				id = id.id;
 		}
 		else {
-			id = Date.now().toString(16);
+			id = Base.id();
 		}
 
 		this.#id = id;
@@ -116,6 +117,7 @@ export class Base {
 		this.#alpha = (v < 16 ? '0' : '') + v.toString(16);
 	}
 
+	
 	set shadow(v) {
 		this.#shadow = v;
 	}
@@ -160,7 +162,10 @@ export class Base {
 	set properties(obj) {
 		// note: save may ommit some properties
 		// const data = this.save();
-		const data = Object.fromInstance(this, Base);
+		const data = Object.fromInstance(this, Base)
+			, priv = this.getPrivate();
+
+		Object.assign(data, priv); 
 
 		obj.assign(data);
 	}
@@ -266,6 +271,8 @@ export class Base {
 		return box;
 	}
 
+	getPrivate() { return {} }
+
 	save() {
 		return Object.fromInstance(this, Base);
 	}
@@ -279,7 +286,7 @@ export class Base {
 		const data = this.save();
 		const o = new this.__proto__.constructor(this);
 
-		const id = Date.now().toString(16);
+		const id = Base.id();
 		const name = this.name + ' copy';
 
 		o.load(data);
@@ -347,6 +354,7 @@ export class Base {
 
 	drawPath(ctx, path, geometry=true, angle=this.#angle) {
 
+		const fill = this.fillColor();
 
 		ctx.save();
 
@@ -355,7 +363,7 @@ export class Base {
 		
 		//ctx.globalAlpha = 0.4;
 
-		ctx.fillStyle = this.fillColor();
+		ctx.fillStyle = fill;
 
 		if (this.#shadowWidth > 0) {
 			
@@ -372,7 +380,7 @@ export class Base {
 		}
 
 		if (this.#fill) 
-			ctx.fill(path);
+			this.fillPath(ctx, path, fill);
 
 		this.strokePath(ctx, path);
 
@@ -380,7 +388,16 @@ export class Base {
 		
 	}
 
-	fillPath(ctx, path, geometry=true, angle=this.#angle) {
+	fillPath(ctx, path, fill=this.fillColor()) {
+		ctx.save();
+
+		ctx.fillStyle = fill;
+		ctx.fill(path);
+
+		ctx.restore();
+	}
+
+	fillPathway(ctx, path, geometry=true, angle=this.#angle) {
 
 		ctx.save();
 
@@ -447,13 +464,7 @@ export class Base {
 		}
 
 		if (this.#fill) {
-
-			ctx.save();
-
-			ctx.fillStyle = this.fillColor();
-			ctx.fillRect(x, y, this.#width, this.#height);
-
-			ctx.restore();
+			this.fillRectangle(ctx, x, y);
 		}
 
 		if (this.#stroke && this.#strokeWidth > 0) {
@@ -467,6 +478,15 @@ export class Base {
 			ctx.restore();
 		}
 
+
+		ctx.restore();
+	}
+
+	fillRectangle(ctx, x, y) {
+		ctx.save();
+
+		ctx.fillStyle = this.fillColor();
+		ctx.fillRect(x, y, this.#width, this.#height);
 
 		ctx.restore();
 	}
@@ -498,15 +518,7 @@ export class Base {
 		}
 
 		if (this.#fill) {
-
-			ctx.save();
-
-			ctx.fillStyle = this.fillColor();
-			ctx.beginPath();
-			ctx.roundRect(x, y, this.#width, this.#height, radius);
-			ctx.fill();
-
-			ctx.restore();
+			this.fillRoundRectangle(ctx, x, y, radius);
 		}
 
 		if (this.#stroke && this.#strokeWidth > 0) {
@@ -526,6 +538,19 @@ export class Base {
 		ctx.restore();
 	}
 
+	fillRoundRectangle(ctx, x, y, radius, fill=this.fillColor()) {
+
+		ctx.save();
+
+		ctx.fillStyle = fill;
+		ctx.beginPath();
+		ctx.roundRect(x, y, this.#width, this.#height, radius);
+		ctx.fill();
+
+		ctx.restore();
+		
+	}
+
 	drawEllipse(ctx) {
 		
 		ctx.save();
@@ -534,8 +559,6 @@ export class Base {
 
 
 		// Calculate the center and radii
-		const centerX = 0; // Center x-coordinate
-		const centerY = 0; // Center y-coordinate
 		const radiusX = w; // Horizontal radius
 		const radiusY = h; // Vertical radius
 
@@ -549,7 +572,7 @@ export class Base {
 			ctx.strokeStyle = this.#stroke;
 
 			ctx.beginPath();
-			ctx.ellipse(centerX, centerY, radiusX, radiusY, 0, 0, Math.PI * 2);
+			ctx.ellipse(0, 0, radiusX, radiusY, 0, 0, Math.PI * 2);
 
 			if (this.#shadow == 'fill')
 				ctx.fill();
@@ -561,14 +584,7 @@ export class Base {
 
 		if (this.#fill) {
 
-			ctx.save();
-
-			ctx.fillStyle = this.fillColor();
-			ctx.beginPath();
-			ctx.ellipse(centerX, centerY, radiusX, radiusY, 0, 0, Math.PI * 2);
-			ctx.fill();
-
-			ctx.restore();
+			this.fillEllipse(ctx, w, h);
 		}
 
 		if (this.#stroke && this.#strokeWidth > 0) {
@@ -578,17 +594,30 @@ export class Base {
 			ctx.lineWidth = this.#strokeWidth;
 
 			ctx.beginPath();
-			ctx.ellipse(centerX, centerY, radiusX, radiusY, 0, 0, Math.PI * 2);
+			ctx.ellipse(0, 0, radiusX, radiusY, 0, 0, Math.PI * 2);
 			ctx.stroke();
 
 			ctx.restore();
 		}
 
+		ctx.restore();
+	}
+
+	fillEllipse(ctx, radiusX, radiusY, fill=this.fillColor()) {
+		ctx.save();
+
+		ctx.fillStyle = fill;
+		ctx.beginPath();
+		ctx.ellipse(0, 0, radiusX, radiusY, 0, 0, Math.PI * 2);
+		ctx.fill();
 
 		ctx.restore();
 	}
 
 	drawText(ctx, text, opt={ size: 30, font: 'Airal' }) {
+
+		const fill = this.fillColor();
+
 		text = text.split('\n').map(i => i.trim());
 
 		ctx.save();
@@ -602,7 +631,7 @@ export class Base {
 			(opt.italic ? 'italic ' : '') + 
 			`${opt.size}px` + ' ' + opt.font;
 		
-		ctx.fillStyle = this.fillColor();
+		ctx.fillStyle = fill;
 		ctx.strokeStyle = this.#stroke;
 		ctx.lineWidth = this.#strokeWidth;
 
@@ -625,8 +654,8 @@ export class Base {
 			}
 
 			// ctx.translate(x, y);
-			if (this.#fill) 
-				ctx.fillText(t, x, y);
+			if (this.#fill)
+				this.fillText(ctx, t, x, y, fill);
 			
 
 			if (this.strokeWidth > 0) 
@@ -636,6 +665,13 @@ export class Base {
 		}
 
 		ctx.restore();
+	}
+
+	fillText(ctx, text, x, y, fill=this.fillColor()) {
+
+		ctx.fillStyle = fill;
+		ctx.fillText(text, x, y);
+
 	}
 
 	setGeometry(ctx, angle=this.#angle) {
@@ -658,8 +694,13 @@ export class Base {
 	}
 
 	getGeometry(x, y) {
-		const [X, Y] = this.center()
-			, angle = this.#angle;
+		const [X, Y] = this.center();
+		return this.getGeometryOrigin(x, y, X, Y);
+	}
+
+	getGeometryOrigin(x, y, X, Y) {
+
+		const angle = this.#angle;
 
 		let ox = x - X, oy = y - Y;
 
@@ -726,7 +767,7 @@ export class Base {
 
 		if (this.inNode(x, y, X, Y))
 			return {
-				move: (x, y) => this.updatePos(x, y)
+				move: (x, y, vkeys) => this.updatePos(x, y, vkeys)
 			};
 
 		//console.debug('OBJECT click:', X, Y, ox, oy);
@@ -734,7 +775,7 @@ export class Base {
 		if (this.inNode(ox, oy, this.width / 2, this.height / 2))
 			
 			return {
-				move: (x, y) => {
+				move: (x, y, vkeys) => {
 
 					x -= X;
 					y -= Y;
@@ -750,7 +791,13 @@ export class Base {
 						y = ry;
 					}
 
-					this.updateSize(x + X, y + Y);
+					if (vkeys.Control) {
+						const p = this.#height / this.#width;
+
+						y = x * p;
+					}
+
+					this.updateSize(x + X, y + Y, vkeys);
 				}
 			}; 
 
@@ -781,14 +828,14 @@ export class Base {
 	}
 
 	updatePos(x, y) {
-		this.x = Math.round(x - this.width / 2);
-		this.y = Math.round(y - this.height / 2);
+		// this.x = Math.floor(x - this.width / 2);
+		this.x = x - this.width / 2;
+		this.y = y - this.height / 2;
 	}
 
 	updateSize(x, y) {
-		this.width = Math.round(x - this.#x);
-		this.height = Math.round(y - this.#y);
-
+		this.width = x - this.#x;
+		this.height = y - this.#y;
 	}
 
 	snap(x, y) {
@@ -869,4 +916,8 @@ export class Base {
 			y < Y + R);
 	}
 	
+	static id() {
+		return Date.now().toString(16);
+	}
 }
+

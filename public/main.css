@@ -5,7 +5,7 @@ body {
 	display: flex;
 	flex-direction: column;
 	margin: auto;
-	font-family: ubuntu, cursive;
+	font-family: ubuntu, "Segoe UI";
 
 	border: 1px solid #555;
 	user-select: none;
@@ -672,3 +672,11 @@ button[name="apply"] {
 .noevents .list > .item {
 	pointer-events: all;
 }
+
+/* input.checkbox[type="checkbox"].fa:checked:before {
+	opacity: unset!important; 
+}
+
+input.checkbox[type="checkbox"].fa:before {
+	opacity: .5!important;
+} */

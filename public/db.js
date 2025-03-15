@@ -1,5 +1,5 @@
 
-export class IndexDB {
+class IndexDB {
 
 	#setup = false;
 
@@ -862,25 +862,49 @@ function getTable(table) {
 	return table;
 }
 
-export function addTable(db, name, autoIncrement=false, keyPath='id') {
+function addTable(db, name, autoIncrement=false, keyPath='id') {
 	const opt = { keyPath, autoIncrement };
 	db.createObjectStore(name, opt);
 }
 
-export function deleteTable(db, name) {
+function deleteTable(db, name) {
 	db.deleteObjectStore(name);
 }
 
-export function addIndex(table, index, txn, unique=false, name=index) {
+function addIndex(table, index, txn, unique=false, name=index) {
 	// get the Contacts object store
 	const store = txn.objectStore(table);
 	store.createIndex(name, index, { unique });
 }
 
-export function deleteIndex(table, index, txn) {
+function deleteIndex(table, index, txn) {
 	// get the Contacts object store
 	const store = txn.objectStore(table);
 	store.deleteIndex(index);
+}
+
+export class Database extends IndexDB {
+
+	get name() { return 'meme'; }
+	get version() { return 3; }
+
+	onUpgrade(db, txn, ver) {
+		switch (ver) {
+		
+			case 0:
+			Database.addTable(db, 'meme');
+			Database.addIndex('meme', 'ts', txn);
+
+			case 1:
+			Database.addTable(db, 'file');
+			Database.addIndex('file', 'type', txn);
+
+			case 2:
+			Database.addTable(db, 'image');
+
+			break;
+		}
+	}
 }
 
 /*

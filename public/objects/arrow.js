@@ -1,5 +1,5 @@
 
-import { Base } from "./object.js";
+import { Base } from "./base.js";
 import { Point } from "./curve.js";
 
 const M = 8;
@@ -39,7 +39,7 @@ export class Arrow extends Base {
 	draw(ctx) {
 		// Math.hypot
 
-		let [x0, y0, x, y] = this.#getCoordinates();
+		let [x0, y0, x, y] = this.getCoordinates();
 
 		const m = M + this.strokeWidth*1.3;
 
@@ -89,8 +89,8 @@ export class Arrow extends Base {
 
 		this.drawLine(ctx, X + 1, Y, x0, 0);
 
-		if (a0) this.fillPath(ctx, a0, false, 0);
-		if (a1) this.fillPath(ctx, a1, false, 0);
+		if (a0) this.fillPathway(ctx, a0, false, 0);
+		if (a1) this.fillPathway(ctx, a1, false, 0);
 
 		this.drawLine(ctx, X + 1, 0, x0 - 1, 0, false);
 		
@@ -105,7 +105,7 @@ export class Arrow extends Base {
 		// this.drawBorder(ctx, 1, '#888', -3, true);
 		// super.drawSelection(ctx);
 
-		const [x0, y0, x, y] = this.#getCoordinates();
+		const [x0, y0, x, y] = this.getCoordinates();
 
 		ctx.save();
 		ctx.translate(x0, y0);
@@ -229,13 +229,13 @@ export class Arrow extends Base {
 	}
 	 
 	handleClick(x, y) {
-		const [x0, y0, x1, y1] = this.#getCoordinates(true);
+		const [x0, y0, x1, y1] = this.getCoordinates(true);
 
 		if (this.inNode(x, y, x0, y0))
 			return {
 				move: (x, y) => {
-					this.x = Math.round(x);
-					this.y = Math.round(y - this.height / 2);
+					this.x = x;
+					this.y = y - this.height / 2;
 				}
 			};
 
@@ -244,7 +244,7 @@ export class Arrow extends Base {
 			return {
 				move: (x, y) => {
 
-					const [x0, y0 ] = this.#getCoordinates();
+					const [x0, y0 ] = this.getCoordinates();
 
 					// console.log('####', x0, y0, this.width);
 					let a = Math.asin((y - y0) / this.width);
@@ -299,16 +299,7 @@ export class Arrow extends Base {
 				finalY >= rectTop && finalY <= rectBottom) ? this : null;
 	}
 
-	#drawDot(ctx, x, y) {
-
-		let r = this.strokeWidth * 0.7;
-
-		if (r < 2) r = 2;
-
-		this.drawNode(ctx, x, y, this.stroke, true, r);
-	}
-
-	#getCoordinates(rotate=false) {
+	getCoordinates(rotate=false) {
 
 		let x0 = this.x
 			, y0 = this.y
@@ -323,4 +314,15 @@ export class Arrow extends Base {
 
 		return [ x0, y0, x0 + x, y0 + y ];
 	}
+
+	#drawDot(ctx, x, y) {
+
+		let r = this.strokeWidth * 0.7;
+
+		if (r < 2) r = 2;
+
+		this.drawNode(ctx, x, y, this.stroke, true, r);
+	}
+
+	
 }

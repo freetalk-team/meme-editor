@@ -1,5 +1,5 @@
 
-import { Base } from "./object.js";
+import { Gradient as Base } from "./gradient.js";
 import { Point, Curve2, Curve3 } from './curve.js';
 
 
@@ -282,6 +282,19 @@ export class Path extends Base {
 		this.#path = this.getPath();
 	}
 
+	updateSize(x, y) {
+
+		const w = this.width
+			, h = this.height;
+
+		super.updateSize(x, y);
+
+		const sx = (this.width / w)
+			, sy = (this.height / h);
+
+		this.scale(sx, sy);
+	}
+
 	close(updateSize=true) {
 		// todo: remove first point
 		// start point should be the last point
@@ -447,6 +460,15 @@ export class Path extends Base {
 
 	scale(sx, sy) {
 
+		// console.debug('SCALE:', sx, sy);
+		// console.debug(this.segments);
+
+		for (const i of this.#segments)
+			i.scale(sx, sy);
+
+		// console.debug(this.segments);
+
+		this.updatePath();
 	}
 	// #last() {
 	// 	return this.#segments[this.#last ?? 0];
@@ -509,34 +531,6 @@ export class Path extends Base {
 
 
 	#updateSize(X = 0, Y = 0) {
-		// const start = this.#segments[0];
-
-		// let minX = start.x
-		// 	, maxX = minX
-		// 	, minY = start.y
-		// 	, maxY = minY
-		// 	;
-
-		// for (const i of this.#segments) {
-
-		// 	if (i.x < minX) minX = i.x;
-		// 	else if (i.x > maxX) maxX = i.x;
-
-		// 	if (i.y < minY) minY = i.y;
-		// 	else if (i.y > maxY) maxY = i.y;
-
-		// }
-
-		// minX = Math.round(minX);
-		// minY = Math.round(minY);
-		// maxX = Math.round(maxX);
-		// maxY = Math.round(maxY);
-
-		// this.x = minX;
-		// this.y = minY;
-		// this.width = Math.abs(maxX - minX);
-		// this.height = Math.abs(maxY - minY);
-
 		const b = calculateBoundingBox(this.#segments);
 
 		// console.log('Calculated box:', b);
@@ -610,7 +604,7 @@ Path.detectBody = async function(image, threshold=0.7) {
 	// path.y = image.y;
 	path.alpha = 0.5;
 
-	image.setMask(path);
+	image.applyMask(path);
 
 	return path;
 }

@@ -174,3 +174,33 @@ dom.disable = function(e, r) {
 	if (isPromise(r)) 
 		r.finally(() => e.disabled = false);
 }
+
+dom.toInteger = function(e) {
+	e.value = e.value.split('.')[0];
+
+}
+
+dom.nextDisabled = function(e, disabled) {
+	e.nextElementSibling.disabled = disabled;
+}
+
+dom.prevDisabled = function(e, disabled) {
+	e.previousElementSibling.disabled = disabled;
+}
+
+dom.nextToggleHide = function(e, show) {
+
+	const n = e.nextElementSibling;
+
+	if (show == null)
+		n.classList.toggle('hidden');
+	else if (show)
+		n.classList.remove('hidden');
+	else
+		n.classList.add('hidden');
+
+}
+
+dom.nextAngle = function(e) {
+	e.nextElementSibling.value = Math.round(parseFloat(e.value) * 180/Math.PI);
+}

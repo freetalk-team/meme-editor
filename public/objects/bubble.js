@@ -1,6 +1,6 @@
-import { Rectangle } from "./rect.js";
+import { Rectangle as Base } from "./label.js";
 
-class Bubble extends Rectangle {
+class Bubble extends Base {
 
 	#beak = 'left';
 	#beakWidth = 0.2;
@@ -202,6 +202,5 @@ class Bubble extends Rectangle {
 }
 
 export {
-	Rectangle,
 	Bubble
 }

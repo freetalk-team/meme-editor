@@ -9,8 +9,8 @@
 	</div>
 	<div class="cc m2 fit">
 		<div class="cr ci" style="margin-bottom:10px;" hoverable>
-			<h3 class="fit ellipsis wm8 nomargin">{{this.id.split('.')[0]}}</h3>
-			<button name="rm" class="icon fa display-hover" title="Remove"></button>
+			<h3 class="fit ellipsis wm8 nomargin">{{this.name}}</h3>
+			<button name="rm" class="icon fa display-hover" title="Remove"  onclick="app.removeFromLibrary(dom.id(this))"></button>
 		</div>
 		<div class="cr ci smaller">
 			<b>Dimensions:</b>

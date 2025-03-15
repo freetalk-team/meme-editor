@@ -20,6 +20,8 @@ function wrap(container, props={}) {
 
 						const p = e.previousElementSibling;
 						const checked = !!value;
+
+						let d;
 	
 						if (p && p.tagName == 'INPUT' && p.type == 'checkbox') {
 							// p.checked = checked;
@@ -30,15 +32,25 @@ function wrap(container, props={}) {
 							if (checked) 
 								e.value = value;
 
-							if (checked != p.checked)
+							if (checked != p.checked) {
 								p.checked = checked;
+								d = p;
+							}
 						}
 						else if (typeof value == 'number') {
 							e.value = isNaN(value) ? 0 : value;
+							d = e;
 						}
 						else {
+							if (e.type == 'color' && !value)
+								value = e.value;
+							// else if (e.type == 'range')
+							// 	d = e;
+
 							e.value = value || '';
 						}
+
+						if (d) d.dispatchEvent(new Event('change', { 'bubbles': true }));
 					}
 					break;
 
@@ -105,9 +117,11 @@ function wrapList(container, template) {
 	const e = container.querySelector('.list');
 	const list = UX.List.createMixin(e);
 
-	list.add = function(o, after) {
+	list.add = function(o, after, check=false) {
 
-		const id = o.id;
+		const id = o.id || o.name;
+
+		if (check && this.getItem(id)) return
 
 		let e;
 
@@ -154,6 +168,10 @@ function wrapList(container, template) {
 		dom.swap(e1, e2);
 	}
 
+	list.rm = function(id) {
+		this.delete(id);
+	}
+
 	return list;
 }
 
@@ -173,20 +191,14 @@ export function wrapProperties(container, handler) {
 		}
 	});
 
-	props.set_ = props.set;
-	props.set = function(prop, value, id) {
+	// props.set_ = props.set;
+	// props.set = function(prop, value, id) {
 
-		const e = this.set_(prop, value, id);
+	// 	const e = this.set_(prop, value, id);
 
-		switch (prop) {
-			case 'angle':
-			case 'radius':
-			case 'strokeWidth':
-			case 'alpha':
-			e.dispatchEvent(new Event('change', { 'bubbles': true }));
-			break;
-		}
-	}
+	// 	if (e.tagName == 'INPUT' && e.type == 'range')
+	// 		e.dispatchEvent(new Event('change', { 'bubbles': true }));
+	// }
 
 	container.oninput = (e) => {
 
@@ -529,18 +541,6 @@ export function wrapActions(container, editor) {
 
 			case 'width':
 			editor.width = parseInt(value);
-			break;
-
-			case 'fill':
-			editor.fill = value;
-			break;
-
-			case 'stroke':
-			editor.stroke = value;
-			break;
-
-			case 'strokeWidth':
-			editor.strokeWidth = parseInt(value);
 			break;
 
 			case 'zoom':

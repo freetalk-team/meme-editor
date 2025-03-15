@@ -1,7 +1,9 @@
 <div id="properties" class="column noverflow" tab="properties">
 	<div class="row ci">
 		<h2 class="wm8 inconsolata fit">Properties</h2>
-		<button name="export" class="icon fa fa-file-export" title="Export" display="rect image chart" onclick="app.exportObject()"></button>
+		<button name="library" class="icon fa sm fa-photo-film w3-text-blue relative" title="Add to library" display="image" onclick="app.addToLibrary()"><i class="fa fa-circle-plus action w3-text-green" style="right:0"></i></button>
+		<button name="export" class="icon fa fa-file-export w3-text-blue" title="Export" display="rect image chart" onclick="app.exportObject()"></button>
+		<button name="copy" class="icon fa fa-copy" title="Copy" display="all" onclick="app.copy(null,false)"></button>
 		<button name="remove" class="icon fa lg" title="Remove" display="all" onclick="app.remove()"></button>
 	</div>
 	
@@ -15,24 +17,25 @@
 		<div class="cc fade">
 			<span class="row">
 				<b class="fit">x</b>
-				<input id="object-x" type="number">
+				<!-- <input id="object-x" type="number" pattern="[\d]+" step="1"> -->
+				<input id="object-x" type="number" oninput="dom.toInteger(this)" onchange="dom.toInteger(this)">
 			</span>
 			<span class="row">
 				<b class="fit">y</b>
-				<input id="object-y" type="number">
+				<input id="object-y" type="number" oninput="dom.toInteger(this)" onchange="dom.toInteger(this)">
 			</span>
 			<span class="row" nodisplay="arrow">
 				<b class="fit">width</b>
-				<input id="object-width" type="number">
+				<input id="object-width" type="number" oninput="dom.toInteger(this)" onchange="dom.toInteger(this)">
 			</span>
 			<span class="row" nodisplay="arrow">
 				<b class="fit">height</b>
-				<input id="object-height" type="number">
+				<input id="object-height" type="number" oninput="dom.toInteger(this)" onchange="dom.toInteger(this)">
 			</span>
 			<span class="row" display="all">
 				<b class="fit">angle</b>
 				<span class="cr ci fit">
-					<input id="object-angle" type="range" min="0" max="6.28" step="0.02" style="width:100%;" oninput="this.nextElementSibling.value=Math.round(parseFloat(this.value)*(180/Math.PI))" onchange="this.nextElementSibling.value=Math.round(parseFloat(this.value)*(180/Math.PI))">
+					<input id="object-angle" type="range" min="0" max="6.28" step="0.02" style="width:100%;" oninput="dom.nextAngle(this)" onchange="dom.nextAngle(this)">
 					<output style="text-align:right">0</output>
 				</span>
 			</span>
@@ -63,22 +66,33 @@
 					<output style="text-align:right">0</output>
 				</span>
 			</span>
-			<span class="row" nodisplay="emoji arrow">
-				<b class="fit">fill</b>
-				<input for="object-fill" class="checkbox w3-margin-right" type="checkbox" checked onchange="this.nextElementSibling.disabled=!this.checked">
-				<input id="object-fill" type="color">
-			</span>
-			<span class="row" nodisplay="arrow group">
-				<b class="fit">fill alpha</b>
-				<span class="cr ci fit">
-					<input id="object-alpha" type="range" min="0" max="1" step="0.01" style="width:100%;" oninput="dom.nextFloat(this)" onchange="dom.nextFloat(this)">
-					<output style="text-align:right">0</output>
+			<div class="cc" nodisplay="emoji arrow">
+
+				<span class="row">
+					<b class="fit">fill</b>
+					<input for="object-fill" class="checkbox w3-margin-right" type="checkbox" checked onchange="dom.nextDisabled(this,!this.checked);dom.nextToggleHide(this.parentElement,this.checked)">
+					<input id="object-fill" type="color">
 				</span>
-			</span>
+				<div class="cc fade">
+					<span class="row">
+						<b class="fit">fill alpha</b>
+						<span class="cr ci fit">
+							<input id="object-alpha" type="range" min="0" max="1" step="0.01" style="width:100%;" oninput="dom.nextFloat(this)" onchange="dom.nextFloat(this)">
+							<output style="text-align:right">0</output>
+						</span>
+					</span>
+					<span class="row">
+						<b class="fit">gradient</b>
+						<input id="object-fillGradientVector" type="checkbox" class="checkbox fa invert sm fa-arrow-right-long fa-rotate-by w3-text-indigo" style="--fa-rotate-angle: -45deg;margin-right:5px;"  title="Show/hide vector" disabled>
+						<input for="object-fillGradient" class="checkbox w3-margin-right" type="checkbox" onchange="dom.nextDisabled(this,!this.checked);dom.prevDisabled(this,!this.checked)">
+						<input id="object-fillGradient" type="color">
+					</span>
+				</div>
+			</div>
 			<div class="cc" nodisplay="group">
 				<span class="row">
 					<b class="fit">shadow</b>
-					<input for="object-shadow" class="checkbox w3-margin-right" type="checkbox" onchange="this.nextElementSibling.disabled=!this.checked;this.parentElement.nextElementSibling.classList.toggle('hidden')">
+					<input for="object-shadow" class="checkbox w3-margin-right" type="checkbox" onchange="dom.nextDisabled(this,!this.checked);dom.nextToggleHide(this.parentElement)">
 					<select id="object-shadow" disabled>
 						<option value="fill" selected>fill</option>
 						<option value="stroke">stroke</option>
@@ -154,7 +168,7 @@
 			
 			<span class="row" display="text emoji icon chart">
 				<b class="fit">size</b>
-				<input id="object-size" type="number">
+				<input id="object-size" type="number" onchange="dom.toInteger(this)">
 			</span>
 			<span class="row" display="text">
 				<b class="fit">bold</b>
@@ -167,18 +181,21 @@
 			<span class="row" display="text chart">
 				<b class="fit">font</b>
 				<select id="object-font">
-					<option value="Arial" selected>Arial</option>
-					<option value="Serif">Serif</option>
-					<option value="Times New Roman">Roman</option>
-					<option value="Monospace">Monospace</option>
-					<option value="Helvetica">Helvetica</option>
-					<option value="Calibri">Calibri</option>
-					<option value="Optima">Optima</option>
-					<option value="Comic Sans MS">Comic</option>
-					<option value="DejaVu Sans Mono">DejaVu</option>
+					<option value="Arial" style="font-family:Arial;" selected><b>Arial</b></option>
+					<option value="Serif" style="font-family:serif"><b>Serif</b></option>
+					<option value="sans-serif" style="font-family:sans-serif"><b>Sans</b></option>
+					<option value="Times New Roman" style="font-family:Times New Roman;"><b>Roman</b></option>
+					<option value="Monospace" style="font-family:monospace;"><b>Monospace</b></option>
+					<option value="Roboto" style="font-family:roboto;"><b>Roboto</b></option>
+					<option value="Helvetica" style="font-family:Helvetica;"><b>Helvetica</b></option>
+					<option value="Calibri" style="font-family:Calibri;"><b>Calibri</b></option>
+					<option value="Optima" style="font-family:Optima;"><b>Optima</b></option>
+					<option value="Comic Sans MS" style="font-family:Comic Sans MS;"><b>Comic</b></option>
+					<option value="DejaVu Sans Mono" style="font-family:DejaVu Sans Mono;"><b>DejaVu</b></option>
 					<!-- <option value="Verdana">Verdana</option>
 					<option value="Geneva">Geneva</option> -->
-					<option value="Ubuntu">Ubuntu</option>
+					<option value="Ubuntu" style="font-family:ubuntu;"><b>Ubuntu</b></option>
+					<option value="Segoe UI" style="font-family:Segoe UI;"><b>Segoe UI</b></option>
 				</select>
 			</span>
 			<textarea id="object-value" rows="5" display="text" placeholder="Some text" spellcheck="false"></textarea>
@@ -195,11 +212,11 @@
 			<div class="cc fade">
 				<span class="row">
 					<b class="fit">x</b>
-					<input id="object-imgX" type="number">
+					<input id="object-imgX" type="number" oninput="dom.toInteger(this)" onchange="dom.toInteger(this)">
 				</span>
 				<span class="row">
 					<b class="fit">y</b>
-					<input id="object-imgY" type="number">
+					<input id="object-imgY" type="number" oninput="dom.toInteger(this)" onchange="dom.toInteger(this)">
 				</span>
 				<!-- <span class="row">
 					<b class="fit">width</b>
@@ -222,8 +239,8 @@
 						<input id="object-imgKeepProportion" type="checkbox" class="checkbox" title="Keep proportion">
 					</div>
 					<div class="cc">
-						<input id="object-imgWidth" type="number">
-						<input id="object-imgHeight" type="number">
+						<input id="object-imgWidth" type="number" oninput="dom.toInteger(this)" onchange="dom.toInteger(this)">
+						<input id="object-imgHeight" type="number" oninput="dom.toInteger(this)"onchange="dom.toInteger(this)">
 					</div>
 				</div>
 				
@@ -254,25 +271,15 @@
 
 				<span class="row">
 					<b class="fit">mask</b>
-					<input for="object-mask" class="checkbox w3-margin-right" type="checkbox" onchange="this.nextElementSibling.disabled=!this.checked;this.parentElement.nextElementSibling.classList.toggle('hidden')">
+					<input for="object-mask" class="checkbox w3-margin-right" type="checkbox" onchange="dom.nextDisabled(this, !this.checked)">
 					<input id="object-mask"  disabled readonly style="max-width: 100px;">
 				</span>
-				<div class="cc fade hidden">
-					<span class="row">
-						<b class="fit">mask X</b>
-						<input id="object-maskX" type="number">
-					</span>
-					<span class="row">
-						<b class="fit">mask Y</b>
-						<input id="object-maskY" type="number">
-					</span>
-				</div>
 
 				<div class="cc" filter="none">
 					<span class="row">
 						<b class="fit">filter</b>
 						<input for="object-filter" class="checkbox w3-margin-right" type="checkbox" onchange="this.nextElementSibling.disabled=!this.checked">
-						<select id="object-filter" disabled onchange="this.parentElement.parentElement.setAttribute('filter', this.value)">
+						<select id="object-filter" disabled  style="max-width: 100px" onchange="this.parentElement.parentElement.setAttribute('filter', this.value)">
 							<!-- <option value="none" selected>none</option> -->
 							<optgroup label="Adjust">
 								<option value="contrast">contrast</option>
@@ -317,27 +324,27 @@
 					</span>
 					<span class="row w3-margin-left" display="brightnessContrast">
 						<b class="fit smaller wm8">Contrast:</b>
-						<input id="object-filterContrast" type="range" min="-1" max="1" step="0.01">
+						<input class="fit" id="object-filterContrast" type="range" min="-1" max="1" step="0.01">
 					</span>
 					<span class="row w3-margin-left" display="hueSaturation">
 						<b class="fit smaller wm8">Hue:</b>
-						<input id="object-filterHue" type="range" min="-1" max="1" step="0.01">
+						<input class="fit" id="object-filterHue" type="range" min="-1" max="1" step="0.01">
 					</span>
 					<span class="row w3-margin-left" display="hueSaturation">
 						<b class="fit smaller wm8">Saturation:</b>
-						<input id="object-filterSaturation" type="range" min="-1" max="1" step="0.01">
+						<input class="fit" id="object-filterSaturation" type="range" min="-1" max="1" step="0.01">
 					</span>
 					<span class="row w3-margin-left" display="denoise">
 						<b class="fit smaller wm8">Exponent:</b>
-						<input id="object-filterExponent" type="range" min="0" max="50">
+						<input class="fit" id="object-filterExponent" type="range" min="0" max="50">
 					</span>
 					<span class="row w3-margin-left" display="noise_ sepia vignette vibrance">
 						<b class="fit smaller wm8">Amount:</b>
-						<input id="object-filterAmount" type="range" min="-1" max="1" step="0.01">
+						<input class="fit" id="object-filterAmount" type="range" min="-1" max="1" step="0.01">
 					</span>
 					<span class="row w3-margin-left" display="vignette">
 						<b class="fit smaller wm8">Size:</b>
-						<input id="object-filterSize" type="range" min="0" max="1" step="0.01">
+						<input class="fit" id="object-filterSize" type="range" min="0" max="1" step="0.01">
 					</span>
 				</div>
 				<span class="cr ci">
@@ -387,16 +394,21 @@
 				<span class="row">
 					<b class="fit">font</b>
 					<select id="object-textFont">
-						<option value="Arial" selected>Arial</option>
-						<option value="Serif">Serif</option>
-						<option value="Times New Roman">Roman</option>
-						<option value="Monospace">Monospace</option>
-						<option value="Helvetica">Helvetica</option>
-						<option value="Calibri">Calibri</option>
-						<option value="Optima">Optima</option>
-						<option value="Comic Sans MS">Comic</option>
-						<option value="DejaVu Sans Mono">DejaVu</option>
-						<option value="Ubuntu">Ubuntu</option>
+						<option value="Arial" style="font-family:Arial;" selected><b>Arial</b></option>
+						<option value="Serif" style="font-family:serif"><b>Serif</b></option>
+						<option value="sans-serif" style="font-family:sans-serif"><b>Sans</b></option>
+						<option value="Times New Roman" style="font-family:Times New Roman;"><b>Roman</b></option>
+						<option value="Monospace" style="font-family:monospace;"><b>Monospace</b></option>
+						<option value="Roboto" style="font-family:roboto;"><b>Roboto</b></option>
+						<option value="Helvetica" style="font-family:Helvetica;"><b>Helvetica</b></option>
+						<option value="Calibri" style="font-family:Calibri;"><b>Calibri</b></option>
+						<option value="Optima" style="font-family:Optima;"><b>Optima</b></option>
+						<option value="Comic Sans MS" style="font-family:Comic Sans MS;"><b>Comic</b></option>
+						<option value="DejaVu Sans Mono" style="font-family:DejaVu Sans Mono;"><b>DejaVu</b></option>
+						<!-- <option value="Verdana">Verdana</option>
+						<option value="Geneva">Geneva</option> -->
+						<option value="Ubuntu" style="font-family:ubuntu;"><b>Ubuntu</b></option>
+						<option value="Segoe UI" style="font-family:Segoe UI;"><b>Segoe UI</b></option>
 					</select>
 				</span>
 				<span class="row">

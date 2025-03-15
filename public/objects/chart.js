@@ -1,5 +1,5 @@
 
-import { Base } from "./object.js";
+import { Rect as Base } from "./rect.js";
 import { Point } from "./curve.js";
 import { Path } from './path.js';
 
@@ -105,6 +105,8 @@ export class Chart extends Base {
 	}
 
 	draw(ctx) {
+
+		super.draw(ctx);
 
 		const datasets = this.#data.sets
 			, labels = this.#data.labels

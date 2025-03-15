@@ -1,13 +1,13 @@
 import './utils.js';
 
-import { Canvas } from './canvas.js';
-import { Path } from './path.js';
-import { Picture } from './picture.js';
-import { Chart } from './chart.js';
+import { Canvas } from './objects/canvas.js';
+import { Path } from './objects/path.js';
+import { Picture } from './objects/picture.js';
+import { Chart } from './objects/chart.js';
 
 import { EditorCanvas as Base } from './base.js';
 import { WebGL } from './webgl.js';
-import { IndexDB } from './db.js';
+import { Database } from './db.js';
 
 import { wrapProjects, wrapObjects, wrapProperties, wrapImages, wrapTools, wrapCanvas, wrapStatus, wrapActions, wrapNotifications } from './wrappers.js';
 
@@ -48,6 +48,7 @@ export default class Editor extends Base {
 
 	#bg = new Canvas;
 	#selected;
+	#clipboard;
 	#fill = '#eeeeee';
 	#stroke = '#111111';
 	#strokeWidth = 1;
@@ -66,6 +67,7 @@ export default class Editor extends Base {
 	#nodes = [];
 	#selectedNodes = [];
 	#images = new Map;
+	#imagesLoaded = false;
 	#data = new Map;
 	#file;
 	#blobs = new Map;
@@ -147,6 +149,7 @@ export default class Editor extends Base {
 	}
 
 	set strokeWidth(n) {
+		if (typeof n == 'string') n = parseInt(n);
 		this.#strokeWidth = n;
 	}
 
@@ -196,6 +199,11 @@ export default class Editor extends Base {
 			console.error('Failed to init WbGL');
 		}
 
+		if (!window.offctx) {
+			const e = new OffscreenCanvas(512, 512);
+			window.offctx = e.getContext('2d');
+		}
+
 		this.#registerCanvasEvents();
 		this.#registerResizeEvents();
 
@@ -225,6 +233,30 @@ export default class Editor extends Base {
 		if (this.#projects) return;
 
 		this.#loadProjects();
+	}
+
+	async loadImages() {
+		if (this.#imagesLoaded) return;
+
+		this.#imagesLoaded = true;
+
+		try {
+
+			const images = await this.#db.ls('image');
+
+			for (const i of images) {
+
+				i.link = await Picture.thumb(i.blob);
+				i.type = i.blob.type;
+				i.size = i.blob.size;
+
+				this.#dom.images.add(i, null, true);
+			}
+
+		}
+		catch (e) {
+			console.error('Faild to load images');
+		}
 	}
 
 	center() {
@@ -283,7 +315,7 @@ export default class Editor extends Base {
 		super.draw(selection, this.#mode);
 	}
 
-	add(type, value='', parent=null) {
+	async add(type, value='', parent=null) {
 
 		const o = super.create(type, parent);
 
@@ -315,18 +347,27 @@ export default class Editor extends Base {
 			break;
 
 			case 'chart':
-			o.width = 400;
-			o.height = 300;
+			o.width = this.#bg.width * 0.8;
+			o.height = this.#bg.height * 0.8;
 			break;
 
 			case 'image':
 			if (value) {
-				const image = this.#images.get(value);
-				if (!image) {
-					// todo: ???
+				const id = value;
+				let image = this.#images.get(id);
+
+				if (image) {
+					o.setImage(image);
+				}
+				else {
+					const i = await this.#db.get('image', id);
+
+					if (!i.blob.name)
+						i.blob.name = i.name;
+
+					await o.loadImage(i.blob);
 				}
 				
-				o.setImage(image);
 			}
 			break;
 		}
@@ -391,49 +432,32 @@ export default class Editor extends Base {
 		const o = objects[i - 1];
 
 		if (o && o.type == 'image') {
-			o.setMask(objects[i]);
+			o.applyMask(objects[i]);
 
 			this.draw();
 		}
-
-
-		// if (i < 2) return;
-
-		// let i = this.#objects.findIndex(o => o.id == id);
-		// if (i < 2) return;
-
-		// const path = this.#objects[i];
-
-		// for (i--; i >= 0; --i) {
-		// 	const o = this.#objects[i];
-		// 	if (o.type == 'image') {
-		// 		o.setMask(path);
-
-		// 		this.#dom.properties.set('mask', path.name, path.id);
-		// 		this.draw();
-
-		// 		return;
-		// 	}
-		// }
 	}
 
 	export(name='meme', type='jpeg') {
 
-		const canvas = this.#bg;
+		const canvas = this.#bg
+			, width = canvas.width
+			, height = canvas.height;
 
-		const e = new OffscreenCanvas(canvas.width, canvas.height);
-		const ctx = e.getContext('2d');
+		const e = offctx.canvas;
+		const ctx = offctx;
 
 
-		// e.width = canvas.width;
-		// e.height = canvas.height;
+		e.width = width;
+		e.height = height;
 
-		/* todo: Slection must be removed
-			1. Translate to canvas origin ctx.translate(-canvas.x, - canvas.y)  
-			2. call draw in canvas (this.draw(ctx))
-		*/
+		ctx.save();
+		ctx.clearRect(0, 0, width, height);
+		ctx.translate(-canvas.x, -canvas.y);
 
-		ctx.drawImage(this.canvas, canvas.x, canvas.y, canvas.width, canvas.height, 0, 0, canvas.width, canvas.height);
+		this.drawInContext(ctx, false);
+
+		ctx.restore();
 
 		drawWatermark(ctx, kSite);
 
@@ -445,32 +469,18 @@ export default class Editor extends Base {
 
 		const o = this.#selected;
 
-		const e = new OffscreenCanvas(o.width, o.height);
-		const ctx = e.getContext('2d');
+		const e = offctx.canvas;
+		const ctx = offctx;
 
+		e.width = o.width;
+		e.height = o.height;
+
+		ctx.save();
 		ctx.translate(-o.x, -o.y);
 
 		o.draw(ctx);
 
-		// o.selected = false;
-		// this.draw();
-
-		// const e = document.createElement('canvas');
-		// // const e = new OffscreenCanvas(o.width, o.height);
-		// const ctx = e.getContext('2d');
-
-		// const m = o.strokeWidth / 2 + o.shadowWidth + 5;
-		// const b = o.boundingBox(-m);
-
-		// e.width = b.width;
-		// e.height = b.height;
-
-		// ctx.drawImage(this.canvas, b.x, b.y, b.width, b.height, 0, 0, b.width, b.height);
-
-		// o.selected = true;
-		// this.draw();
-
-		// drawWatermark(ctx, kSite);
+		ctx.restore();
 
 		return this.#exportCanvas(e, o.name, 'png');
 	}
@@ -606,7 +616,7 @@ export default class Editor extends Base {
 			
 			const objects = super.open(project.objects);
 			const images = objects.filter(i => i.type == 'image');
-			const paths = Object.fromArray(objects.filter(i => i.type == 'path'));
+			const paths = Object.fromArray(objects);
 
 			this.#bg.load(project.canvas);
 			this.#blobs = project.blobs;
@@ -793,16 +803,45 @@ export default class Editor extends Base {
 		this.draw();
 	}
 
-	copy(id) {
+	copy(id=this.#selected?.id, duplicate=true) {
 
-		const b = super.copy(id);
+		if (duplicate) {
 
-		b.x += 10;
-		b.y += 10;
+			const b = super.copy(id);
 
-		this.draw();
+			b.x += 10;
+			b.y += 10;
 
-		this.#dom.objects.add(b, id); 
+			this.draw();
+
+			this.#dom.objects.add(b, id); 
+		}
+		else {
+
+			id = id || this.#selected.id;
+
+			this.#clipboard = this.find(id);
+			this.#dom.objects.enable('paste', true);
+
+			this.#dom.notify.add('Copied !', 'success');
+		}
+	}
+
+	paste() {
+		if (this.#clipboard) {
+
+			const o = this.#clipboard.clone();
+
+			o.id = Path.id();
+			o.visible = true;
+
+			this.create(o);
+			this.emit('newobject', o.id);
+
+			this.select(o);
+
+			this.#dom.objects.add(o);
+		}
 	}
 
 	undo() {
@@ -888,6 +927,51 @@ export default class Editor extends Base {
 		this.draw();
 	}
 
+	async addToLibrary(o=this.#selected) {
+
+		const blob = o.image()._file
+			, ext = blob.name ? blob.name.splitLast('.')[1] : blob.type.split('/')[1]
+			;
+
+		const name = o.name
+			, id = name + '.' + ext
+			, width = o.width
+			, height = o.height;
+
+		try {
+			
+			const blob = await o.toBlob();
+
+			await this.#db.put('image', { id, name, width, height, blob });
+
+			//this.#images.set(id, image);
+
+			const link = await Picture.thumb(blob);
+
+			this.#dom.images.add({ id, name, width, height, link, type: blob.type, size: blob.size }, null, true);
+			this.#dom.notify.add('Added !', 'success');
+		}
+		catch (e) {
+			console.error('Failed to add image to library');
+
+			this.#dom.notify.add('Failed !', 'error');
+		}
+
+	}
+
+	async removeFromLibrary(id) {
+		try {
+
+			await this.#db.rm('image', id);
+
+		}
+		catch (e) {
+			console.error('Failed to remove image from library');
+		}
+
+		this.#dom.images.rm(id);
+	}
+
 	centerText(o=this.#selected) {
 		if (!o) return;
 
@@ -907,6 +991,8 @@ export default class Editor extends Base {
 
 		if (!this.#selected || this.#selected.type != 'image') return;
 
+		this.#toggleLoading();
+
 		const image = this.#selected;
 		const path = await Path.detectBody(image, threshold);
 
@@ -924,6 +1010,7 @@ export default class Editor extends Base {
 			this.#dom.notify.add('Failed to detect human !', 'error');
 		}
 
+		this.#toggleLoading();
 	}
 
 	wrap() {
@@ -1179,6 +1266,11 @@ export default class Editor extends Base {
 		this.#dom.objects.add(path);
 	}
 
+	#toggleLoading() {
+		const e = this.canvas.parentElement;
+		e.classList.toggle('loading3');
+	} 
+
 	#handleSelectClick(x, y) {
 		if (this.#node) {
 
@@ -1225,7 +1317,7 @@ export default class Editor extends Base {
 		this.#node = null;
 
 		for (const i of this.objects) {
-			if (this.#node = i.handleClick(x, y)) {
+			if (this.#node = i.handleClick(x, y, this.#vkeys)) {
 
 				this.#node.x = i.x;
 				this.#node.y = i.y;
@@ -1255,37 +1347,38 @@ export default class Editor extends Base {
 
 		}
 
-		this.#node.move(x, y);
+		this.#node.move(x, y, this.#vkeys);
+
 		this.draw();
 
-
 		const o = this.#selected;
-
-
 		if (o) {
 			const data = {
 				x: o.x,
 				y: o.y,
 				width: o.width,
 				height: o.height,
-				angle: o.angle
+				angle: o.angle,
+				size: o.size
 			};
 
 			this.#dom.properties.assign(data);
 			this.emit('update', data);
 		}
-
 	}
 
-	#handleDrawClick(x, y) {
-
-	}
+	#handleDrawClick(x, y) {}
 
 	#handleDrawDown(x, y) {
 
 		if (!this.#path) {
-			this.#path = new Path;
+			const p = new Path;
 
+			p.fill = this.#fill;
+			p.stroke = this.#stroke;
+			p.strokeWidth = this.#strokeWidth;
+
+			this.#path = p;
 		}
 
 		this.#path.mouseDown(x, y, this.#vkeys);
@@ -1779,6 +1872,7 @@ export default class Editor extends Base {
 
 			img = Editor.create('image');
 			img.file = i;
+			img.name = id.splitLast('.')[0];
 
 			image = this.#images.get(id);
 
@@ -1790,7 +1884,14 @@ export default class Editor extends Base {
 
 				link = await Picture.thumb(image); 
 
-				this.#dom.images.add({ id, link, type: i.type, size: i.size, width: image.width, height: image.height });
+				this.#dom.images.add({ 
+					id,
+					name: img.name, 
+					link, 
+					type: i.type, 
+					size: i.size, 
+					width: image.width, 
+					height: image.height });
 			}
 			else {
 				img.setImage(image);
@@ -1978,28 +2079,6 @@ function readFile(file) {
 	});
 }
 
-
-
-class Database extends IndexDB {
-
-	get name() { return 'meme'; }
-	get version() { return 2; }
-
-	onUpgrade(db, txn, ver) {
-		switch (ver) {
-		
-			case 0:
-			Database.addTable(db, 'meme');
-			Database.addIndex('meme', 'ts', txn);
-
-			case 1:
-			Database.addTable(db, 'file');
-			Database.addIndex('file', 'type', txn);
-
-			break;
-		}
-	}
-}
 
 function drawWatermark(ctx, text, height=ctx.canvas.height) {
 	//ctx.translate(btn.x, btn.y);

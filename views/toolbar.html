@@ -12,9 +12,9 @@
 
 	<i class="hs"></i>
 
-	<input type="color" name="fill" value="#eeeeee" title="Fill color">
-	<input type="number" name="strokeWidth" value="1" style="max-width: 30px;" title="Stroke width">
-	<input type="color" name="stroke" value="#111111" title="Stroke color">
+	<input type="color" name="fill" value="#eeeeee" title="Fill color" onchange="app.fill=this.value">
+	<input type="number" name="strokeWidth" value="1" style="max-width: 30px;" title="Stroke width" oninput="app.strokeWidth=this.value">
+	<input type="color" name="stroke" value="#111111" title="Stroke color" onchange="app.stroke=this.value">
 	<div class="row ci relative" style="width: 80px;">
 
 		<input name="zoom" class="text-right" list="zoom" value="100%" style="width:100%;box-sizing: border-box;" title="Zoom">

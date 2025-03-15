@@ -1,15 +1,16 @@
-import { Base } from './object.js';
-import { Bubble, Rectangle } from './bubble.js';
-import { Circle } from './circle.js';
-import { Canvas } from './canvas.js';
-import { Picture } from './picture.js';
-import { Text } from './text.js';
-import { Emoji } from './emoji.js';
-import { Icon } from './fa.js';
-import { Path } from './path.js';
-import { Arrow } from './arrow.js';
-import { Chart } from './chart.js';
-import { Group } from './group.js';
+import { Base } from './objects/base.js';
+import { Rectangle } from './objects/label.js';
+import { Bubble } from './objects/bubble.js';
+import { Circle } from './objects/circle.js';
+import { Canvas } from './objects/canvas.js';
+import { Picture } from './objects/picture.js';
+import { Text } from './objects/text.js';
+import { Emoji } from './objects/emoji.js';
+import { Icon } from './objects/fa.js';
+import { Path } from './objects/path.js';
+import { Arrow } from './objects/arrow.js';
+import { Chart } from './objects/chart.js';
+import { Group } from './objects/group.js';
 
 import { SVG } from './svg.js';
 
@@ -281,9 +282,10 @@ export class EditorCanvas extends EditorBase {
 	}
 
 	draw(selection=false, ...params) {
+		this.drawInContext(this.#ctx, selection, ...params);
+	}
 
-		const ctx = this.#ctx;
-
+	drawInContext(ctx, selection=false, ...params) {
 		ctx.save();
 
 		ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
@@ -307,7 +309,6 @@ export class EditorCanvas extends EditorBase {
 		this.drawAfter(ctx, ...params);
 
 		ctx.restore();
-
 	}
 
 	drawBefore() {}

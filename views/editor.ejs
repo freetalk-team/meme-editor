@@ -12,7 +12,7 @@
 			<%- include('sidebar') %>
 			
 			<div class="column noverflow fit" style="height:100%;">
-				<div class="canvas dnd-area">
+				<div class="canvas dnd-area hide">
 					<canvas id="canvas" class="" tabindex="1" width="1200" height="900">Create meme with canvas</canvas>
 				</div>
 
@@ -57,6 +57,11 @@ function wrapIconPopup(id) {
 
 	// Toggle popup visibility
 	toggleButton.addEventListener('click', (e) => {
+		const popups = document.querySelectorAll('.icon-popup');
+		for (const i of popups)
+			if (i != popup)
+				i.style.display = 'none';
+
 		popup.style.display = popup.style.display === 'block' ? 'none' : 'block';
 		e.stopPropagation();
 	});

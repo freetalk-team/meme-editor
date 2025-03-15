@@ -1,5 +1,5 @@
 
-import { Base } from "./object.js";
+import { Base } from "./base.js";
 
 export class Canvas extends Base {
 
@@ -14,6 +14,15 @@ export class Canvas extends Base {
 		this.height = 0;
 		this.stroke = null;
 		this.fill = '#fafafa';
+	}
+
+	get height() { return super.height; }
+	set height(n) {
+		const h = this.height;
+
+		super.height = n;
+
+		this.y += (h - this.height) / 2;
 	}
 
 	handleClick() {}
